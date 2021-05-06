@@ -1,0 +1,404 @@
+---
+title: "`dmethr` pipeline"
+subtitle: "Hunting DNA Methylation repression of transcriptional activity"
+author: "Florent Chuffart"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+---
+
+
+
+```{r, echo=FALSE, eval=TRUE}
+knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
+species="Homo_sapiens"
+version="hg38"
+```
+
+# Requirements
+
+# Aim and data
+
+**Aim**
+
+The goal of this study is to group and compare genes of different categories: 
+
+- CpG-rich versus CpG-poor Promoters
+- level of methylation of the promoter in most of normal tissues
+- expression reactivation in demethylating context
+- testis restricted genes
+
+**Data**
+
+This study is based on following data set:
+
+- methylation data from normal tissues (Illumina 450k: GSE56515, GSE48472, GSE64096, GSE50192", GSE31848", GSE73375)
+- transcriptomic data HCT116 DNMT DKO vs. WT (RNA-seq: GSE45332)
+
+
+
+# Pipeline
+
+**Genes with CpG rich TSS**
+
+We use definition of transcripts proposed by UCSC, version hg38.
+
+From genomic sequence of the promoter of each gene, we compute a CpG density value.
+
+Distribution of CpG density clearly shows two population.
+
+(from ~/projects/genes/02_tss_cpg_status.Rmd)
+
+```{r}
+genes = readRDS(paste0("~/projects/genes/bed_", version, "_epimeddb.rds"))
+```
+
+```{r echo=TRUE, results="verbatim"}
+table(genes$tss_cpg_status)
+gs_cpgrich = rownames(genes)[!is.na(genes$tss_cpg_status) & genes$tss_cpg_status=="cpg_rich"]
+```
+
+
+```{r}
+dim(genes)
+gs = rownames(genes)
+layout(1, respect=TRUE)
+plot(density(genes$cpg_density, na.rm=TRUE), main="Distribution of CpG density", lwd=3, col="grey", lty=2)
+den_rich = density(genes[genes$tss_cpg_status%in%"cpg_rich",]$cpg_density, na.rm=TRUE)
+den_poor = density(genes[genes$tss_cpg_status%in%"cpg_poor",]$cpg_density, na.rm=TRUE)
+lines(den_rich$x, den_rich$y * (den_rich$n/nrow(genes)), col=2, lwd=2)
+lines(den_poor$x, den_poor$y * (den_poor$n/nrow(genes)), col=4, lwd=2)
+legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("cpg_rich", "cpg_poor", "both"), lwd=c(2,2,3))
+```
+
+
+
+
+
+
+
+
+
+
+**Promoter methylation status in normal tissues**
+
+```{r loading_study_meth_all_human_tissues_grch38}
+if (!exists("mreadRDS"))   mreadRDS = memoise::memoise(readRDS) 
+s_meth = mreadRDS("~/projects/all_human_tissues/results/meth/study_meth_all_human_tissues_grch38.rds")
+```
+
+```{r process_study_meth_all_human_tissues_grch38, }
+table(s_meth$platform$Chromosome)
+if (!exists("gene_indexed_probes")) {
+  # params
+  pf_chr_colname = "Chromosome"
+  pf_pos_colname = "Start"
+  up_str = 2000
+  dwn_str = 2000  
+  if (!exists("pf_orig")) {
+    pf_orig = s_meth$platform
+    pf_orig = pf_orig[order(pf_orig[[pf_chr_colname]],pf_orig[[pf_pos_colname]]), ]
+    pf_bed = pf_orig[,c(pf_chr_colname, pf_pos_colname)]
+    pf_bed[,3] = pf_bed[,2] + 1
+    pf_bed[,4] = row.names(pf_bed)
+    pf_bed[,5] = 0
+    pf_bed[,6] = "+"
+    pf_bed = pf_bed[!pf_bed[,1]%in%"*",]
+    head(pf_bed)
+    options(scipen=999)
+    write.table(pf_bed, file="illumina_450k_hg38.bed", sep="\t", quote=FALSE,row.names=FALSE, col.names=FALSE)    
+  }  
+  ## index meth probes by chr
+  chrs = unique(genes[gs_cpgrich,1])
+  chrs_indexed_methpf = lapply(chrs, function(chr) {
+    print(chr)
+    idx = rownames(pf_orig)[!is.na(pf_orig[[pf_chr_colname]]) & pf_orig[[pf_chr_colname]]==chr]  
+    ret = pf_orig[idx,]
+    return(ret)
+  })
+  names(chrs_indexed_methpf) = chrs
+  ## index probes by gene name
+  print("# indexing probes by gene name")
+  gene_indexed_probes = epimedtools::monitored_apply(genes[gs_cpgrich,], 1, function(gene) {
+    # gene = randomall_genes[1,]genes=readRDS("~/fchuffar/projects/genes/bed_grch38_epimeddb.rds")
+    # print(gene)
+    chr = gene[[1]]
+    meth_platform = chrs_indexed_methpf[[chr]]
+    ret = dmprocr::get_probe_names(gene, meth_platform, pf_chr_colname, pf_pos_colname, up_str, dwn_str) 
+    return(ret)
+  })
+  barplot(table(sapply(gene_indexed_probes, length)))
+  gene_indexed_probes = gene_indexed_probes[sapply(gene_indexed_probes, length)>5]
+}
+```
+
+
+```{r label="reduction of signal by tissue"}
+if (!exists("meth_by_tissues_by_gene")) {
+  print("reduction of signal by tissue then by gene")
+  key = "tissue_group_level1"
+  print(table(s_meth$exp_grp[[key]]))
+  tissues = na.omit(sort(unique(s_meth$exp_grp[[key]])))
+
+  indicator_func1 = mean
+  tmp_meth_data = s_meth$data[unique(unlist(gene_indexed_probes)),]
+  meth_by_tissues = sapply(tissues, function(tissue) {
+    # tissue = tissues[1]
+    print(tissue)
+    sample_idx = rownames(s_meth$exp_grp)[s_meth$exp_grp[[key]] %in% tissue]
+    if (length(sample_idx) > 1) {
+      tmp_meth_by_tissues = epimedtools::monitored_apply(mod=50000, tmp_meth_data[,sample_idx], 1, indicator_func1, na.rm=TRUE)      
+    } else {
+      tmp_meth_by_tissues = indicator_func1(tmp_meth_data[,sample_idx], na.rm=TRUE)
+    }
+    return(tmp_meth_by_tissues)
+  })
+  head(meth_by_tissues)
+  dim(meth_by_tissues)
+  sum(is.na(meth_by_tissues))
+  # saveRDS(meth_by_tissues, "meth_by_tissues_level1.rds")
+  # ```
+  #
+  #
+  # ```{r label="reduction of signal by gene"}
+  indicator_func2 = mean
+  tmp_meth_data = meth_by_tissues
+  dim(tmp_meth_data)
+  meth_by_tissues_by_gene = epimedtools::monitored_apply(mod=10, genes[names(gene_indexed_probes),], 1, function(gene) {
+    # gene = genes[names(gene_indexed_probes),][1,]
+    # print(gene[[4]])
+    probe_idx = gene_indexed_probes[[gene[[4]]]]
+    if (length(probe_idx) > 1) {
+      tmp_meth_by_tissues_by_gene = apply(tmp_meth_data[probe_idx,], 2, indicator_func2, na.rm=TRUE)    
+    } else {
+      tmp_meth_by_tissues_by_gene  = sapply(tmp_meth_data[probe_idx,], indicator_func2, na.rm=TRUE) 
+    }
+    return(tmp_meth_by_tissues_by_gene)
+  })
+  meth_by_tissues_by_gene = t(meth_by_tissues_by_gene)
+  dim(meth_by_tissues_by_gene)
+  sum(is.na(meth_by_tissues_by_gene))
+# saveRDS(meth_by_tissues_by_gene, "meth_by_tissues_by_gene.rds")
+}
+```
+
+From Illumina 450k studies, we obtain a methylation matrix of `r ncol(s_meth$data)` samples, 
+dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues 
+including `r unique(s_meth$exp_grp$tissue_group_level1)`.
+
+This matrix is successively reduced, first by tissues, then by genes with CpG rich promoter. 
+The function used to reduce the data is the `mean`.
+
+It means that for each methylation probe, we compute the mean methylation value by tissue.
+Then for each genes promoter group of probes, we compute the mean of mean methylation value by tissue.
+
+We obtain an `r nrow(meth_by_tissues_by_gene)` genes by `r ncol(meth_by_tissues_by_gene)` tissues mean of mean methylation value matrix.
+
+Heatmap on the methylation value matrix clearly shows a subset of genes with highly methylated promoter.
+
+```{r label="clustering and heatmap", fig.height=9}
+data = meth_by_tissues_by_gene
+dim(data)
+sum(apply(is.na(data), 1, any))
+data = data[!apply(is.na(data), 1, any), ]
+dim(data)
+
+# clustering base on correlation for tissues
+tmp_d = data
+tmp_d = t(tmp_d) - apply(tmp_d, 2, mean, na.rm=TRUE)
+tmp_d = t(tmp_d)
+tmp_d = cor(tmp_d, method="pe")
+dim(tmp_d)
+hc_col = hclust(dist(1 - tmp_d), method="complete")
+Colv = as.dendrogram(hc_col)
+dendrogram="col"      
+
+# clustering base on eucl. dist. for genes
+d = dist(data)
+hc_row = hclust(d, method="complete")
+Rowv = as.dendrogram(hc_row)
+dendrogram="both"      
+
+# col
+colors=c("cyan", "black", "red")
+cols = colorRampPalette(colors)(20)
+
+hm = gplots::heatmap.2(data, Rowv=Rowv, Colv=Colv, dendrogram=dendrogram, trace="none", col=cols, main=paste0("Mean of mean (", nrow(data), " genes x ", ncol(data), " tissues)"), mar=c(10,5), useRaster=TRUE)
+```
+
+```{r selecting_genes, echo=TRUE, results="verbatim", eval=TRUE}
+gs_methplusplus = rownames(data)[unlist(hm$rowDendrogram[[1]])]
+length(gs_methplusplus)
+```
+```{r}
+genes$methplusplus = rownames(genes) %in% gs_methplusplus
+table(genes$tss_cpg_status, genes$methplusplus, useNA="ifany")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**Expression of genes in DNMT double KO**
+
+We used the study GSE45332 to perform differential analysis of HCT116 cell lines transcriptome in wild type vs. DNMT double KO context.
+
+Form the differential analysis we obtain a vector of log2foldchange.
+
+GSEA clearly show that the previously define genesets (genes with promoter highly methylated in most of tissues) have a significantly increased expression in the DNMT DKO samples.
+
+```{r}
+dim(genes)
+d = read.table("~/projects/hadaca/results/GSE45332/04_deseq2/tables/KOvsWT.complete.txt", header=TRUE, stringsAsFactors=FALSE, row.names=1)
+d$lpadj = -log10(d$padj + 10^-300)
+# head(d)
+dim(d)
+# intersect(row.names(d), row.names(genes))
+layout(1, respect=TRUE)
+plot(d$log2FoldChange, d$lpadj, col="grey", xlab="log2FoldChange", ylab="adjusted pval")
+
+idx = gs = c("C3"  , "CYR61", "DCAF4L1", "DNAH17", "HKDC1"   , "IGF2BP1",  "IL1A", "KRT7" , "NES"    , "SDC4"  , "SERPINE1", "TGM2"   ,  "VIM")
+text(d[idx,]$log2FoldChange, d[idx,]$lpadj, rownames(d[idx,]))
+
+idx = intersect(gs_methplusplus, rownames(d))
+points(d[idx,]$log2FoldChange, d[idx,]$lpadj, col=2, pch=1)
+legend("topleft", pch=1, col=2, "gs_methplusplus")
+
+layout(1, respect=TRUE)
+boxplot(abs(d[idx,]$log2FoldChange)~d[idx,]$log2FoldChange>0, xlab="log2FoldChange > 0", ylab="|log2FoldChange|")
+
+
+layout(matrix(1:6, 2), respect=TRUE)
+e = read.table("~/projects/hadaca/results/GSE45332/04_deseq2/design.txt", header=TRUE, row.names=1)
+# g = "KRT7"
+# boxplot(unlist(d[g,paste0("norm.", rownames(e))])~e$cond, main=g)
+gs = c("C3"  , "CYR61", "DCAF4L1", "DNAH17", "HKDC1"   , "IGF2BP1",  "IL1A", "KRT7" , "NES"    , "SDC4"  , "SERPINE1", "TGM2"   ,  "VIM")
+# sapply(gs[-1], function(g){boxplot(unlist(d[g,paste0("norm.", rownames(e))])~e$cond, main=g)})
+sapply(gs[-1], function(g){boxplot(log2(unlist(d[g,paste0("norm.", rownames(e))])+1)~e$cond, main=g, ylab="log2(norm_count+1)")})
+```
+
+
+
+```{r selecting_genes3, echo=TRUE, results="verbatim"}
+idx = 
+  (!is.na(d$padj) & d$lpadj > 50 & d$log2FoldChange > 0) | 
+  (!is.na(d$padj) & d$log2FoldChange > 3)
+sum(idx)
+gs_dnmtkoup = rownames(d)[idx]
+length(gs_dnmtkoup)
+```
+
+We export gene as : 
+
+```{r export_genes}
+genes$dnmtkoup = rownames(genes) %in% gs_dnmtkoup
+genes$dnmtkoup_methplusplus = rownames(genes) %in% intersect(gs_dnmtkoup, gs_methplusplus)
+WriteXLS::WriteXLS(genes, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusplus.xlsx"))
+```
+
+
+```{r eval=FALSE}
+gsea_input = d[!is.na(d$log2FoldChange),c("log2FoldChange", "lpadj")]
+gsea_input = gsea_input[order(gsea_input$log2FoldChange),]
+gsea_input = cbind(rownames(gsea_input), gsea_input$log2FoldChange)
+prefix = "GSE45332dnmtko"
+gsea_input_filename = paste0(prefix, "_gsea_input.rnk")
+print(paste("gsea_input were exported in", gsea_input_filename, "file."))
+write.table(gsea_input, gsea_input_filename, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
+write.table(gs_methplusplus, "gs_methplusplus.grp", sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
+
+
+gsea_input = read.table(gsea_input_filename, row.names=1)
+stoda_input = gsea_input[,1]
+names(stoda_input) = rownames(gsea_input)
+stoda::gseaplot(v=stoda_input, gs=gs_methplusplus)
+
+#  /Applications/GSEA_4.1.0/gsea-cli.sh GSEAPreranked -gmx gs_methplusplus.grp -collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -rnk GSE45332dnmtko_gsea_input.rnk -scoring_scheme weighted -rpt_label my_analysis -create_svgs false -include_only_symbols true -make_sets true -plot_top_x 20 -rnd_seed timestamp -set_max 1000 -set_min 15 -zip_report false -out gsea_out
+
+```
+
+
+
+![](./gsea_out/my_analysis.GseaPreranked.1612862042867/enplot_gs_methplusplus.grp_1.png)
+
+
+
+
+
+
+
+
+
+
+**Testis restricted genes from`epimed_db`**
+
+Testis restricted genes are obtained from `epimed_db`.
+
+```{r epimed_db}
+if (!exists("mread.table"))   mread.table = memoise::memoise(read.table) 
+url = "http://epimed.univ-grenoble-alpes.fr/database/query/genes?annotations=epimed_tsg2_restricted_1_testis_adult&taxid=9606"
+ts_genes = read.csv2(url, header=TRUE, sep=";")
+
+head(ts_genes)
+dim(ts_genes)
+
+gs_epimed = as.character(ts_genes$gene_symbol)
+length(intersect(gs_epimed, gs))
+genes$testis_restricted = rownames(genes) %in% gs_epimed
+table(genes$testis_restricted, useNA="ifany")
+```
+
+
+```{r echo=TRUE, results="verbatim"}
+table(genes$tss_cpg_status, genes$testis_restricted, useNA="ifany")
+```
+
+
+
+
+
+
+
+
+
+# Session Information
+
+```{r, results="verbatim"}
+sessionInfo()
+```
+
+
+
