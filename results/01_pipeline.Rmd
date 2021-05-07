@@ -352,7 +352,7 @@ stoda::gseaplot(v=stoda_input, gs=gs_methplusplus)
 
 
 
-![](./gsea_out/my_analysis.GseaPreranked.1612862042867/enplot_gs_methplusplus.grp_1.png)
+![](./enplot_gs_methplusplus.grp_1.png)
 
 
 
