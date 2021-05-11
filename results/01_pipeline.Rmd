@@ -1,6 +1,6 @@
 ---
 title: "`dmethr` pipeline"
-subtitle: "Hunting DNA Methylation repression of transcriptional activity"
+subtitle: "Hunting DNA methylation repression of transcriptional activity"
 author: "Florent Chuffart"
 date: "`r Sys.Date()`"
 output: 
@@ -45,13 +45,15 @@ This study is based on following data set:
 
 **Genes with CpG rich TSS**
 
-We use definition of transcripts proposed by UCSC, version hg38.
+We use definition of transcripts proposed by UCSC, version hg38 (`genome`).
 
-From genomic sequence of the promoter of each gene, we compute a CpG density value.
+From genomic sequence of the promoter of each gene (`genes.bed`), we compute a CpG density value. Job is done there `~/projects/genes/02_tss_cpg_status.Rmd`, including PCA analisis.
 
-Distribution of CpG density clearly shows two population.
+Distribution of CpG density clearly shows two population (results).
 
-(from ~/projects/genes/02_tss_cpg_status.Rmd)
+The file `genes.bed` is enriched with new colomn called `tss_cpg_status`.
+
+
 
 ```{r}
 genes = readRDS(paste0("~/projects/genes/bed_", version, "_epimeddb.rds"))
@@ -328,6 +330,7 @@ genes$dnmtkoup = rownames(genes) %in% gs_dnmtkoup
 genes$dnmtkoup_methplusplus = rownames(genes) %in% intersect(gs_dnmtkoup, gs_methplusplus)
 WriteXLS::WriteXLS(genes, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusplus.xlsx"))
 ```
+
 
 
 ```{r eval=FALSE}
