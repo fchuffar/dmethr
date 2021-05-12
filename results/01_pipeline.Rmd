@@ -75,6 +75,25 @@ den_poor = density(genes[genes$tss_cpg_status%in%"cpg_poor",]$cpg_density, na.rm
 lines(den_rich$x, den_rich$y * (den_rich$n/nrow(genes)), col=2, lwd=2)
 lines(den_poor$x, den_poor$y * (den_poor$n/nrow(genes)), col=4, lwd=2)
 legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("cpg_rich", "cpg_poor", "both"), lwd=c(2,2,3))
+
+
+CpG_dens = function() {
+  layout(1, respect=TRUE)
+plot(density(genes$cpg_density, na.rm=TRUE), main="Distribution of CpG density", lwd=3, col="grey", lty=2)
+den_rich = density(genes[genes$tss_cpg_status%in%"cpg_rich",]$cpg_density, na.rm=TRUE)
+den_poor = density(genes[genes$tss_cpg_status%in%"cpg_poor",]$cpg_density, na.rm=TRUE)
+lines(den_rich$x, den_rich$y * (den_rich$n/nrow(genes)), col=2, lwd=2)
+lines(den_poor$x, den_poor$y * (den_poor$n/nrow(genes)), col=4, lwd=2)
+legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("cpg_rich", "cpg_poor", "both"), lwd=c(2,2,3))
+}
+
+CpG_dens()
+
+pdf(paste0("fig_CpG_dens.pdf"), width=15, height=5)
+CpG_dens()
+dev.off()
+
+
 ```
 
 
@@ -230,6 +249,16 @@ colors=c("cyan", "black", "red")
 cols = colorRampPalette(colors)(20)
 
 hm = gplots::heatmap.2(data, Rowv=Rowv, Colv=Colv, dendrogram=dendrogram, trace="none", col=cols, main=paste0("Mean of mean (", nrow(data), " genes x ", ncol(data), " tissues)"), mar=c(10,5), useRaster=TRUE)
+
+
+heatmap_meth= function() {
+  hm = gplots::heatmap.2(data, Rowv=Rowv, Colv=Colv, dendrogram=dendrogram, trace="none", col=cols, main=paste0("Mean of mean (", nrow(data), " genes x ", ncol(data), " tissues)"), mar=c(10,5), useRaster=TRUE)
+
+}
+
+pdf(paste0("fig_heatmap_meth.pdf"), width=15, height=5)
+heatmap_meth()
+dev.off()
 ```
 
 ```{r selecting_genes, echo=TRUE, results="verbatim", eval=TRUE}
@@ -302,6 +331,13 @@ legend("topleft", pch=1, col=2, "gs_methplusplus")
 layout(1, respect=TRUE)
 boxplot(abs(d[idx,]$log2FoldChange)~d[idx,]$log2FoldChange>0, xlab="log2FoldChange > 0", ylab="|log2FoldChange|")
 
+volcano_plot_meth = function(){
+  layout(1, respect=TRUE)
+boxplot(abs(d[idx,]$log2FoldChange)~d[idx,]$log2FoldChange>0, xlab="log2FoldChange > 0", ylab="|log2FoldChange|")
+}
+pdf(paste0("volcano_plot_meth.pdf"), width=15, height=5)
+volcano_plot_meth()
+dev.off()
 
 layout(matrix(1:6, 2), respect=TRUE)
 e = read.table("~/projects/hadaca/results/GSE45332/04_deseq2/design.txt", header=TRUE, row.names=1)
@@ -389,9 +425,15 @@ table(genes$testis_restricted, useNA="ifany")
 table(genes$tss_cpg_status, genes$testis_restricted, useNA="ifany")
 ```
 
+**5AZA**
+
+```{r study_GSE581}
+s = readRDS("~/projects/study_gpl570/study_GSE5816_trscr_gs.rds")
+s
+s$data 
 
 
-
+```
 
 
 
