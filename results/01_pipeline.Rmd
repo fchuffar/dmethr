@@ -429,9 +429,37 @@ table(genes$tss_cpg_status, genes$testis_restricted, useNA="ifany")
 
 ```{r study_GSE581}
 s = readRDS("~/projects/study_gpl570/study_GSE5816_trscr_gs.rds")
-s
-s$data 
 
+#separer les infos de la colonne sample_title
+library(stringr)
+
+split_sample = str_split_fixed(s$exp_grp$sample_title, " ", 2)
+
+#3 labels de traitement
+for (i in 1:length(split_sample[,2])) {
+  
+  if (str_detect(split_sample[i,2], "Cont")){
+    split_sample[i,2]="ctl"
+  }  else if (str_detect(split_sample[i,2], "1000")|str_detect(split_sample[i,2], "High")){
+    split_sample[i,2]="high"
+  }  else if (str_detect(split_sample[i,2], "100")|str_detect(split_sample[i,2], "Low")){
+    split_sample[i,2]="low"
+  } else {
+    stop(paste0("Enable to parse value: ", split_sample[i,2]))
+  }
+  
+}
+
+#rajout dans la table
+s$exp_grp$cell_line <- split_sample[,1]
+s$exp_grp$treatment_5aza <- split_sample[,2]
+
+#verification treatment bien attribué + info pertinente (deux lignées hors lung (breast and colon))
+compar <- data.frame(sample_title = s$exp_grp$sample_title, ttt = s$exp_grp$treatment_5aza, cell=s$exp_grp$cell_line, topology=s$exp_grp$topology)
+(compar <- compar[order(compar$cell),])
+
+#tableau de completude du design
+table(s$exp_grp$cell_line, s$exp_grp$treatment_5aza)
 
 ```
 
