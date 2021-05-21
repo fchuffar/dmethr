@@ -433,33 +433,106 @@ s = readRDS("~/projects/study_gpl570/study_GSE5816_trscr_gs.rds")
 #separer les infos de la colonne sample_title
 library(stringr)
 
-split_sample = str_split_fixed(s$exp_grp$sample_title, " ", 2)
+s$exp_grp$cell_line = stringr::str_split_fixed(s$exp_grp$sample_title, " ", 2)[,1]
 
-#3 labels de traitement
-for (i in 1:length(split_sample[,2])) {
-  
-  if (str_detect(split_sample[i,2], "Cont")){
-    split_sample[i,2]="ctl"
-  }  else if (str_detect(split_sample[i,2], "1000")|str_detect(split_sample[i,2], "High")){
-    split_sample[i,2]="high"
-  }  else if (str_detect(split_sample[i,2], "100")|str_detect(split_sample[i,2], "Low")){
-    split_sample[i,2]="low"
+s$exp_grp$treatment_5aza = sapply(stringr::str_split_fixed(s$exp_grp$sample_title, " ", 2)[,2],function(it){
+  if (str_detect(it, "Cont")){
+    return("1ct")
+  }  else if (str_detect(it, "1000")|str_detect(it, "High")){
+    return("3hi")
+  }  else if (str_detect(it, "100")|str_detect(it, "Low")){
+    return("2lo")
   } else {
-    stop(paste0("Enable to parse value: ", split_sample[i,2]))
+    stop(paste0("Enable to parse value: ", it))
   }
   
-}
-
-#rajout dans la table
-s$exp_grp$cell_line <- split_sample[,1]
-s$exp_grp$treatment_5aza <- split_sample[,2]
+})
 
 #verification treatment bien attribué + info pertinente (deux lignées hors lung (breast and colon))
-compar <- data.frame(sample_title = s$exp_grp$sample_title, ttt = s$exp_grp$treatment_5aza, cell=s$exp_grp$cell_line, topology=s$exp_grp$topology)
-(compar <- compar[order(compar$cell),])
+compar = data.frame(sample_title=s$exp_grp$sample_title, ttt=s$exp_grp$treatment_5aza, cell=s$exp_grp$cell_line, topology=s$exp_grp$topology)
+(compar = compar[order(compar$cell),])
 
-#tableau de completude du design
+#tableau de completude du design, selection des echantillons représenté dans les 3 traitements
 table(s$exp_grp$cell_line, s$exp_grp$treatment_5aza)
+tmp_table=table(s$exp_grp$cell_line, s$exp_grp$treatment_5aza)
+as.matrix(tmp_table)
+foo <-apply(tmp_table,1,function(l){
+  print(l)
+  all(l==c(1,1,1))
+})
+foo
+idx_cell_line=names(foo)[foo]
+s$exp_grp=s$exp_grp[s$exp_grp$cell_line%in%idx_cell_line,]
+table(s$exp_grp$cell_line, s$exp_grp$treatment_5aza)
+
+
+#3 groupes de traitements
+s$exp_grp = s$exp_grp[order(s$exp_grp$treatment_5aza, s$exp_grp$cell_line),]
+s$exp_grp[, c("treatment_5aza","cell_line")]
+idx_1ct=rownames(s$exp_grp)[s$exp_grp$treatment_5aza%in%"1ct"]
+idx_2lo=rownames(s$exp_grp)[s$exp_grp$treatment_5aza%in%"2lo"]
+idx_3hi=rownames(s$exp_grp)[s$exp_grp$treatment_5aza%in%"3hi"]
+
+
+#t test apparié group control et group high
+pval = c()
+beta = c()
+for (i in 1:nrow(s$data)){
+  x <- s$data[i,idx_1ct]
+  y <- s$data[i,idx_3hi]
+  beta=c(beta,mean(y-x))
+  pval=c(pval, t.test(x,y, paired = TRUE)$p.value)
+}
+pval
+beta
+plot(beta, -log10(pval))
+
+#meme chose avec apply
+stats = apply(s$data, 1, function(l){
+  x <- l[idx_1ct]
+  y <- l[idx_3hi]
+  beta = mean(y-x)
+  pval = t.test(x,y, paired = TRUE)$p.value
+  ret = c(beta=beta, pval=pval)
+  return(ret)
+})
+
+
+#comparaison graph pval/padj(avec BH)
+stats=t(stats)
+stats = data.frame(stats)
+stats$padj = p.adjust(stats$pval, method = "BH")
+layout(matrix(1:2,1), respect = TRUE)
+plot(stats$beta,-log10(stats$pval), pch=".")
+plot(stats$beta,-log10(stats$padj), pch=".")
+
+
+
+#regression lineaire
+d = data.frame(treatment_5aza=s$exp_grp[c(idx_1ct,idx_3hi), "treatment_5aza"], cell_line=s$exp_grp[c(idx_1ct,idx_3hi), "cell_line" ])
+
+stats2 = apply(s$data, 1, function(l){
+  #l = s$data[1,]
+  d$expr = l[c(idx_1ct, idx_3hi)]
+  m = lm(expr~treatment_5aza+cell_line, d)
+  beta = m$coefficients[[2]]
+  pval = anova(m)[1,5]
+  ret = c(beta=beta, pval=pval)
+  return(ret)
+  
+})
+stats2 = t(stats2)
+stats2 = data.frame(stats2)
+stats2$padj = p.adjust(stats2$pval, method = "BH")
+layout(matrix(1:2,1), respect = TRUE)
+plot(stats2$beta,-log10(stats2$pval), pch=".")
+abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
+plot(stats2$beta,-log10(stats2$padj), pch=".")
+abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
+
+plot(stats$beta, stats2$beta)
+plot(-log10(stats$pval), -log10(stats2$pval))
+
 
 ```
 
