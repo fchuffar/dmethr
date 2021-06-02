@@ -1,0 +1,212 @@
+---
+title: "heatmap avec max"
+subtitle: 
+author: "Florence Pittion"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+---
+
+
+
+```{r, echo=FALSE, eval=TRUE}
+knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
+species="Homo_sapiens"
+version="hg38"
+```
+
+# Requirements
+
+
+
+**Data**
+
+This study is based on following data set:
+
+- methylation data from normal tissues (Illumina 450k: GSE56515, GSE48472, GSE64096, GSE50192", GSE31848", GSE73375)
+
+
+
+# Pipeline
+
+**Genes with CpG rich TSS**
+
+We use definition of transcripts proposed by UCSC, version hg38 (`genome`).
+
+From genomic sequence of the promoter of each gene (`genes.bed`), we compute a CpG density value. Job is done there `~/projects/genes/02_tss_cpg_status.Rmd`, including PCA analisis.
+
+Distribution of CpG density clearly shows two population (results).
+
+The file `genes.bed` is enriched with new colomn called `tss_cpg_status`.
+
+
+
+```{r}
+genes = readRDS(paste0("~/projects/genes/bed_", version, "_epimeddb.rds"))
+```
+
+```{r echo=TRUE, results="verbatim"}
+table(genes$tss_cpg_status)
+gs_cpgrich = rownames(genes)[!is.na(genes$tss_cpg_status) & genes$tss_cpg_status=="cpg_rich"]
+```
+
+
+**Promoter methylation status in normal tissues**
+
+```{r loading_study_meth_all_human_tissues_grch38}
+if (!exists("mreadRDS"))   mreadRDS = memoise::memoise(readRDS) 
+s_meth = mreadRDS("~/projects/all_human_tissues/results/meth/study_meth_all_human_tissues_grch38.rds")
+s_meth$platform
+
+```
+
+```{r process_study_meth_all_human_tissues_grch38, }
+table(s_meth$platform$Chromosome)
+if (!exists("gene_indexed_probes")) {
+  # params
+  pf_chr_colname = "Chromosome"
+  pf_pos_colname = "Start"
+  up_str = 2000
+  dwn_str = 2000  
+  if (!exists("pf_orig")) {
+    pf_orig = s_meth$platform
+    pf_orig = pf_orig[order(pf_orig[[pf_chr_colname]],pf_orig[[pf_pos_colname]]), ]
+    pf_bed = pf_orig[,c(pf_chr_colname, pf_pos_colname)]
+    pf_bed[,3] = pf_bed[,2] + 1
+    pf_bed[,4] = row.names(pf_bed)
+    pf_bed[,5] = 0
+    pf_bed[,6] = "+"
+    pf_bed = pf_bed[!pf_bed[,1]%in%"*",]
+    head(pf_bed)
+    options(scipen=999)
+    write.table(pf_bed, file="illumina_450k_hg38.bed", sep="\t", quote=FALSE,row.names=FALSE, col.names=FALSE)    
+  }  
+  ## index meth probes by chr
+  chrs = unique(genes[gs_cpgrich,1])
+  chrs_indexed_methpf = lapply(chrs, function(chr) {
+    print(chr)
+    idx = rownames(pf_orig)[!is.na(pf_orig[[pf_chr_colname]]) & pf_orig[[pf_chr_colname]]==chr]  
+    ret = pf_orig[idx,]
+    return(ret)
+  })
+  names(chrs_indexed_methpf) = chrs
+  ## index probes by gene name
+  print("# indexing probes by gene name")
+  gene_indexed_probes = epimedtools::monitored_apply(genes[gs_cpgrich,], 1, function(gene) {
+    # gene = randomall_genes[1,]genes=readRDS("~/fchuffar/projects/genes/bed_grch38_epimeddb.rds")
+    # print(gene)
+    chr = gene[[1]]
+    meth_platform = chrs_indexed_methpf[[chr]]
+    ret = dmprocr::get_probe_names(gene, meth_platform, pf_chr_colname, pf_pos_colname, up_str, dwn_str) 
+    return(ret)
+  })
+  barplot(table(sapply(gene_indexed_probes, length)))
+  gene_indexed_probes = gene_indexed_probes[sapply(gene_indexed_probes, length)>5]
+}
+```
+
+
+```{r label="reduction of signal by tissue"}
+
+if (!exists("meth_by_tissues_by_gene_max")) {
+  print("reduction of signal by tissue then by gene")
+  key = "tissue_group_level1"
+  print(table(s_meth$exp_grp[[key]]))
+  tissues = na.omit(sort(unique(s_meth$exp_grp[[key]])))
+
+  indicator_func1 = max
+  tmp_meth_data_max = s_meth$data[unique(unlist(gene_indexed_probes)),]
+  meth_by_tissues_max = sapply(tissues, function(tissue) {
+    # tissue = tissues[1]
+    print(tissue)
+    sample_idx = rownames(s_meth$exp_grp)[s_meth$exp_grp[[key]] %in% tissue]
+    if (length(sample_idx) > 1) {
+      tmp_meth_by_tissues_max = epimedtools::monitored_apply(mod=50000, tmp_meth_data_max[,sample_idx], 1, indicator_func1, na.rm=TRUE)      
+    } else {
+      tmp_meth_by_tissues_max = indicator_func1(tmp_meth_data_max[,sample_idx], na.rm=TRUE)
+    }
+    return(tmp_meth_by_tissues_max)
+  })
+  head(meth_by_tissues_max)
+  dim(meth_by_tissues_max)
+  sum(is.na(meth_by_tissues_max))
+  # saveRDS(meth_by_tissues, "meth_by_tissues_level1.rds")
+  # ```
+  #
+  #
+  # ```{r label="reduction of signal by gene"}
+  indicator_func2 = max
+  tmp_meth_data_max = meth_by_tissues_max
+  dim(tmp_meth_data_max)
+  meth_by_tissues_by_gene_max = epimedtools::monitored_apply(mod=10, genes[names(gene_indexed_probes),], 1, function(gene) {
+    # gene = genes[names(gene_indexed_probes),][1,]
+    # print(gene[[4]])
+    probe_idx = gene_indexed_probes[[gene[[4]]]]
+    if (length(probe_idx) > 1) {
+      tmp_meth_by_tissues_by_gene_max = apply(tmp_meth_data_max[probe_idx,], 2, indicator_func2, na.rm=TRUE)    
+    } else {
+      tmp_meth_by_tissues_by_gene_max  = sapply(tmp_meth_data_max[probe_idx,], indicator_func2, na.rm=TRUE) 
+    }
+    return(tmp_meth_by_tissues_by_gene_max)
+  })
+  meth_by_tissues_by_gene_max = t(meth_by_tissues_by_gene_max)
+  dim(meth_by_tissues_by_gene_max)
+  sum(is.na(meth_by_tissues_by_gene_max))
+# saveRDS(meth_by_tissues_by_gene, "meth_by_tissues_by_gene.rds")
+}
+head(meth_by_tissues_by_gene_max)
+```
+
+From Illumina 450k studies, we obtain a methylation matrix of `r ncol(s_meth$data)` samples, 
+dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues 
+including `r unique(s_meth$exp_grp$tissue_group_level1)`.
+
+This matrix is successively reduced, first by tissues, then by genes with CpG rich promoter. 
+The function used to reduce the data is the `max`.
+
+
+We obtain an `r nrow(meth_by_tissues_by_gene_max)` genes by `r ncol(meth_by_tissues_by_gene_max)` tissues .
+
+
+
+```{r label="clustering and heatmap", fig.height=9}
+data = meth_by_tissues_by_gene_max
+dim(data)
+sum(apply(is.na(data), 1, any))
+data = data[!apply(is.na(data), 1, any), ]
+data = data[!apply(is.infinite(data), 1, any), ]
+dim(data)
+
+# clustering base on correlation for tissues
+tmp_d = data
+tmp_d = t(tmp_d) - apply(tmp_d, 2, mean, na.rm=TRUE)
+tmp_d = t(tmp_d)
+tmp_d = cor(tmp_d, method="pe")
+dim(tmp_d)
+hc_col = hclust(dist(1 - tmp_d), method="complete")
+Colv = as.dendrogram(hc_col)
+dendrogram="col"      
+
+# clustering base on eucl. dist. for genes
+d = dist(data)
+hc_row = hclust(d, method="complete")
+Rowv = as.dendrogram(hc_row)
+dendrogram="both"      
+
+# col
+colors=c("cyan", "black", "red")
+cols = colorRampPalette(colors)(20)
+
+hm_max = gplots::heatmap.2(data, Rowv=Rowv, Colv=Colv, dendrogram=dendrogram, trace="none", col=cols, main=paste0("Mean of mean (", nrow(data), " genes x ", ncol(data), " tissues)"), mar=c(10,5), useRaster=TRUE)
+
+
+```
+
+```{r selecting_genes, echo=TRUE, results="verbatim", eval=TRUE}
+gs_methplusplus_max = rownames(data)[unlist(hm_max$rowDendrogram[[1]])]
+length(gs_methplusplus_max)
+```
