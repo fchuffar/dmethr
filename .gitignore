@@ -1,0 +1,9 @@
+.Rproj*
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+results/*.xlsx
+results/*.bed
+.Rproj.user
