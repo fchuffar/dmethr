@@ -321,6 +321,11 @@ idx =
 sum(idx)
 gs_dnmtkoup = rownames(d)[idx]
 length(gs_dnmtkoup)
+
+
+idx = !is.na(d$padj) & d$lpadj > -log10(0.05) & d$log2FoldChange > 1 & rownames(d) %in% gs_methplusplus
+sum(idx)
+
 ```
 
 We export gene as : 
