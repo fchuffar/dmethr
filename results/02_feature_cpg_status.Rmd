@@ -59,15 +59,13 @@ rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
 
 ```
 
-```{r fig.height=9}
-layout(matrix(c(3,1,1,3,1,1, 4,2,2), 3), respect=TRUE)
+```{r marginals, fig.height=9}
+layout(matrix(c(3,1,1,3,1,1,4,2,2), 3), respect=TRUE)
 plot(feat_cpg$score, feat_cpg$len, pch=".")
 den = density(feat_cpg$len)
 plot(den$y, den$x, type="l")
 den2 = density(feat_cpg$score)
 plot(den2$x, den2$y, type="l")
-
-
 ```
 
 ```{r sequences}
