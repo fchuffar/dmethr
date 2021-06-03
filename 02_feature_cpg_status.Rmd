@@ -1,0 +1,215 @@
+---
+title: "CpG status of probes aggregate"
+author: "Florent Chuffart"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+---
+
+
+
+```{r, echo=FALSE, eval=TRUE, label="loading libraries"}
+knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide")
+```
+
+# Purpose
+
+The main goal of this study is to define Cpg Islands in probes aggregate in genome.
+
+It happends in 2 steps : 
+  
+  - aggregate genome sequence
+  - count the number of CG in the sequence
+
+
+
+```{r}
+
+feat_cpg = readRDS("~/projects/feat_cpg/feats_epic_grch38.rds")
+head(feat_cpg)
+dim(feat_cpg)
+```
+# Features
+```{r label="Extract features lenght"}
+#feat_filename=paste0("feat_cpg_status.rds")
+
+feat_cpg$len=(feat_cpg[,3]-feat_cpg[,2])
+
+plot(density(feat_cpg$len), xlim=c(0,5000))
+plot(density(feat_cpg$score))
+#barplot(feat_cpg$len)
+table(feat_cpg$strand)
+table(feat_cpg$score)
+#barplot(feat_cpg$score)
+plot(feat_cpg$len~feat_cpg$score)
+den = density(feat_cpg$len)
+plot(den$y, den$x, type="l")
+#distribution marginale x y
+
+
+ud_str = 2500
+up_str = dwn_str = ud_str
+feats_filename = paste0("feats_", up_str, "_", dwn_str, ".rds")
+
+hg38_chrom_sizes  = read.table("~/projects/genes/hg38.chrom.sizes", stringsAsFactors=FALSE)
+rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
+
+
+
+library(BSgenome)
+if (!file.exists(feats_filename)) {
+  feats = epimedtools::monitored_apply(mod=10, feat_cpg, 1, function(gene) {
+    chr = gene[[1]]
+    strand = gene[[6]]
+    start = as.numeric(gene[[2]])
+    len = as.numeric(gene[[7]])
+    mid = start + floor(len/2)
+    if (strand == "+") {
+      cen = mid
+      bef = up_str
+      aft = dwn_str
+    } else {
+      cen = mid
+      bef = dwn_str
+      aft = up_str
+    }  
+    beg = max(1,cen - bef)
+    end = min(hg38_chrom_sizes[chr,2], cen + aft)
+    str = as.character(BSgenome::getSeq(BSgenome.Hsapiens.UCSC.hg38::Hsapiens, chr, beg, end))
+    return(str)
+  })
+  saveRDS(feats, feats_filename)
+}
+feats = readRDS(feats_filename)
+length(feats)
+
+head(feats)
+
+```
+
+# CpG enrichment of Features
+
+```{r label="count CpG"}
+
+mat_feats_filename = paste0("mat_feats_", up_str, "_", dwn_str, "_", ".rds")
+
+if (!file.exists(mat_feats_filename)) {
+  mat_feats = epimedtools::monitored_apply(t(t(feats)), 1, function(s) {
+      lnn = nchar(s)
+      if (lnn==0) {
+        return(NA)
+      } else {
+        return(stringr::str_count(s, "CG") / lnn)
+      }
+    })
+  saveRDS(mat_feats, mat_feats_filename)
+}
+mat_feats = readRDS(mat_feats_filename)
+head(mat_feats)
+head(feat_cpg)
+plot(density(mat_feats))
+
+feat_cpg$cpg_dens = NA
+feat_cpg[names(mat_feats),]$cpg_dens = mat_feats
+
+plot(feat_cpg$len, feat_cpg$cpg_dens)
+#mais en fait on n'a pas les sequences de de plus 5000
+```
+
+```{r label="slice seq and count CpG"}
+step = 250
+mat_feats_bins_filename = paste0("mat_feats_bins_", up_str, "_", dwn_str, "_", step, ".rds")
+foo = seq(1,(2*ud_str), step)
+bins = cbind(foo, foo+step-1)
+if (!file.exists(mat_feats_bins_filename)) {
+  mat_feats_bins = t(epimedtools::monitored_apply(t(t(feats)), 1, function(s) {
+    apply(bins, 1, function(b) {
+      # b = bins[1,]
+      str = substr(s, b[[1]], b[[2]])
+      # l = nchar(str)
+      lnn = nchar(gsub("N", "", str))
+      # denom = l - lnn
+      if (lnn==0) {
+        return(NA)
+      } else {
+        return(stringr::str_count(str, "CG") / lnn)
+      }
+    })
+  }))
+  saveRDS(mat_feats_bins, mat_feats_bins_filename)
+}
+mat_feats_bins = readRDS(mat_feats_bins_filename)
+head(mat_feats_bins)
+dim(mat_feats_bins)
+plot(density(mat_feats_bins, na.rm=TRUE))
+```
+
+```{r label="heatmap for 1000 rnd features"}
+set.seed(1)
+data = mat_feats_bins[sample(rownames(mat_feats_bins), 1000),]
+# cor clust
+tmp_d = t(data)
+tmp_d = cor(tmp_d, method="pe")
+hc_row = hclust(dist(1 - tmp_d), method="complete")
+Rowv = as.dendrogram(hc_row)
+dendrogram="row"      
+
+colors=c("black",  "red")
+cols = colorRampPalette(colors)(20)
+offset = (bins[,2] - ud_str - step/2)/1000
+colnames(data) = paste0("TSS ", ifelse(offset<0, "-", "+"), abs(offset), "kb")
+rownames(data) = NULL
+gplots::heatmap.2(data, Rowv=Rowv, Colv=NULL, dendrogram="row", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb)"), xaxt="n", mar=c(8,5))
+```
+
+# PCA
+```{r label="PCA on mat"}
+mat_feats_bins = mat_feats_bins[!apply(is.na(mat_feats_bins), 1, any),] 
+pca = prcomp(mat_feats_bins, scale=FALSE)
+v = pca$sdev * pca$sdev
+p = v / sum(v) * 100
+
+layout(matrix(1:2,1), respect=TRUE)
+barplot(p)
+i = 1
+plot(density(pca$x[,i]), main=paste0("PC", i, "(", signif(p[i], 3), "%)"))
+abline(v=-0.04)
+
+idx = pca$x[,1] < -0.04
+
+plot(apply(mat_feats_bins[idx,], 2, mean), type="l", ylim=c(0, .13), col=1, main="CpG enrichment", xaxt="n")
+lines(apply(mat_feats_bins[!idx,], 2, mean), col=2)
+axis(1, at=c(0, ncol(mat_feats_bins)/2, ncol(mat_feats_bins)), label=c(paste0("center -", ud_str/1000, "kb"), "center", paste0("center +", ud_str/1000, "kb")))
+legend("topright", legend=c(paste0(sum(idx), " feats"), paste0(sum(!idx), " feats")), col=1:2, lty=1)
+
+
+# layout(matrix(1:6,2), respect=TRUE)
+# for(i in 1:6) {
+#   barplot(pca$rotation[,i], main=paste("contrib PC",i))
+# }
+
+# layout(matrix(1:2,1), respect=TRUE)
+# i=1
+# j=2
+# plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=adjustcolor(1, alpha.f=0.05),
+#   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " genes)")
+# )
+# i=1
+# j=3
+# plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=adjustcolor(1, alpha.f=0.05),
+#   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " genes)")
+# )
+
+
+```
+
+
+```{r label="binning centile"}
+#cut(x, breaks = 100)
+
+
+```
