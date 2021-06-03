@@ -206,10 +206,3 @@ legend("topright", legend=c(paste0(sum(idx), " feats"), paste0(sum(!idx), " feat
 
 
 ```
-
-
-```{r label="binning centile"}
-#cut(x, breaks = 100)
-
-
-```
