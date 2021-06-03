@@ -29,7 +29,7 @@ It happends in 2 steps :
 
 ```{r}
 
-feat_cpg = readRDS("~/projects/feat_cpg/feats_epic_grch38.rds")
+feat_cpg = readRDS("~/projects/01_momik/results/feats_epic_grch38.rds")
 head(feat_cpg)
 dim(feat_cpg)
 ```
