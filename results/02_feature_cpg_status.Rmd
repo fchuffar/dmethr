@@ -77,17 +77,21 @@ plot(den_y$y, den_y$x, type="l", ylim=ylim)
 ```{r feat_cpg_centered}
 feat_cpg_centered = feat_cpg
 feat_cpg_centered$mid =  feat_cpg_centered$start + floor(feat_cpg_centered$len/2)
-feat_cpg_centered$start = feat_cpg_centered$maxcpgden - ud_str
-feat_cpg_centered$end = feat_cpg_centered$maxcpgden + ud_str
+feat_cpg_centered$start = feat_cpg_centered$mid - ud_str
+feat_cpg_centered$end = feat_cpg_centered$mid + ud_str
 head(feat_cpg_centered)
 saveRDS(feat_cpg_centered, file = "feat_cpg_centered.rds")
 ```
 
 
-```{r sequences}
+```{r seq_cpg_centered}
+seq_filename = "seq_cpg_centered.rds"
+hg38_chrom_sizes  = read.table("~/projects/genes/hg38.chrom.sizes", stringsAsFactors=FALSE)
+rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
+
 library(BSgenome)
-if (!file.exists(feats_filename)) {
-  feats = epimedtools::monitored_apply(mod=10, feat_cpg_centered, 1, function(gene) {
+if (!file.exists(seq_filename)) {
+  seq = epimedtools::monitored_apply(mod=10, feat_cpg_centered, 1, function(gene) {
     chr = gene[[1]]
     strand = gene[[6]]
     start = as.numeric(gene[[2]])
@@ -97,12 +101,11 @@ if (!file.exists(feats_filename)) {
     str = as.character(BSgenome::getSeq(BSgenome.Hsapiens.UCSC.hg38::Hsapiens, chr, beg, end2))
     return(str)
   })
-  saveRDS(feats, feats_filename)
+  saveRDS(seq, seq_filename)
 }
-feats = readRDS(feats_filename)
-length(feats)
-
-head(feats)
+seq = readRDS(seq_filename)
+length(seq)
+head(seq)
 
 ```
 
