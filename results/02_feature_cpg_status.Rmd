@@ -70,8 +70,6 @@ den_y = density(feat_cpg$score)
 plot(den_y$y, den_y$x, type="l", ylim=ylim)
 ```
 
-
-
 ## feat_cpg_centered
 
 ```{r feat_cpg_centered}
@@ -106,45 +104,16 @@ if (!file.exists(seq_filename)) {
 seq = readRDS(seq_filename)
 length(seq)
 head(seq)
-
 ```
 
-# CpG enrichment of Features
-
-```{r label="count CpG"}
-
-mat_feats_filename = paste0("mat_feats_", up_str, "_", dwn_str, "_", ".rds")
-
-if (!file.exists(mat_feats_filename)) {
-  mat_feats = epimedtools::monitored_apply(t(t(feats)), 1, function(s) {
-      lnn = nchar(s)
-      if (lnn==0) {
-        return(NA)
-      } else {
-        return(stringr::str_count(s, "CG") / lnn)
-      }
-    })
-  saveRDS(mat_feats, mat_feats_filename)
-}
-mat_feats = readRDS(mat_feats_filename)
-head(mat_feats)
-head(feat_cpg)
-plot(density(mat_feats))
-
-feat_cpg$cpg_dens = NA
-feat_cpg[names(mat_feats),]$cpg_dens = mat_feats
-
-plot(feat_cpg$len, feat_cpg$cpg_dens)
-#mais en fait on n'a pas les sequences de de plus 5000
-```
 
 ```{r label="slice seq and count CpG"}
 step = 250
-mat_feats_bins_filename = paste0("mat_feats_bins_", up_str, "_", dwn_str, "_", step, ".rds")
+mat_filename = paste0("mat_cpg_centered_", up_str, "_", dwn_str, "_", step, ".rds")
 foo = seq(1,(2*ud_str), step)
 bins = cbind(foo, foo+step-1)
-if (!file.exists(mat_feats_bins_filename)) {
-  mat_feats_bins = t(epimedtools::monitored_apply(t(t(feats)), 1, function(s) {
+if (!file.exists(mat_filename)) {
+  mat = t(epimedtools::monitored_apply(t(t(seq)), 1, function(s) {
     apply(bins, 1, function(b) {
       # b = bins[1,]
       str = substr(s, b[[1]], b[[2]])
@@ -158,17 +127,109 @@ if (!file.exists(mat_feats_bins_filename)) {
       }
     })
   }))
-  saveRDS(mat_feats_bins, mat_feats_bins_filename)
+  saveRDS(mat, mat_filename)
 }
-mat_feats_bins = readRDS(mat_feats_bins_filename)
-head(mat_feats_bins)
-dim(mat_feats_bins)
-plot(density(mat_feats_bins, na.rm=TRUE))
+mat = readRDS(mat_filename)
+head(mat)
+dim(mat)
+
+binmax = apply(mat, 1, function(l) {
+  maxIndex = which(l==max(l))[1]
+})
+head(binmax)
+feat_cpg_centered$binmax = NA
+feat_cpg_centered[names(binmax),]$binmax = binmax
+head(feat_cpg_centered)
+
 ```
 
-```{r label="heatmap for 1000 rnd features"}
+
+
+
+## feat_cpg_binmax
+
+
+
+
+```{r feat_cpg_binmax}
+feat_cpg_binmax = feat_cpg_centered
+feat_cpg_binmax$maxcpgden = feat_cpg_binmax$start + step*feat_cpg_binmax$binmax + floor(step/2)
+feat_cpg_binmax$start = feat_cpg_binmax$maxcpgden - ud_str
+feat_cpg_binmax$end = feat_cpg_binmax$maxcpgden + ud_str
+head(feat_cpg_binmax)
+saveRDS(feat_cpg_binmax, file = "feat_cpg_feat_cpg_binmax.rds")
+```
+
+
+```{r seq_cpg_binmax}
+seq_filename = "seq_cpg_binmax.rds"
+hg38_chrom_sizes  = read.table("~/projects/genes/hg38.chrom.sizes", stringsAsFactors=FALSE)
+rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
+
+library(BSgenome)
+if (!file.exists(seq_filename)) {
+  seq = epimedtools::monitored_apply(mod=10, feat_cpg_binmax, 1, function(gene) {
+    chr = gene[[1]]
+    strand = gene[[6]]
+    start = as.numeric(gene[[2]])
+    end = as.numeric(gene[[3]])
+    beg = max(1,start)
+    end2 = min(hg38_chrom_sizes[chr,2], end)
+    str = as.character(BSgenome::getSeq(BSgenome.Hsapiens.UCSC.hg38::Hsapiens, chr, beg, end2))
+    return(str)
+  })
+  saveRDS(seq, seq_filename)
+}
+seq = readRDS(seq_filename)
+length(seq)
+head(seq)
+```
+
+
+```{r mat_cpg_binmax}
+step = 250
+mat_filename = paste0("mat_cpg_binmax_", up_str, "_", dwn_str, "_", step, ".rds")
+foo = seq(1,(2*ud_str), step)
+bins = cbind(foo, foo+step-1)
+if (!file.exists(mat_filename)) {
+  mat = t(epimedtools::monitored_apply(t(t(seq)), 1, function(s) {
+    apply(bins, 1, function(b) {
+      # b = bins[1,]
+      str = substr(s, b[[1]], b[[2]])
+      # l = nchar(str)
+      lnn = nchar(gsub("N", "", str))
+      # denom = l - lnn
+      if (lnn==0) {
+        return(NA)
+      } else {
+        return(stringr::str_count(str, "CG") / lnn)
+      }
+    })
+  }))
+  saveRDS(mat, mat_filename)
+}
+mat = readRDS(mat_filename)
+head(mat)
+dim(mat)
+```
+
+
+
+
+
+
+
+
+
+# CpG enrichment of TSS 
+
+CpG density (#CpP / length of sequence) is computed in sequence of TSS +/-`r ud_str/1000`kb sliced into `r step`b bins.
+
+TSS of 1000 random genes is represented there. It shows a CpG enrichment aoroud TSS.
+
+```{r label="heatmap for 1000 rnd genes"}
 set.seed(1)
-data = mat_feats_bins[sample(rownames(mat_feats_bins), 1000),]
+data = mat[sample(rownames(mat), 1000),]
 # cor clust
 tmp_d = t(data)
 tmp_d = cor(tmp_d, method="pe")
@@ -181,13 +242,65 @@ cols = colorRampPalette(colors)(20)
 offset = (bins[,2] - ud_str - step/2)/1000
 colnames(data) = paste0("TSS ", ifelse(offset<0, "-", "+"), abs(offset), "kb")
 rownames(data) = NULL
-gplots::heatmap.2(data, Rowv=Rowv, Colv=NULL, dendrogram="row", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb)"), xaxt="n", mar=c(8,5))
+gplots::heatmap.2(data, Rowv=Rowv, Colv=NULL, dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (TSS +/-", ud_str/1000, "kb, 1000 rnd genes)"), xaxt="n", mar=c(8,5))
 ```
 
-# PCA
+
+CpG density distribution is represented there. 
+
+It shows that MOST OF TSS are CpG enriched compared to random sequence.  
+
+It also shows that NOT ALL TSS are are CpG enriched.
+
+```{r label="CpG density distribution"}
+nb_cpg_rnd_filename = paste0("nb_cpg_rnd_TSS_", up_str, "_", dwn_str, ".rds")
+if (!file.exists(nb_cpg_rnd_filename)) {
+  idx = sample(1:22, 5000, replace=TRUE)
+  set.seed(1)
+  pos = sapply(hg38_chrom_sizes[idx,2], function(e) round(runif(1, 15000, e-15000)))
+  rnd_feat = data.frame(hg38_chrom_sizes[idx,1], pos, stringsAsFactors=FALSE)
+  nb_cpg_rnd = epimedtools::monitored_apply(mod=10, rnd_feat, 1, function(feat) {
+    chr = feat[[1]]
+    tss = as.numeric(feat[[2]])
+    bef = up_str
+    aft = dwn_str
+    beg = max(1,tss - bef)
+    end = min(hg38_chrom_sizes[chr,2], tss + aft)
+    str = as.character(BSgenome::getSeq(BSgenome.Hsapiens.UCSC.hg38::Hsapiens, chr, beg, end))
+    # stringr::str_count(str, "CG") / nchar(str)
+    lnn = nchar(gsub("N", "", str))
+    # denom = l - lnn
+    if (lnn==0) {
+      return(NA)
+    } else {
+      return(stringr::str_count(str, "CG") / lnn)
+    }
+  })
+  saveRDS(nb_cpg_rnd, nb_cpg_rnd_filename)
+}
+nb_cpg_rnd = readRDS(nb_cpg_rnd_filename)
+
+nb_cpg_tss = apply(mat, 1, mean, na.rm=TRUE)
+
+layout(matrix(1:2,1), respect=TRUE)
+plot(density(nb_cpg_tss),ylim=c(0,100), main="CpG enrichment distribution", xlab="CpG density", ylab="", yaxt="n")
+lines(density(nb_cpg_rnd, na.rm=TRUE), col=2)
+legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0("rnd pos +/-", ud_str/1000, "kb")), col=1:2, lty=1)
+plot(density(log10(nb_cpg_tss)), main="CpG enrichment distribution", xlab="log10(CpG density)", ylab="", yaxt="n")
+lines(density(log10(nb_cpg_rnd), na.rm=TRUE), col=2)
+legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0("rnd pos +/-", ud_str/1000, "kb")), col=1:2, lty=1)
+```
+
+
+Then we clustering TSS according to there sliced CpG density
+
+PCA on TSS +/-`r ud_str/1000`kb sliced into `r step`b bins is performed.
+
+Component 1 discriminates CpG rich and poor TSS.
+
 ```{r label="PCA on mat"}
-mat_feats_bins = mat_feats_bins[!apply(is.na(mat_feats_bins), 1, any),] 
-pca = prcomp(mat_feats_bins, scale=FALSE)
+mat = mat[!apply(is.na(mat), 1, any),] 
+pca = prcomp(mat, scale=FALSE)
 v = pca$sdev * pca$sdev
 p = v / sum(v) * 100
 
@@ -199,10 +312,10 @@ abline(v=-0.04)
 
 idx = pca$x[,1] < -0.04
 
-plot(apply(mat_feats_bins[idx,], 2, mean), type="l", ylim=c(0, .13), col=1, main="CpG enrichment", xaxt="n")
-lines(apply(mat_feats_bins[!idx,], 2, mean), col=2)
-axis(1, at=c(0, ncol(mat_feats_bins)/2, ncol(mat_feats_bins)), label=c(paste0("center -", ud_str/1000, "kb"), "center", paste0("center +", ud_str/1000, "kb")))
-legend("topright", legend=c(paste0(sum(idx), " feats"), paste0(sum(!idx), " feats")), col=1:2, lty=1)
+plot(apply(mat[idx,], 2, mean), type="l", ylim=c(0, .13), col=1, main="CpG enrichment", xaxt="n")
+lines(apply(mat[!idx,], 2, mean), col=2)
+axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
+legend("topright", legend=c(paste0(sum(idx), " genes"), paste0(sum(!idx), " genes")), col=1:2, lty=1)
 
 
 # layout(matrix(1:6,2), respect=TRUE)
@@ -222,5 +335,20 @@ legend("topright", legend=c(paste0(sum(idx), " feats"), paste0(sum(!idx), " feat
 #   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " genes)")
 # )
 
-
+genes_grch38$tss_cpg_status  = NA
+genes_grch38[names(idx)[!idx],]$tss_cpg_status = "cpg_rich"
+genes_grch38[names(idx)[idx],]$tss_cpg_status = "cpg_poor"
+table(genes_grch38$tss_cpg_status)
+genes_grch38$cpg_density = NA
+genes_grch38[rownames(mat),]$cpg_density = apply(mat, 1, mean)
+saveRDS(genes_grch38, "~/projects/genes/bed_grch38_epimeddb.rds")
+WriteXLS::WriteXLS(genes_grch38, "genes_grch38_cpg_status.xls")
 ```
+
+# Session Information
+
+```{r, results="verbatim"}
+sessionInfo()
+```
+
+
