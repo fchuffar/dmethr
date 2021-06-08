@@ -44,10 +44,8 @@ dim(feat_cpg)
 ```
 
 
-# Descriptive Statistics
-
 ```{r marginals_full, fig.height=9}
-plot_feat_den = function (x, y, xlim, ylim) {
+plot_feat_den = function (x, y, xlim, ylim, ...) {
   if (missing(xlim)) {
     xlim = range(x)    
   }
@@ -56,21 +54,22 @@ plot_feat_den = function (x, y, xlim, ylim) {
   }
   layout(matrix(c(2,1,1,2,1,1,4,3,3), 3), respect=TRUE)
   # plot(x, y, pch=".", xlim=xlim, ylim=ylim)
-  smoothScatter (x, y, xlim=xlim, ylim=ylim)
-  den_x = density(x)
-  plot(den_x$x, den_x$y, type="l", xlim=xlim)
+  smoothScatter (x, y, xlim=xlim, ylim=ylim, ...)
+  den_x = density(x,)
+  plot(den_x$x, den_x$y, type="l", xlim=xlim, xlab="")
   den_y = density(y)
   # den_y = density(y, breaks=c(-1, seq(min(ylim), max(ylim)), max(y)+1))
-  plot(den_y$y, den_y$x, type="l", ylim=ylim)  
+  plot(den_y$y, den_y$x, type="l", ylim=ylim, ylab="")  
 }
-plot_feat_den(feat_cpg$len, feat_cpg$score)
+plot_feat_den(feat_cpg$len, feat_cpg$score, xlab="length", ylab="#probes")
 
 xlim = c(0,10000)
 ylim = c(0,30)
-plot_feat_den(feat_cpg$len, feat_cpg$score, xlim, ylim)
+plot_feat_den(feat_cpg$len, feat_cpg$score, xlim, ylim, xlab="length", ylab="#probes")
 ```
 
-# Feature selection
+# Center feature on CpG peak
+
 
 ```{r feat reduce, fig.height=9}
 # Filtering according to...
@@ -90,7 +89,8 @@ if (nb_rnd_feat > 0) {
 ```
 
 
-## feat_cpg_centered
+
+## Raw features
 
 ```{r feat_cpg_centered}
 feat_cpg_centered = feat_cpg
@@ -161,7 +161,6 @@ feat_cpg_centered[names(binmax),]$binmax = binmax
 head(feat_cpg_centered)
 ```
 
-## Heatmap
 
 ```{r hm_cpg_centered, fig.height=9}
 data = mat[order(binmax[rownames(mat)]),]
@@ -171,15 +170,13 @@ cols = colorRampPalette(colors)(20)
 offset = (bins[,2] - ud_str - step/2)/1000
 colnames(data) = paste0("binmax ", ifelse(offset<0, "-", "+"), abs(offset), "kb")
 rownames(data) = NULL
-gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 100 rnd genes)"), xaxt="n", mar=c(8,5))
+gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 1000 rnd genes)"), xaxt="n", mar=c(8,5))
 ```
 
 
 
 
-## feat_cpg_binmax
-
-
+## Centered features
 
 
 ```{r feat_cpg_binmax}
@@ -188,9 +185,8 @@ feat_cpg_binmax$maxcpgden = feat_cpg_binmax$start + step*feat_cpg_binmax$binmax 
 feat_cpg_binmax$start = feat_cpg_binmax$maxcpgden - ud_str
 feat_cpg_binmax$end = feat_cpg_binmax$maxcpgden + ud_str
 head(feat_cpg_binmax)
-saveRDS(feat_cpg_binmax, file = "feat_cpg_feat_cpg_binmax.rds")
+# saveRDS(feat_cpg_binmax, file = "feat_cpg_feat_cpg_binmax.rds")
 ```
-
 
 ```{r seq_cpg_binmax}
 seq_filename = paste0("seq_cpg_binmax_", nb_rnd_feat, "_.rds")
@@ -215,9 +211,6 @@ seq = readRDS(seq_filename)
 length(seq)
 head(seq)
 ```
-
-
- 
 
 ```{r mat_cpg_binmax}
 mat_filename = paste0("mat_cpg_binmax_", up_str, "_", dwn_str, "_", step, ".rds")
@@ -251,7 +244,6 @@ head(binmax)
 feat_cpg_centered$binmax = NA
 feat_cpg_centered[names(binmax),]$binmax = binmax
 head(feat_cpg_centered)
-
 ```
 
 ```{r hm_cpg_binmax, fig.height=9}
@@ -262,19 +254,19 @@ cols = colorRampPalette(colors)(20)
 offset = (bins[,2] - ud_str - step/2)/1000
 colnames(data) = paste0("binmax ", ifelse(offset<0, "-", "+"), abs(offset), "kb")
 rownames(data) = NULL
-gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 100 rnd genes)"), xaxt="n", mar=c(8,5))
+gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 1000 rnd genes)"), xaxt="n", mar=c(8,5))
 ```
 
-# PCA
+# CpG density
 
 ```{r label="CpG density distribution"}
-nb_cpg_rnd_filename = paste0("nb_cpg_rnd_TSS_", up_str, "_", dwn_str, ".rds")
-if (!file.exists(nb_cpg_rnd_filename)) {
-  idx = sample(1:22, 5000, replace=TRUE)
+cpg_den_rnd_filename = paste0("cpg_den_rnd_TSS_", up_str, "_", dwn_str, ".rds")
+if (!file.exists(cpg_den_rnd_filename)) {
+  idx = sample(1:22, 1000, replace=TRUE)
   set.seed(1)
   pos = sapply(hg38_chrom_sizes[idx,2], function(e) round(runif(1, 15000, e-15000)))
   rnd_feat = data.frame(hg38_chrom_sizes[idx,1], pos, stringsAsFactors=FALSE)
-  nb_cpg_rnd = epimedtools::monitored_apply(mod=10, rnd_feat, 1, function(feat) {
+  cpg_den_rnd = epimedtools::monitored_apply(mod=10, rnd_feat, 1, function(feat) {
     chr = feat[[1]]
     tss = as.numeric(feat[[2]])
     bef = up_str
@@ -291,22 +283,22 @@ if (!file.exists(nb_cpg_rnd_filename)) {
       return(stringr::str_count(str, "CG") / lnn)
     }
   })
-  saveRDS(nb_cpg_rnd, nb_cpg_rnd_filename)
+  saveRDS(cpg_den_rnd, cpg_den_rnd_filename)
 }
-nb_cpg_rnd = readRDS(nb_cpg_rnd_filename)
 
-nb_cpg_tss = apply(mat, 1, mean, na.rm=TRUE)
+cpg_den_rnd = readRDS(cpg_den_rnd_filename)
+cpg_den_feat = apply(mat, 1, mean, na.rm=TRUE)
 
 layout(matrix(1:2,1), respect=TRUE)
-plot(density(nb_cpg_tss),ylim=c(0,100), main="CpG enrichment distribution", xlab="CpG density", ylab="", yaxt="n")
-lines(density(nb_cpg_rnd, na.rm=TRUE), col=2)
+plot(density(cpg_den_feat, na.rm=TRUE),ylim=c(0,100), main="CpG enrichment distribution", xlab="CpG density", ylab="", yaxt="n")
+lines(density(cpg_den_rnd, na.rm=TRUE), col=2)
 legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0("rnd pos +/-", ud_str/1000, "kb")), col=1:2, lty=1)
-plot(density(log10(nb_cpg_tss)), main="CpG enrichment distribution", xlab="log10(CpG density)", ylab="", yaxt="n")
-lines(density(log10(nb_cpg_rnd), na.rm=TRUE), col=2)
+plot(density(log10(cpg_den_feat), na.rm=TRUE), main="CpG enrichment distribution", xlab="log10(CpG density)", ylab="", yaxt="n")
+lines(density(log10(cpg_den_rnd), na.rm=TRUE), col=2)
 legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0("rnd pos +/-", ud_str/1000, "kb")), col=1:2, lty=1)
 ```
 
-
+# PCA
 
 ```{r label="PCA on mat"}
 mat = mat[!apply(is.na(mat), 1, any),] 
@@ -346,15 +338,38 @@ lines(apply(mat[idx3,], 2, mean), col=4)
 axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
 ```
 
+```{r}
+i=1
+for (j in 2:3) {
+  layout(1, respect=TRUE)
+  plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=cols)
 
+  layout(matrix(1:9, 3, byrow=FALSE), respect=TRUE)
 
+  threshs_i = quantile(pca$x[,i], c(1/3, 2/3))
+  threshs_j = quantile(pca$x[,j], c(1/3, 2/3))
+
+  idx_i = idx_j = list()
+  idx_i[[1]] = rownames(pca$x)[pca$x[,i] <  threshs_i[1]]
+  idx_i[[2]] = rownames(pca$x)[pca$x[,i] >= threshs_i[1] & pca$x[,i] < threshs_i[2]]
+  idx_i[[3]] = rownames(pca$x)[pca$x[,i] >= threshs_i[2] ]
+  idx_j[[1]] = rownames(pca$x)[pca$x[,j] <  threshs_j[1]]
+  idx_j[[2]] = rownames(pca$x)[pca$x[,j] >= threshs_j[1] & pca$x[,j] < threshs_j[2]]
+  idx_j[[3]] = rownames(pca$x)[pca$x[,j] >= threshs_j[2] ]
+
+  for (it in 1:3) {
+    for (jt in 1:3) {
+      idx = intersect(idx_i[[it]], idx_j[[jt]])
+      plot(apply(mat[idx,], 2, mean),  col=1, type="l", ylim=c(0, .13), main=paste0("PC", i, "Q", it, " PC", j, "Q" , jt), xaxt="n", ylab="CpG density")
+      axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
+    }
+  }  
+}
+```
+
+# Results
 
 ```{r hm_pop, fig.height=9}
-idx = c(
-  names(idx1)[idx1],
-  names(idx2)[idx2],
-  names(idx3)[idx3]
-)
 idx = rownames(pca$x)[order(pca$x[,1])]
 data = mat[idx,]
 data = data[sort(sample(1:nrow(data), min(nrow(data), 1000))), ]
@@ -363,10 +378,7 @@ cols = colorRampPalette(colors)(20)
 offset = (bins[,2] - ud_str - step/2)/1000
 colnames(data) = paste0("binmax ", ifelse(offset<0, "-", "+"), abs(offset), "kb")
 rownames(data) = NULL
-gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 100 rnd genes)"), xaxt="n", mar=c(8,5))
-
-
-plot(pca$x[,1], feat_cpg[rownames(pca$x), ]$score)
+gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 1000 rnd genes)"), xaxt="n", mar=c(8,5))
 ```
 
 
@@ -375,6 +387,75 @@ plot(pca$x[,1], feat_cpg[rownames(pca$x), ]$score)
 Long features (> 5000bp) could be splited into subfeatures centrered on CpG bumps.
 
 Notice that 5000bp feature could overlap an other feature.
+
+
+
+
+
+
+```{r, fig.height=9}
+plot_feat_den(pca$x[,1], feat_cpg[rownames(pca$x), ]$score)
+ylim = c(0,30)
+plot_feat_den(pca$x[,1], feat_cpg[rownames(pca$x), ]$score, ylim=ylim)
+
+plot_feat_den(pca$x[,1], feat_cpg[rownames(pca$x), ]$score, ylim=ylim)
+
+idx = rownames(pca$x)[pca$x[,1]<0 | feat_cpg[rownames(pca$x), ]$score>5]
+
+plot_feat_den(pca$x[idx,1], feat_cpg[idx, ]$score, ylim=ylim)
+```
+
+```{r}
+mat = mat[idx,]
+mat = mat[!apply(is.na(mat), 1, any),] 
+pca = prcomp(mat, scale=FALSE)
+v = pca$sdev * pca$sdev
+p = v / sum(v) * 100
+
+layout(matrix(1:4,2), respect=TRUE)
+barplot(p)
+
+cols = 1
+i = 3
+j = 2
+plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=cols)
+
+i = 1
+j = 3
+plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=cols)
+
+i = 1
+j = 2
+plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=cols)
+
+i=1
+for (j in 2:3) {
+  layout(1, respect=TRUE)
+  plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=cols)
+
+  layout(matrix(1:9, 3, byrow=FALSE), respect=TRUE)
+
+  threshs_i = quantile(pca$x[,i], c(1/3, 2/3))
+  threshs_j = quantile(pca$x[,j], c(1/3, 2/3))
+
+  idx_i = idx_j = list()
+  idx_i[[1]] = rownames(pca$x)[pca$x[,i] <  threshs_i[1]]
+  idx_i[[2]] = rownames(pca$x)[pca$x[,i] >= threshs_i[1] & pca$x[,i] < threshs_i[2]]
+  idx_i[[3]] = rownames(pca$x)[pca$x[,i] >= threshs_i[2] ]
+  idx_j[[1]] = rownames(pca$x)[pca$x[,j] <  threshs_j[1]]
+  idx_j[[2]] = rownames(pca$x)[pca$x[,j] >= threshs_j[1] & pca$x[,j] < threshs_j[2]]
+  idx_j[[3]] = rownames(pca$x)[pca$x[,j] >= threshs_j[2] ]
+
+  for (it in 1:3) {
+    for (jt in 1:3) {
+      idx = intersect(idx_i[[it]], idx_j[[jt]])
+      plot(apply(mat[idx,], 2, mean),  col=1, type="l", ylim=c(0, .13), main=paste0("PC", i, "Q", it, " PC", j, "Q" , jt), xaxt="n", ylab="CpG density")
+      axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
+    }
+  }  
+}
+```
+
 
 
 # Session Information
