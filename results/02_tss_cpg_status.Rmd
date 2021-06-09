@@ -1,0 +1,232 @@
+---
+title: "CpG status of region surrounding TSS"
+author: "Florent Chuffart"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+---
+
+
+
+```{r, echo=FALSE, eval=TRUE, label="loading libraries"}
+knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide")
+```
+
+```{r params}
+source("common.R")
+step = 100
+nb_rnd_feat = 0
+ud_str = 2500
+up_str = dwn_str = ud_str
+```
+```
+
+# Purpose
+
+The main goal of this study is to define CpG status of genome region around TSS by computing CpG density from genome sequence.
+
+It happends in 2 steps : 
+  
+  - extract genome sequence around TSS
+  - count the number of CG in the sequence
+
+
+# Features
+
+```{r}
+genes_grch38 = readRDS("~/projects/genes/bed_grch38_epimeddb.rds")
+head(genes_grch38)
+dim(genes_grch38)
+```
+
+
+
+```{r}
+plot_feat_den(feat_cpg$len, feat_cpg$score, xlab="length", ylab="#probes")
+```
+
+
+
+
+
+
+
+
+```{r label="Extract sequence of TSS +/- XXkb"}
+ud_str = 2500
+up_str = dwn_str = ud_str
+hg38_chrom_sizes  = read.table("~/projects/genes/hg38.chrom.sizes", stringsAsFactors=FALSE)
+rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
+
+seq_filename = paste0("seq_TSS_", up_str, "_", dwn_str, ".rds")
+if (!file.exists(seq_filename)) {
+  seq = get_seq_from_bed(genes_grch38, up_str, dwn_str, hg38_chrom_sizes)
+  saveRDS(seq, seq_filename)
+}
+seq = readRDS(seq_filename)
+length(seq)
+```
+
+```{r label="slice seq and count CpG"}
+step = 250
+mat_filename = paste0("mat_TSS_", up_str, "_", dwn_str, "_", step, ".rds")
+foo = seq(1,(2*ud_str), step)
+bins = cbind(foo, foo+step-1)
+if (!file.exists(mat_filename)) {
+  mat = t(epimedtools::monitored_apply(t(t(seq)), 1, function(s) {
+    apply(bins, 1, function(b) {
+      # b = bins[1,]
+      str = substr(s, b[[1]], b[[2]])
+      # l = nchar(str)
+      lnn = nchar(gsub("N", "", str))
+      # denom = l - lnn
+      if (lnn==0) {
+        return(NA)
+      } else {
+        return(stringr::str_count(str, "CG") / lnn)
+      }
+    })
+  }))
+  saveRDS(mat, mat_filename)
+}
+mat = readRDS(mat_filename)
+head(mat)
+dim(mat)
+```
+
+
+# CpG enrichment of TSS 
+
+CpG density (#CpP / length of sequence) is computed in sequence of TSS +/-`r ud_str/1000`kb sliced into `r step`b bins.
+
+TSS of 1000 random genes is represented there. It shows a CpG enrichment aoroud TSS.
+
+```{r label="heatmap for 1000 rnd genes"}
+set.seed(1)
+data = mat[sample(rownames(mat), 1000),]
+# cor clust
+tmp_d = t(data)
+tmp_d = cor(tmp_d, method="pe")
+hc_row = hclust(dist(1 - tmp_d), method="complete")
+Rowv = as.dendrogram(hc_row)
+dendrogram="row"      
+
+colors=c("black",  "red")
+cols = colorRampPalette(colors)(20)
+offset = (bins[,2] - ud_str - step/2)/1000
+colnames(data) = paste0("TSS ", ifelse(offset<0, "-", "+"), abs(offset), "kb")
+rownames(data) = NULL
+gplots::heatmap.2(data, Rowv=Rowv, Colv=NULL, dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (TSS +/-", ud_str/1000, "kb, 1000 rnd genes)"), xaxt="n", mar=c(8,5))
+```
+
+
+CpG density distribution is represented there. 
+
+It shows that MOST OF TSS are CpG enriched compared to random sequence.  
+
+It also shows that NOT ALL TSS are are CpG enriched.
+
+```{r label="CpG density distribution"}
+nb_cpg_rnd_filename = paste0("nb_cpg_rnd_TSS_", up_str, "_", dwn_str, ".rds")
+if (!file.exists(nb_cpg_rnd_filename)) {
+  idx = sample(1:22, 5000, replace=TRUE)
+  set.seed(1)
+  pos = sapply(hg38_chrom_sizes[idx,2], function(e) round(runif(1, 15000, e-15000)))
+  rnd_feat = data.frame(hg38_chrom_sizes[idx,1], pos, stringsAsFactors=FALSE)
+  nb_cpg_rnd = epimedtools::monitored_apply(mod=10, rnd_feat, 1, function(feat) {
+    chr = feat[[1]]
+    tss = as.numeric(feat[[2]])
+    bef = up_str
+    aft = dwn_str
+    beg = max(1,tss - bef)
+    end = min(hg38_chrom_sizes[chr,2], tss + aft)
+    str = as.character(BSgenome::getSeq(BSgenome.Hsapiens.UCSC.hg38::Hsapiens, chr, beg, end))
+    # stringr::str_count(str, "CG") / nchar(str)
+    lnn = nchar(gsub("N", "", str))
+    # denom = l - lnn
+    if (lnn==0) {
+      return(NA)
+    } else {
+      return(stringr::str_count(str, "CG") / lnn)
+    }
+  })
+  saveRDS(nb_cpg_rnd, nb_cpg_rnd_filename)
+}
+nb_cpg_rnd = readRDS(nb_cpg_rnd_filename)
+
+nb_cpg_tss = apply(mat, 1, mean, na.rm=TRUE)
+
+layout(matrix(1:2,1), respect=TRUE)
+plot(density(nb_cpg_tss),ylim=c(0,100), main="CpG enrichment distribution", xlab="CpG density", ylab="", yaxt="n")
+lines(density(nb_cpg_rnd, na.rm=TRUE), col=2)
+legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0("rnd pos +/-", ud_str/1000, "kb")), col=1:2, lty=1)
+plot(density(log10(nb_cpg_tss)), main="CpG enrichment distribution", xlab="log10(CpG density)", ylab="", yaxt="n")
+lines(density(log10(nb_cpg_rnd), na.rm=TRUE), col=2)
+legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0("rnd pos +/-", ud_str/1000, "kb")), col=1:2, lty=1)
+```
+
+
+Then we clustering TSS according to there sliced CpG density
+
+PCA on TSS +/-`r ud_str/1000`kb sliced into `r step`b bins is performed.
+
+Component 1 discriminates CpG rich and poor TSS.
+
+```{r label="PCA on mat"}
+mat = mat[!apply(is.na(mat), 1, any),] 
+pca = prcomp(mat, scale=FALSE)
+v = pca$sdev * pca$sdev
+p = v / sum(v) * 100
+
+layout(matrix(1:2,1), respect=TRUE)
+barplot(p)
+i = 1
+plot(density(pca$x[,i]), main=paste0("PC", i, "(", signif(p[i], 3), "%)"))
+abline(v=-0.04)
+
+idx = pca$x[,1] < -0.04
+
+plot(apply(mat[idx,], 2, mean), type="l", ylim=c(0, .13), col=1, main="CpG enrichment", xaxt="n")
+lines(apply(mat[!idx,], 2, mean), col=2)
+axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
+legend("topright", legend=c(paste0(sum(idx), " genes"), paste0(sum(!idx), " genes")), col=1:2, lty=1)
+
+
+# layout(matrix(1:6,2), respect=TRUE)
+# for(i in 1:6) {
+#   barplot(pca$rotation[,i], main=paste("contrib PC",i))
+# }
+
+# layout(matrix(1:2,1), respect=TRUE)
+# i=1
+# j=2
+# plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=adjustcolor(1, alpha.f=0.05),
+#   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " genes)")
+# )
+# i=1
+# j=3
+# plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=adjustcolor(1, alpha.f=0.05),
+#   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " genes)")
+# )
+
+genes_grch38$tss_cpg_status  = NA
+genes_grch38[names(idx)[!idx],]$tss_cpg_status = "cpg_rich"
+genes_grch38[names(idx)[idx],]$tss_cpg_status = "cpg_poor"
+table(genes_grch38$tss_cpg_status)
+genes_grch38$cpg_density = NA
+genes_grch38[rownames(mat),]$cpg_density = apply(mat, 1, mean)
+saveRDS(genes_grch38, "~/projects/genes/bed_grch38_epimeddb.rds")
+WriteXLS::WriteXLS(genes_grch38, "genes_grch38_cpg_status.xls")
+```
+
+# Session Information
+
+```{r, results="verbatim"}
+sessionInfo()
+```
+
+
