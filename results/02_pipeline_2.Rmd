@@ -1,0 +1,266 @@
+---
+title: "`dmethr` pipeline 2"
+subtitle: "Hunting DNA methylation repression of transcriptional activity"
+author: "Florent Chuffart, Florence Pittion"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+---
+
+
+
+```{r, echo=FALSE, eval=TRUE}
+knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
+species="Homo_sapiens"
+version="hg38"
+```
+
+# Requirements
+
+# Aim and data
+
+**Aim**
+
+The goal of this study is to group and compare genes of different categories: 
+
+- CpG-rich versus CpG-poor Promoters
+- level of methylation of the promoter in most of normal tissues
+- expression reactivation in demethylating context
+- testis restricted genes
+
+**Data**
+
+This study is based on following data set:
+
+- methylation data from normal tissues (Illumina 450k: GSE56515, GSE48472, GSE64096, GSE50192", GSE31848", GSE73375)
+- transcriptomic data HCT116 DNMT DKO vs. WT (RNA-seq: GSE45332)
+
+
+
+# Pipeline
+
+**Genes with CpG rich feats**
+
+
+
+
+```{r}
+feats = readRDS(paste0("~/projects/01_momik/results/feats_epic_grch38_cpg_status.rds")) 
+```
+
+```{r echo=TRUE, results="verbatim"}
+table(feats$feat_cpg_status)
+gs_cpgrich = rownames(feats)[!is.na(feats$feat_cpg_status) & feats$feat_cpg_status=="cpg_rich"]
+```
+
+
+```{r}
+dim(feats)
+gs = rownames(feats)
+layout(1, respect=TRUE)
+plot(density(feats$cpg_density, na.rm=TRUE), main="Distribution of CpG density", lwd=3, col="grey", lty=2)
+den_rich = density(feats[feats$feat_cpg_status%in%"cpg_rich",]$cpg_density, na.rm=TRUE)
+den_poor = density(feats[feats$feat_cpg_status%in%"cpg_poor",]$cpg_density, na.rm=TRUE)
+lines(den_rich$x, den_rich$y * (den_rich$n/nrow(feats)), col=2, lwd=2)
+lines(den_poor$x, den_poor$y * (den_poor$n/nrow(feats)), col=4, lwd=2)
+legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("cpg_rich", "cpg_poor", "both"), lwd=c(2,2,3))
+
+
+CpG_dens = function() {
+  layout(1, respect=TRUE)
+plot(density(feats$cpg_density, na.rm=TRUE), main="Distribution of CpG density", lwd=3, col="grey", lty=2)
+den_rich = density(feats[feats$feat_cpg_status%in%"cpg_rich",]$cpg_density, na.rm=TRUE)
+den_poor = density(feats[feats$feat_cpg_status%in%"cpg_poor",]$cpg_density, na.rm=TRUE)
+lines(den_rich$x, den_rich$y * (den_rich$n/nrow(feats)), col=2, lwd=2)
+lines(den_poor$x, den_poor$y * (den_poor$n/nrow(feats)), col=4, lwd=2)
+legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("cpg_rich", "cpg_poor", "both"), lwd=c(2,2,3))
+}
+
+CpG_dens()
+
+pdf(paste0("fig_CpG_dens.pdf"), width=15, height=5)
+CpG_dens()
+dev.off()
+
+
+```
+
+
+
+
+
+
+
+
+
+
+**Promoter methylation status in normal tissues**
+
+```{r loading_study_meth_all_human_tissues_grch38}
+if (!exists("mreadRDS"))   mreadRDS = memoise::memoise(readRDS) 
+s_meth = mreadRDS("~/projects/all_human_tissues/results/meth/study_meth_all_human_tissues_grch38.rds")
+```
+
+```{r process_study_meth_all_human_tissues_grch38, }
+table(s_meth$platform$Chromosome)
+if (!exists("feat_indexed_probes")) {
+  # params
+  pf_chr_colname = "Chromosome"
+  pf_pos_colname = "Start"
+  up_str = 2000
+  dwn_str = 2000  
+  if (!exists("pf_orig")) {
+    pf_orig = s_meth$platform
+    pf_orig = pf_orig[order(pf_orig[[pf_chr_colname]],pf_orig[[pf_pos_colname]]), ]
+    pf_bed = pf_orig[,c(pf_chr_colname, pf_pos_colname)]
+    pf_bed[,3] = pf_bed[,2] + 1
+    pf_bed[,4] = row.names(pf_bed)
+    pf_bed[,5] = 0
+    pf_bed[,6] = "+"
+    pf_bed = pf_bed[!pf_bed[,1]%in%"*",]
+    head(pf_bed)
+    options(scipen=999)
+    write.table(pf_bed, file="illumina_450k_hg38.bed", sep="\t", quote=FALSE,row.names=FALSE, col.names=FALSE)    
+  }  
+  ## index meth probes by chr
+  chrs = unique(feats[gs_cpgrich,1])
+  chrs_indexed_methpf = lapply(chrs, function(chr) {
+    print(chr)
+    idx = rownames(pf_orig)[!is.na(pf_orig[[pf_chr_colname]]) & pf_orig[[pf_chr_colname]]==chr]  
+    ret = pf_orig[idx,]
+    return(ret)
+  })
+  names(chrs_indexed_methpf) = chrs
+  ## index probes by gene name
+  print("# indexing probes by gene name")
+  feat_indexed_probes = epimedtools::monitored_apply(feats[gs_cpgrich,], 1, function(gene) {
+    # gene = randomall_genes[1,]genes=readRDS("~/fchuffar/projects/genes/bed_grch38_epimeddb.rds")
+    # print(gene)
+    chr = gene[[1]]
+    meth_platform = chrs_indexed_methpf[[chr]]
+    ret = dmprocr::get_probe_names(gene, meth_platform, pf_chr_colname, pf_pos_colname, up_str, dwn_str) 
+    return(ret)
+  })
+  barplot(table(sapply(feat_indexed_probes, length)))
+  feat_indexed_probes = feat_indexed_probes[sapply(feat_indexed_probes, length)>5]
+}
+```
+
+
+```{r label="reduction of signal by tissue"}
+if (!exists("meth_by_tissues_by_gene")) {
+  print("reduction of signal by tissue then by gene")
+  key = "tissue_group_level1"
+  print(table(s_meth$exp_grp[[key]]))
+  tissues = na.omit(sort(unique(s_meth$exp_grp[[key]])))
+
+  indicator_func1 = mean
+  tmp_meth_data = s_meth$data[unique(unlist(feat_indexed_probes)),]
+  meth_by_tissues = sapply(tissues, function(tissue) {
+    # tissue = tissues[1]
+    print(tissue)
+    sample_idx = rownames(s_meth$exp_grp)[s_meth$exp_grp[[key]] %in% tissue]
+    if (length(sample_idx) > 1) {
+      tmp_meth_by_tissues = epimedtools::monitored_apply(mod=50000, tmp_meth_data[,sample_idx], 1, indicator_func1, na.rm=TRUE)      
+    } else {
+      tmp_meth_by_tissues = indicator_func1(tmp_meth_data[,sample_idx], na.rm=TRUE)
+    }
+    return(tmp_meth_by_tissues)
+  })
+  head(meth_by_tissues)
+  dim(meth_by_tissues)
+  sum(is.na(meth_by_tissues))
+  # saveRDS(meth_by_tissues, "meth_by_tissues_level1.rds")
+  # ```
+  #
+  #
+  # ```{r label="reduction of signal by gene"}
+  indicator_func2 = mean
+  tmp_meth_data = meth_by_tissues
+  dim(tmp_meth_data)
+  meth_by_tissues_by_gene = epimedtools::monitored_apply(mod=10, feats[names(feat_indexed_probes),], 1, function(gene) {
+    # gene = genes[names(gene_indexed_probes),][1,]
+    # print(gene[[4]])
+    probe_idx = feat_indexed_probes[[gene[[4]]]]
+    if (length(probe_idx) > 1) {
+      tmp_meth_by_tissues_by_gene = apply(tmp_meth_data[probe_idx,], 2, indicator_func2, na.rm=TRUE)    
+    } else {
+      tmp_meth_by_tissues_by_gene  = sapply(tmp_meth_data[probe_idx,], indicator_func2, na.rm=TRUE) 
+    }
+    return(tmp_meth_by_tissues_by_gene)
+  })
+  meth_by_tissues_by_gene = t(meth_by_tissues_by_gene)
+  dim(meth_by_tissues_by_gene)
+  sum(is.na(meth_by_tissues_by_gene))
+# saveRDS(meth_by_tissues_by_gene, "meth_by_tissues_by_gene.rds")
+}
+```
+
+From Illumina 450k studies, we obtain a methylation matrix of `r ncol(s_meth$data)` samples, 
+dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues 
+including `r unique(s_meth$exp_grp$tissue_group_level1)`.
+
+This matrix is successively reduced, first by tissues, then by genes with CpG rich promoter. 
+The function used to reduce the data is the `mean`.
+
+It means that for each methylation probe, we compute the mean methylation value by tissue.
+Then for each genes promoter group of probes, we compute the mean of mean methylation value by tissue.
+
+We obtain an `r nrow(meth_by_tissues_by_gene)` genes by `r ncol(meth_by_tissues_by_gene)` tissues mean of mean methylation value matrix.
+
+Heatmap on the methylation value matrix clearly shows a subset of genes with highly methylated promoter.
+
+```{r label="clustering and heatmap", fig.height=9}
+data = meth_by_tissues_by_gene
+dim(data)
+sum(apply(is.na(data), 1, any))
+data = data[!apply(is.na(data), 1, any), ]
+dim(data)
+
+# clustering base on correlation for tissues
+tmp_d = data
+tmp_d = t(tmp_d) - apply(tmp_d, 2, mean, na.rm=TRUE)
+tmp_d = t(tmp_d)
+tmp_d = cor(tmp_d, method="pe")
+dim(tmp_d)
+hc_col = hclust(dist(1 - tmp_d), method="complete")
+Colv = as.dendrogram(hc_col)
+dendrogram="col"      
+
+# clustering base on eucl. dist. for genes
+d = dist(data)
+hc_row = hclust(d, method="complete")
+Rowv = as.dendrogram(hc_row)
+dendrogram="both"      
+
+# col
+colors=c("cyan", "black", "red")
+cols = colorRampPalette(colors)(20)
+
+hm = gplots::heatmap.2(data, Rowv=Rowv, Colv=Colv, dendrogram=dendrogram, trace="none", col=cols, main=paste0("Mean of mean (", nrow(data), " genes x ", ncol(data), " tissues)"), mar=c(10,5), useRaster=TRUE)
+
+
+heatmap_meth= function() {
+  hm = gplots::heatmap.2(data, Rowv=Rowv, Colv=Colv, dendrogram=dendrogram, trace="none", col=cols, main=paste0("Mean of mean (", nrow(data), " genes x ", ncol(data), " tissues)"), mar=c(10,5), useRaster=TRUE)
+
+}
+
+pdf(paste0("fig_heatmap_meth.pdf"), width=15, height=15)
+heatmap_meth()
+dev.off()
+```
+
+```{r selecting_genes, echo=TRUE, results="verbatim", eval=TRUE}
+gs_methplusplus = rownames(data)[unlist(hm$rowDendrogram[[2]])]
+length(gs_methplusplus)
+```
+
+```{r}
+feats$methplusplus = rownames(feats) %in% gs_methplusplus
+table(feats$feat_cpg_status, feats$methplusplus, useNA="ifany")
+```
+
