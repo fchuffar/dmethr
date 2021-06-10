@@ -1,6 +1,6 @@
 ---
 title: "CpG status of region surrounding TSS"
-author: "Florent Chuffart"
+author: "Florence Pittion, Florent Chuffart"
 date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_document:
@@ -205,10 +205,10 @@ legend("topright", legend=c(paste0(sum(idx), " feats"), paste0(sum(!idx), " feat
 #   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " feats)")
 # )
 
-feats$tss_cpg_status  = NA
-feats[names(idx)[!idx],]$tss_cpg_status = "cpg_rich"
-feats[names(idx)[idx],]$tss_cpg_status = "cpg_poor"
-table(feats$tss_cpg_status)
+feats$cpg_status  = NA
+feats[names(idx)[!idx],]$cpg_status = "rich"
+feats[names(idx)[idx],]$cpg_status = "poor"
+table(feats$cpg_status)
 feats$cpg_density = NA
 feats[rownames(mat),]$cpg_density = apply(mat, 1, mean)
 # WriteXLS::WriteXLS(feats, "feats_cpg_status.xls")

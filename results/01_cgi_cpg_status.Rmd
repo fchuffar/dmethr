@@ -1,5 +1,5 @@
 ---
-title: "CpG status of probes aggregate reduced, slice 100pb"
+title: "Step 1: CpG density of features"
 author: "Florence Pittion, Florent Chuffart"
 date: "`r Sys.Date()`"
 output: 

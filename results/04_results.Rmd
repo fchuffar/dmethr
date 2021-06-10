@@ -1,0 +1,50 @@
+---
+title: "Step 4: results"
+subtitle: "Hunting DNA methylation repression of transcriptional activity"
+author: "Florence Pittion, Florent Chuffart"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+---
+
+
+
+```{r, echo=FALSE, eval=TRUE}
+knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
+```
+
+# Export features
+
+We export gene as : 
+
+```{r export_genes}
+WriteXLS::WriteXLS(feats, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusplus.xlsx"))
+```
+
+
+# Core feats
+
+...
+
+
+# Multi omic analysis in in TCGA
+
+...
+
+
+
+
+
+
+# Session Information
+
+```{r, results="verbatim"}
+sessionInfo()
+```
+
+
+

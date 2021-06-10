@@ -1,7 +1,6 @@
 ---
-title: "`dmethr` pipeline 2"
-subtitle: "Hunting DNA methylation repression of transcriptional activity"
-author: "Florent Chuffart, Florence Pittion"
+title: "Step 2: methylation status in healthy tissues"
+author: "Florence Pittion, Florent Chuffart"
 date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_document:
@@ -49,12 +48,12 @@ This study is based on following data set:
 
 
 ```{r}
-feats = readRDS(paste0("~/projects/01_momik/results/feats_epic_grch38_cpg_status.rds")) 
+if (!exists("feats")) {feats = readRDS(paste0("~/projects/01_momik/results/feats_epic_grch38_cpg_status.rds"))}
 ```
 
 ```{r echo=TRUE, results="verbatim"}
-table(feats$feat_cpg_status)
-gs_cpgrich = rownames(feats)[!is.na(feats$feat_cpg_status) & feats$feat_cpg_status=="cpg_rich"]
+table(feats$cpg_status)
+gs_cpgrich = rownames(feats)[!is.na(feats$cpg_status) & feats$cpg_status=="rich"]
 ```
 
 
@@ -63,21 +62,21 @@ dim(feats)
 gs = rownames(feats)
 layout(1, respect=TRUE)
 plot(density(feats$cpg_density, na.rm=TRUE), main="Distribution of CpG density", lwd=3, col="grey", lty=2)
-den_rich = density(feats[feats$feat_cpg_status%in%"cpg_rich",]$cpg_density, na.rm=TRUE)
-den_poor = density(feats[feats$feat_cpg_status%in%"cpg_poor",]$cpg_density, na.rm=TRUE)
+den_rich = density(feats[feats$cpg_status%in%"rich",]$cpg_density, na.rm=TRUE)
+den_poor = density(feats[feats$cpg_status%in%"poor",]$cpg_density, na.rm=TRUE)
 lines(den_rich$x, den_rich$y * (den_rich$n/nrow(feats)), col=2, lwd=2)
 lines(den_poor$x, den_poor$y * (den_poor$n/nrow(feats)), col=4, lwd=2)
-legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("cpg_rich", "cpg_poor", "both"), lwd=c(2,2,3))
+legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("rich", "poor", "both"), lwd=c(2,2,3))
 
 
 CpG_dens = function() {
   layout(1, respect=TRUE)
 plot(density(feats$cpg_density, na.rm=TRUE), main="Distribution of CpG density", lwd=3, col="grey", lty=2)
-den_rich = density(feats[feats$feat_cpg_status%in%"cpg_rich",]$cpg_density, na.rm=TRUE)
-den_poor = density(feats[feats$feat_cpg_status%in%"cpg_poor",]$cpg_density, na.rm=TRUE)
+den_rich = density(feats[feats$cpg_status%in%"rich",]$cpg_density, na.rm=TRUE)
+den_poor = density(feats[feats$cpg_status%in%"poor",]$cpg_density, na.rm=TRUE)
 lines(den_rich$x, den_rich$y * (den_rich$n/nrow(feats)), col=2, lwd=2)
 lines(den_poor$x, den_poor$y * (den_poor$n/nrow(feats)), col=4, lwd=2)
-legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("cpg_rich", "cpg_poor", "both"), lwd=c(2,2,3))
+legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("rich", "poor", "both"), lwd=c(2,2,3))
 }
 
 CpG_dens()
@@ -261,6 +260,6 @@ length(gs_methplusplus)
 
 ```{r}
 feats$methplusplus = rownames(feats) %in% gs_methplusplus
-table(feats$feat_cpg_status, feats$methplusplus, useNA="ifany")
+table(feats$cpg_status, feats$methplusplus, useNA="ifany")
 ```
 

@@ -1,0 +1,147 @@
+---
+title: "Step 3: expression of genes in GSE45332 (DNMT double KO)"
+author: "Florence Pittion, Florent Chuffart"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+---
+
+
+
+```{r, echo=FALSE, eval=TRUE}
+knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
+```
+
+```{r params}
+da_gse = "GSE45332"
+```
+
+We used the study GSE45332 to perform differential analysis of HCT116 cell lines transcriptome in wild type vs. DNMT double KO context.
+
+Form the differential analysis we obtain a vector of log2foldchange.
+
+GSEA clearly show that the previously define genesets (genes with promoter highly methylated in most of tissues) have a significantly increased expression in the DNMT DKO samples.
+
+```{r}
+dim(feats)
+d = read.table("~/projects/hadaca/results/GSE45332/04_deseq2/tables/KOvsWT.complete.txt", header=TRUE, stringsAsFactors=FALSE, row.names=1)
+d$lpadj = -log10(d$padj + 10^-300)
+# head(d)
+dim(d)
+# intersect(row.names(d), row.names(feats))
+layout(1, respect=TRUE)
+plot(d$log2FoldChange, d$lpadj, col="grey", xlab="log2FoldChange", ylab="adjusted pval")
+
+idx = gs = c("C3"  , "CYR61", "DCAF4L1", "DNAH17", "HKDC1"   , "IGF2BP1",  "IL1A", "KRT7" , "NES"    , "SDC4"  , "SERPINE1", "TGM2"   ,  "VIM")
+text(d[idx,]$log2FoldChange, d[idx,]$lpadj, rownames(d[idx,]))
+
+idx = intersect(gs_methplusplus, rownames(d))
+points(d[idx,]$log2FoldChange, d[idx,]$lpadj, col=2, pch=1)
+legend("topleft", pch=1, col=2, "gs_methplusplus")
+
+layout(1, respect=TRUE)
+boxplot(abs(d[idx,]$log2FoldChange)~d[idx,]$log2FoldChange>0, xlab="log2FoldChange > 0", ylab="|log2FoldChange|")
+
+volcano_plot_meth = function(){
+  layout(1, respect=TRUE)
+boxplot(abs(d[idx,]$log2FoldChange)~d[idx,]$log2FoldChange>0, xlab="log2FoldChange > 0", ylab="|log2FoldChange|")
+}
+pdf(paste0("volcano_plot_meth.pdf"), width=15, height=5)
+volcano_plot_meth()
+dev.off()
+
+layout(matrix(1:6, 2), respect=TRUE)
+e = read.table("~/projects/hadaca/results/GSE45332/04_deseq2/design.txt", header=TRUE, row.names=1)
+# g = "KRT7"
+# boxplot(unlist(d[g,paste0("norm.", rownames(e))])~e$cond, main=g)
+gs = c("C3"  , "CYR61", "DCAF4L1", "DNAH17", "HKDC1"   , "IGF2BP1",  "IL1A", "KRT7" , "NES"    , "SDC4"  , "SERPINE1", "TGM2"   ,  "VIM")
+# sapply(gs[-1], function(g){boxplot(unlist(d[g,paste0("norm.", rownames(e))])~e$cond, main=g)})
+sapply(gs[-1], function(g){boxplot(log2(unlist(d[g,paste0("norm.", rownames(e))])+1)~e$cond, main=g, ylab="log2(norm_count+1)")})
+```
+
+
+
+```{r selecting_genes3, echo=TRUE, results="verbatim"}
+idx = 
+  (!is.na(d$padj) & d$lpadj > 50 & d$log2FoldChange > 0) | 
+  (!is.na(d$padj) & d$log2FoldChange > 3)
+sum(idx)
+gs_dnmtkoup = rownames(d)[idx]
+length(gs_dnmtkoup)
+
+
+idx = !is.na(d$padj) & d$lpadj > -log10(0.05) & d$log2FoldChange > 1 & rownames(d) %in% gs_methplusplus
+sum(idx)
+
+```
+
+We export gene as : 
+
+```{r export_genes}
+feats$dnmtkoup = rownames(feats) %in% gs_dnmtkoup
+feats$dnmtkoup_methplusplus = rownames(feats) %in% intersect(gs_dnmtkoup, gs_methplusplus)
+WriteXLS::WriteXLS(feats, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusplus.xlsx"))
+```
+
+
+
+```{r eval=FALSE}
+gsea_input = d[!is.na(d$log2FoldChange),c("log2FoldChange", "lpadj")]
+gsea_input = gsea_input[order(gsea_input$log2FoldChange),]
+gsea_input = cbind(rownames(gsea_input), gsea_input$log2FoldChange)
+prefix = "GSE45332dnmtko"
+gsea_input_filename = paste0(prefix, "_gsea_input.rnk")
+print(paste("gsea_input were exported in", gsea_input_filename, "file."))
+write.table(gsea_input, gsea_input_filename, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
+write.table(gs_methplusplus, "gs_methplusplus.grp", sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
+
+
+gsea_input = read.table(gsea_input_filename, row.names=1)
+stoda_input = gsea_input[,1]
+names(stoda_input) = rownames(gsea_input)
+stoda::gseaplot(v=stoda_input, gs=gs_methplusplus)
+
+#  /Applications/GSEA_4.1.0/gsea-cli.sh GSEAPreranked -gmx gs_methplusplus.grp -collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -rnk GSE45332dnmtko_gsea_input.rnk -scoring_scheme weighted -rpt_label my_analysis -create_svgs false -include_only_symbols true -make_sets true -plot_top_x 20 -rnd_seed timestamp -set_max 1000 -set_min 15 -zip_report false -out gsea_out
+
+```
+
+
+
+![](./enplot_gs_methplusplus.grp_1.png)
+
+
+
+
+
+
+```{r selecting_feats3, echo=TRUE, results="verbatim"}
+idx = 
+  (!is.na(d$padj) & d$lpadj > 50 & d$log2FoldChange > 0) | 
+  (!is.na(d$padj) & d$log2FoldChange > 3)
+sum(idx)
+gs_dnmtkoup = rownames(d)[idx]
+length(gs_dnmtkoup)
+
+
+idx = !is.na(d$padj) & d$lpadj > -log10(0.05) & d$log2FoldChange > 1 & rownames(d) %in% gs_methplusplus
+sum(idx)
+
+feats$dnmtkoup = rownames(feats) %in% gs_dnmtkoup
+feats$dnmtkoup_methplusplus = rownames(feats) %in% intersect(gs_dnmtkoup, gs_methplusplus)
+```
+
+
+
+
+# Session Information
+
+```{r, results="verbatim"}
+sessionInfo()
+```
+
+
+
