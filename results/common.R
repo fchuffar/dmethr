@@ -88,6 +88,29 @@ plot_feat_den = function (x, y, xlim, ylim, ...) {
   plot(den_y$y, den_y$x, type="l", ylim=ylim, ylab="")  
 }
 
+get_matbin_from_seq = function(seq, up_str, dwn_str, step) {
+  foo = seq(1,up_str+dwn_str, step)
+  bins = cbind(foo, foo+step-1)
+  mat = t(epimedtools::monitored_apply(t(t(seq)), 1, function(s) {
+    apply(bins, 1, function(b) {
+      # b = bins[1,]
+      str = substr(s, b[[1]], b[[2]])
+      # l = nchar(str)
+      lnn = nchar(gsub("N", "", str))
+      # denom = l - lnn
+      if (lnn==0) {
+        return(NA)
+      } else {
+        return(stringr::str_count(str, "CG") / lnn)
+      }
+    })
+  }))
+  offset = (bins[,2] - ud_str - step/2)/1000
+  colnames(mat) = paste0("binmax ", ifelse(offset<0, "-", "+"), abs(offset), "kb")
+  return(mat)  
+}
+
+
 get_seq_from_bed = function(bed, up_str, dwn_str, chrom_sizes, genome=BSgenome.Hsapiens.UCSC.hg38::Hsapiens) {
   seq = epimedtools::monitored_apply(mod=10, bed, 1, function(gene) {
     chr = gene[[1]]

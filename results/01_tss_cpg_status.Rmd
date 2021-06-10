@@ -19,10 +19,16 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 ```{r params}
 source("common.R")
 step = 100
-nb_rnd_feat = 0
+nb_rnd_feat = 2000
 ud_str = 2500
 up_str = dwn_str = ud_str
+prefix = "tss"
+prefix = paste0(prefix, "_", up_str, "_", dwn_str, "_", step, "_", nb_rnd_feat, "")
 ```
+
+```{r globals variables}
+hg38_chrom_sizes  = read.table("~/projects/genes/hg38.chrom.sizes", stringsAsFactors=FALSE)
+rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
 ```
 
 # Purpose
@@ -38,89 +44,75 @@ It happends in 2 steps :
 # Features
 
 ```{r}
-genes_grch38 = readRDS("~/projects/genes/bed_grch38_epimeddb.rds")
-head(genes_grch38)
-dim(genes_grch38)
+feats = readRDS("~/projects/genes/bed_grch38_epimeddb.rds")
+head(feats)
+dim(feats)
+```
+
+```{r filtering anbd downsampling}
+# Filtering according to...
+# feats = feats[
+#   # feats$score>5 &
+#   feats$len<5000
+#   ,]
+# plot_feat_den(feats$len, feats$score, xlim, ylim)
+
+# Downsampling
+if (nb_rnd_feat > 0) {
+  dim(feats)
+  set.seed(1)
+  feats = feats[sort(sample(1:nrow(feats), min(nrow(feats), nb_rnd_feat))),]
+  dim(feats)  
+  # plot_feat_den(feats$len, feats$score, xlim, ylim, xlab="length", ylab="#probes")
+}
 ```
 
 
+# CpG enrichment of features
 
-```{r}
-plot_feat_den(feat_cpg$len, feat_cpg$score, xlab="length", ylab="#probes")
-```
-
-
-
-
-
-
-
-
-```{r label="Extract sequence of TSS +/- XXkb"}
-ud_str = 2500
-up_str = dwn_str = ud_str
-hg38_chrom_sizes  = read.table("~/projects/genes/hg38.chrom.sizes", stringsAsFactors=FALSE)
-rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
-
-seq_filename = paste0("seq_TSS_", up_str, "_", dwn_str, ".rds")
+```{r Extract DNA sequences of TSS +/- ud_str bp}
+seq_filename = paste0("seq_", prefix, ".rds")
 if (!file.exists(seq_filename)) {
-  seq = get_seq_from_bed(genes_grch38, up_str, dwn_str, hg38_chrom_sizes)
+  seq = get_seq_from_bed(feats, up_str, dwn_str, hg38_chrom_sizes)
   saveRDS(seq, seq_filename)
 }
 seq = readRDS(seq_filename)
 length(seq)
 ```
 
-```{r label="slice seq and count CpG"}
-step = 250
-mat_filename = paste0("mat_TSS_", up_str, "_", dwn_str, "_", step, ".rds")
-foo = seq(1,(2*ud_str), step)
-bins = cbind(foo, foo+step-1)
-if (!file.exists(mat_filename)) {
-  mat = t(epimedtools::monitored_apply(t(t(seq)), 1, function(s) {
-    apply(bins, 1, function(b) {
-      # b = bins[1,]
-      str = substr(s, b[[1]], b[[2]])
-      # l = nchar(str)
-      lnn = nchar(gsub("N", "", str))
-      # denom = l - lnn
-      if (lnn==0) {
-        return(NA)
-      } else {
-        return(stringr::str_count(str, "CG") / lnn)
-      }
-    })
-  }))
-  saveRDS(mat, mat_filename)
-}
-mat = readRDS(mat_filename)
+```{r Slice DNA sequences and count CpG density}
+# mat_filename = paste0("mat_", prefix, ".rds")
+# if (!file.exists(mat_filename)) {
+  mat = get_matbin_from_seq(seq, up_str, dwn_str, step)
+#   saveRDS(mat, mat_filename)
+# }
+# mat = readRDS(mat_filename)
 head(mat)
 dim(mat)
+
+binmax = apply(mat, 1, function(l) {
+  maxIndex = which(l==max(l))[1]
+})
+head(binmax)
+feats$binmax = NA
+feats[names(binmax),]$binmax = binmax
+head(feats)
 ```
 
 
-# CpG enrichment of TSS 
 
-CpG density (#CpP / length of sequence) is computed in sequence of TSS +/-`r ud_str/1000`kb sliced into `r step`b bins.
+CpG density ( nb. of CpG / length of sequence) is computed in sequence of TSS +/-`r ud_str/1000`kb sliced into `r step` bins.
 
-TSS of 1000 random genes is represented there. It shows a CpG enrichment aoroud TSS.
+TSS of 1000 random feats is represented there. It shows a CpG enrichment aoroud TSS.
 
-```{r label="heatmap for 1000 rnd genes"}
+```{r label="heatmap for 1000 rnd feats"}
 set.seed(1)
-data = mat[sample(rownames(mat), 1000),]
-# cor clust
-tmp_d = t(data)
-tmp_d = cor(tmp_d, method="pe")
-hc_row = hclust(dist(1 - tmp_d), method="complete")
-Rowv = as.dendrogram(hc_row)
-dendrogram="row"      
-
+data = mat[order(binmax[rownames(mat)]),]
+data = data[sort(sample(1:nrow(data), min(nrow(data), 1000))), ]
 colors=c("black",  "red")
 cols = colorRampPalette(colors)(20)
-offset = (bins[,2] - ud_str - step/2)/1000
-colnames(data) = paste0("TSS ", ifelse(offset<0, "-", "+"), abs(offset), "kb")
 rownames(data) = NULL
-gplots::heatmap.2(data, Rowv=Rowv, Colv=NULL, dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (TSS +/-", ud_str/1000, "kb, 1000 rnd genes)"), xaxt="n", mar=c(8,5))
+gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 1000 rnd genes)"), xaxt="n", mar=c(8,5))
 ```
 
 
@@ -193,7 +185,7 @@ idx = pca$x[,1] < -0.04
 plot(apply(mat[idx,], 2, mean), type="l", ylim=c(0, .13), col=1, main="CpG enrichment", xaxt="n")
 lines(apply(mat[!idx,], 2, mean), col=2)
 axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
-legend("topright", legend=c(paste0(sum(idx), " genes"), paste0(sum(!idx), " genes")), col=1:2, lty=1)
+legend("topright", legend=c(paste0(sum(idx), " feats"), paste0(sum(!idx), " feats")), col=1:2, lty=1)
 
 
 # layout(matrix(1:6,2), respect=TRUE)
@@ -205,22 +197,21 @@ legend("topright", legend=c(paste0(sum(idx), " genes"), paste0(sum(!idx), " gene
 # i=1
 # j=2
 # plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=adjustcolor(1, alpha.f=0.05),
-#   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " genes)")
+#   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " feats)")
 # )
 # i=1
 # j=3
 # plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=adjustcolor(1, alpha.f=0.05),
-#   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " genes)")
+#   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " feats)")
 # )
 
-genes_grch38$tss_cpg_status  = NA
-genes_grch38[names(idx)[!idx],]$tss_cpg_status = "cpg_rich"
-genes_grch38[names(idx)[idx],]$tss_cpg_status = "cpg_poor"
-table(genes_grch38$tss_cpg_status)
-genes_grch38$cpg_density = NA
-genes_grch38[rownames(mat),]$cpg_density = apply(mat, 1, mean)
-saveRDS(genes_grch38, "~/projects/genes/bed_grch38_epimeddb.rds")
-WriteXLS::WriteXLS(genes_grch38, "genes_grch38_cpg_status.xls")
+feats$tss_cpg_status  = NA
+feats[names(idx)[!idx],]$tss_cpg_status = "cpg_rich"
+feats[names(idx)[idx],]$tss_cpg_status = "cpg_poor"
+table(feats$tss_cpg_status)
+feats$cpg_density = NA
+feats[rownames(mat),]$cpg_density = apply(mat, 1, mean)
+# WriteXLS::WriteXLS(feats, "feats_cpg_status.xls")
 ```
 
 # Session Information

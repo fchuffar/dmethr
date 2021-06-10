@@ -17,11 +17,19 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 ```
 
 ```{r params}
+source("common.R")
 step = 100
 nb_rnd_feat = 0
 ud_str = 2500
 up_str = dwn_str = ud_str
+prefix = paste0("cgi_", up_str, "_", dwn_str, "_", step, "_", nb_rnd_feat, "")
 ```
+
+```{r globals variables}
+hg38_chrom_sizes  = read.table("~/projects/genes/hg38.chrom.sizes", stringsAsFactors=FALSE)
+rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
+```
+
 
 # Purpose
 
@@ -37,93 +45,63 @@ It happends in 2 steps:
 
 ```{r label="Extract features lenght"}
 feat_filename = "~/projects/01_momik/results/feats_epic_grch38.rds"
-feat_cpg = readRDS(feat_filename)
-feat_cpg$len=(feat_cpg[,3]-feat_cpg[,2])
-head(feat_cpg)
-dim(feat_cpg)
+feats = readRDS(feat_filename)
+feats$len=(feats[,3]-feats[,2])
+head(feats)
+dim(feats)
 ```
 
 
-```{r marginals_full, fig.height=9}
-plot_feat_den = function (x, y, xlim, ylim, ...) {
-  if (missing(xlim)) {
-    xlim = range(x)    
-  }
-  if (missing(ylim)) {
-    ylim = range(y)    
-  }
-  layout(matrix(c(2,1,1,2,1,1,4,3,3), 3), respect=TRUE)
-  # plot(x, y, pch=".", xlim=xlim, ylim=ylim)
-  smoothScatter (x, y, xlim=xlim, ylim=ylim, ...)
-  den_x = density(x,)
-  plot(den_x$x, den_x$y, type="l", xlim=xlim, xlab="")
-  den_y = density(y)
-  # den_y = density(y, breaks=c(-1, seq(min(ylim), max(ylim)), max(y)+1))
-  plot(den_y$y, den_y$x, type="l", ylim=ylim, ylab="")  
-}
-plot_feat_den(feat_cpg$len, feat_cpg$score, xlab="length", ylab="#probes")
-
+```{r plot_marginals_full, fig.height=9}
+plot_feat_den(feats$len, feats$score, xlab="length", ylab="#probes")
 xlim = c(0,10000)
 ylim = c(0,30)
-plot_feat_den(feat_cpg$len, feat_cpg$score, xlim, ylim, xlab="length", ylab="#probes")
+plot_feat_den(feats$len, feats$score, xlim, ylim, xlab="length", ylab="#probes")
 ```
 
-# Center feature on CpG peak
-
-
-```{r feat reduce, fig.height=9}
+```{r filtering anbd downsampling}
 # Filtering according to...
-# feat_cpg = feat_cpg[
-#   # feat_cpg$score>5 &
-#   feat_cpg$len<5000
+# feats = feats[
+#   # feats$score>5 &
+#   feats$len<5000
 #   ,]
-# plot_feat_den(feat_cpg$len, feat_cpg$score, xlim, ylim)
+# plot_feat_den(feats$len, feats$score, xlim, ylim)
 
 # Downsampling
 if (nb_rnd_feat > 0) {
-  dim(feat_cpg)
+  dim(feats)
   set.seed(1)
-  feat_cpg = feat_cpg[sort(sample(1:nrow(feat_cpg), min(nrow(feat_cpg), nb_rnd_feat))),]
-  dim(feat_cpg)  
+  feats = feats[sort(sample(1:nrow(feats), min(nrow(feats), nb_rnd_feat))),]
+  dim(feats)  
+  plot_feat_den(feats$len, feats$score, xlim, ylim, xlab="length", ylab="#probes")
 }
 ```
 
 
 
-## Raw features
-
-```{r feat_cpg_centered}
-feat_cpg_centered = feat_cpg
-feat_cpg_centered$mid =  feat_cpg_centered$start + floor(feat_cpg_centered$len/2)
-feat_cpg_centered$start = feat_cpg_centered$mid - ud_str
-feat_cpg_centered$end = feat_cpg_centered$mid + ud_str
-head(feat_cpg_centered)
-saveRDS(feat_cpg_centered, file = "feat_cpg_centered.rds")
+```{r rescale_feat_to_fixed_width}
+feats_rescaled = feats
+feats_rescaled[,2] =  floor(feats_rescaled[,2] + feats_rescaled[,3]feats_rescaled$len) / 2
+feats_rescaled[,3] =  feats_rescaled[,2] + 1
+head(feats_rescaled)
+# saveRDS(feats_rescaled, file = "feats_rescaled.rds")
 ```
 
 
-```{r seq_cpg_centered}
-seq_filename = paste0("seq_cpg_centered_", nb_rnd_feat, "_.rds")
-hg38_chrom_sizes  = read.table("~/projects/genes/hg38.chrom.sizes", stringsAsFactors=FALSE)
-rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
 
-library(BSgenome)
+
+
+# CpG enrichment of features
+
+
+```{r Extract DNA sequences of TSS +/- ud_str bp}
+seq_filename = paste0("seq_", prefix, ".rds")
 if (!file.exists(seq_filename)) {
-  seq = epimedtools::monitored_apply(mod=10, feat_cpg_centered, 1, function(gene) {
-    chr = gene[[1]]
-    strand = gene[[6]]
-    start = as.numeric(gene[[2]])
-    end = as.numeric(gene[[3]])
-    beg = max(1,start)
-    end2 = min(hg38_chrom_sizes[chr,2], end)
-    str = as.character(BSgenome::getSeq(BSgenome.Hsapiens.UCSC.hg38::Hsapiens, chr, beg, end2))
-    return(str)
-  })
+  seq = get_seq_from_bed(feats, up_str, dwn_str, hg38_chrom_sizes)
   saveRDS(seq, seq_filename)
 }
 seq = readRDS(seq_filename)
 length(seq)
-head(seq)
 ```
 
 
@@ -156,13 +134,14 @@ binmax = apply(mat, 1, function(l) {
   maxIndex = which(l==max(l))[1]
 })
 head(binmax)
-feat_cpg_centered$binmax = NA
-feat_cpg_centered[names(binmax),]$binmax = binmax
-head(feat_cpg_centered)
+feats_rescaled$binmax = NA
+feats_rescaled[names(binmax),]$binmax = binmax
+head(feats_rescaled)
 ```
 
 
 ```{r hm_cpg_centered, fig.height=9}
+set.seed(1)
 data = mat[order(binmax[rownames(mat)]),]
 data = data[sort(sample(1:nrow(data), min(nrow(data), 1000))), ]
 colors=c("black",  "red")
@@ -179,13 +158,13 @@ gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none",
 ## Centered features
 
 
-```{r feat_cpg_binmax}
-feat_cpg_binmax = feat_cpg_centered
-feat_cpg_binmax$maxcpgden = feat_cpg_binmax$start + step*feat_cpg_binmax$binmax + floor(step/2)
-feat_cpg_binmax$start = feat_cpg_binmax$maxcpgden - ud_str
-feat_cpg_binmax$end = feat_cpg_binmax$maxcpgden + ud_str
-head(feat_cpg_binmax)
-# saveRDS(feat_cpg_binmax, file = "feat_cpg_feat_cpg_binmax.rds")
+```{r feats_binmax}
+feats_binmax = feats_rescaled
+feats_binmax$maxcpgden = feats_binmax$start + step*feats_binmax$binmax + floor(step/2)
+feats_binmax$start = feats_binmax$maxcpgden - ud_str
+feats_binmax$end = feats_binmax$maxcpgden + ud_str
+head(feats_binmax)
+# saveRDS(feats_binmax, file = "feats_feats_binmax.rds")
 ```
 
 ```{r seq_cpg_binmax}
@@ -195,7 +174,7 @@ rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
 
 library(BSgenome)
 if (!file.exists(seq_filename)) {
-  seq = epimedtools::monitored_apply(mod=10, feat_cpg_binmax, 1, function(gene) {
+  seq = epimedtools::monitored_apply(mod=10, feats_binmax, 1, function(gene) {
     chr = gene[[1]]
     strand = gene[[6]]
     start = as.numeric(gene[[2]])
@@ -241,9 +220,9 @@ binmax = apply(mat, 1, function(l) {
   maxIndex = which(l==max(l))[1]
 })
 head(binmax)
-feat_cpg_centered$binmax = NA
-feat_cpg_centered[names(binmax),]$binmax = binmax
-head(feat_cpg_centered)
+feats_rescaled$binmax = NA
+feats_rescaled[names(binmax),]$binmax = binmax
+head(feats_rescaled)
 ```
 
 ```{r hm_cpg_binmax, fig.height=9}
@@ -394,15 +373,15 @@ Notice that 5000bp feature could overlap an other feature.
 
 
 ```{r, fig.height=9}
-plot_feat_den(pca$x[,1], feat_cpg[rownames(pca$x), ]$score)
+plot_feat_den(pca$x[,1], feats[rownames(pca$x), ]$score)
 ylim = c(0,30)
-plot_feat_den(pca$x[,1], feat_cpg[rownames(pca$x), ]$score, ylim=ylim)
+plot_feat_den(pca$x[,1], feats[rownames(pca$x), ]$score, ylim=ylim)
 
-plot_feat_den(pca$x[,1], feat_cpg[rownames(pca$x), ]$score, ylim=ylim)
+plot_feat_den(pca$x[,1], feats[rownames(pca$x), ]$score, ylim=ylim)
 
-idx = rownames(pca$x)[pca$x[,1]<0 | feat_cpg[rownames(pca$x), ]$score>5]
+idx = rownames(pca$x)[pca$x[,1]<0 | feats[rownames(pca$x), ]$score>5]
 
-plot_feat_den(pca$x[idx,1], feat_cpg[idx, ]$score, ylim=ylim)
+plot_feat_den(pca$x[idx,1], feats[idx, ]$score, ylim=ylim)
 ```
 
 ```{r}
@@ -456,24 +435,24 @@ for (j in 2:3) {
 }
 ```
 
-# sortie feat_cpg_binmax
+# sortie feats_binmax
 
 ```{r}
 idx = pca$x[,1] > quantile(pca$x[,1], probs = seq(0, 1, 1/3))[[2]]
 
-feat_cpg_binmax$feat_cpg_status  = NA
-feat_cpg_binmax[names(idx)[!idx],]$feat_cpg_status = "cpg_rich"
-feat_cpg_binmax[names(idx)[idx],]$feat_cpg_status = "cpg_poor"
-table(feat_cpg_binmax$feat_cpg_status)
-feat_cpg_binmax$cpg_density = NA
-feat_cpg_binmax[rownames(mat),]$cpg_density = apply(mat, 1, mean)
-feat_cpg_binmax$start = feat_cpg_binmax$start + ud_str
-feat_cpg_binmax$end = feat_cpg_binmax$start + 1
+feats_binmax$feats_status  = NA
+feats_binmax[names(idx)[!idx],]$feats_status = "cpg_rich"
+feats_binmax[names(idx)[idx],]$feats_status = "cpg_poor"
+table(feats_binmax$feats_status)
+feats_binmax$cpg_density = NA
+feats_binmax[rownames(mat),]$cpg_density = apply(mat, 1, mean)
+feats_binmax$start = feats_binmax$start + ud_str
+feats_binmax$end = feats_binmax$start + 1
 
 feat_filename_status = "~/projects/01_momik/results/feats_epic_grch38_cpg_status.rds"
 
-saveRDS(feat_cpg_binmax, feat_filename_status)
-WriteXLS::WriteXLS(feat_cpg_binmax, "feats_epic_grch38_cpg_status.xls")
+saveRDS(feats_binmax, feat_filename_status)
+WriteXLS::WriteXLS(feats_binmax, "feats_epic_grch38_cpg_status.xls")
 ```
 
 # heatmap cpg rich
