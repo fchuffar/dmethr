@@ -28,8 +28,29 @@ WriteXLS::WriteXLS(feats, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusp
 
 # Core feats
 
-...
+```{r}
 
+# plot 2 firsts studies
+#threshold
+#study 1
+i = 2
+#study 2
+j = 2
+layout(1, respect=TRUE)
+plot(feats$wt_dko_l2fc, feats$aza_beta, xlab="Log2FoldChange WTvsDKO", ylab="Beta 5AZA")
+idx = intersect(gs_methplusplus, rownames(feats))
+points(feats[idx,]$wt_dko_l2fc, feats[idx,]$aza_beta, col=2, pch=1)
+abline(h=i, col=2)
+abline(v=j, col=2)
+legend("topleft", pch=1, col=2, "gs_methplusplus")
+
+featsup = rownames(feats[which(feats$wt_dko_l2fc>i & feats$aza_beta>j), ])
+#gs_methplusplus = t(gs_methplusplus)
+idx = intersect (featsup, gs_methplusplus)
+corefeats = rownames(feats[idx,])
+length(corefeats) 
+
+```
 
 # Multi omic analysis in in TCGA
 
