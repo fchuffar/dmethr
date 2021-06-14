@@ -24,7 +24,7 @@ s = readRDS("~/projects/study_gpl570/study_GSE5816_trscr_gs.rds")
 
 #separer les infos de la colonne sample_title
 s$exp_grp$cell_line = stringr::str_split_fixed(s$exp_grp$sample_title, " ", 2)[,1]
-
+library(stringr)
 s$exp_grp$treatment_5aza = sapply(stringr::str_split_fixed(s$exp_grp$sample_title, " ", 2)[,2],function(it){
   if (str_detect(it, "Cont")){
     return("1ct")
@@ -125,7 +125,14 @@ plot(-log10(stats$pval), -log10(stats2$pval))
 ```
 
 
+```{r}
+#add columns
+feats$aza_beta = NA #rajout col log2foldchange
+feats[rownames(stats2),]$aza_beta = stats2$beta
+feats$aza_padj = NA #rajout col padj
+feats[rownames(stats2),]$aza_padj = stats2$padj
 
+```
 
 
 # Session Information

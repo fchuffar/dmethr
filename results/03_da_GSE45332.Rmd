@@ -27,7 +27,6 @@ Form the differential analysis we obtain a vector of log2foldchange.
 GSEA clearly show that the previously define genesets (genes with promoter highly methylated in most of tissues) have a significantly increased expression in the DNMT DKO samples.
 
 ```{r}
-dim(feats)
 d = read.table("~/projects/hadaca/results/GSE45332/04_deseq2/tables/KOvsWT.complete.txt", header=TRUE, stringsAsFactors=FALSE, row.names=1)
 d$lpadj = -log10(d$padj + 10^-300)
 # head(d)
@@ -43,24 +42,24 @@ idx = intersect(gs_methplusplus, rownames(d))
 points(d[idx,]$log2FoldChange, d[idx,]$lpadj, col=2, pch=1)
 legend("topleft", pch=1, col=2, "gs_methplusplus")
 
-layout(1, respect=TRUE)
-boxplot(abs(d[idx,]$log2FoldChange)~d[idx,]$log2FoldChange>0, xlab="log2FoldChange > 0", ylab="|log2FoldChange|")
+#layout(1, respect=TRUE)
+#boxplot(abs(d[idx,]$log2FoldChange)~d[idx,]$log2FoldChange>0, xlab="log2FoldChange > 0", ylab="|log2FoldChange|")
 
-volcano_plot_meth = function(){
-  layout(1, respect=TRUE)
-boxplot(abs(d[idx,]$log2FoldChange)~d[idx,]$log2FoldChange>0, xlab="log2FoldChange > 0", ylab="|log2FoldChange|")
-}
-pdf(paste0("volcano_plot_meth.pdf"), width=15, height=5)
-volcano_plot_meth()
-dev.off()
+#volcano_plot_meth = function(){
+#  layout(1, respect=TRUE)
+#boxplot(abs(d[idx,]$log2FoldChange)~d[idx,]$log2FoldChange>0, xlab="log2FoldChange > 0", ylab="|log2FoldChange|")
+#}
+#pdf(paste0("volcano_plot_meth.pdf"), width=15, height=5)
+#volcano_plot_meth()
+#dev.off()
 
-layout(matrix(1:6, 2), respect=TRUE)
-e = read.table("~/projects/hadaca/results/GSE45332/04_deseq2/design.txt", header=TRUE, row.names=1)
+#layout(matrix(1:6, 2), respect=TRUE)
+#e = read.table("~/projects/hadaca/results/GSE45332/04_deseq2/design.txt", header=TRUE, row.names=1)
 # g = "KRT7"
 # boxplot(unlist(d[g,paste0("norm.", rownames(e))])~e$cond, main=g)
-gs = c("C3"  , "CYR61", "DCAF4L1", "DNAH17", "HKDC1"   , "IGF2BP1",  "IL1A", "KRT7" , "NES"    , "SDC4"  , "SERPINE1", "TGM2"   ,  "VIM")
+#gs = c("C3"  , "CYR61", "DCAF4L1", "DNAH17", "HKDC1"   , "IGF2BP1",  "IL1A", "KRT7" , "NES"    , "SDC4"  , "SERPINE1", "TGM2"   ,  "VIM")
 # sapply(gs[-1], function(g){boxplot(unlist(d[g,paste0("norm.", rownames(e))])~e$cond, main=g)})
-sapply(gs[-1], function(g){boxplot(log2(unlist(d[g,paste0("norm.", rownames(e))])+1)~e$cond, main=g, ylab="log2(norm_count+1)")})
+#sapply(gs[-1], function(g){boxplot(log2(unlist(d[g,paste0("norm.", rownames(e))])+1)~e$cond, main=g, ylab="log2(norm_count+1)")})
 ```
 
 
@@ -84,7 +83,7 @@ We export gene as :
 ```{r export_genes}
 feats$dnmtkoup = rownames(feats) %in% gs_dnmtkoup
 feats$dnmtkoup_methplusplus = rownames(feats) %in% intersect(gs_dnmtkoup, gs_methplusplus)
-WriteXLS::WriteXLS(feats, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusplus.xlsx"))
+#WriteXLS::WriteXLS(feats, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusplus.xlsx"))
 ```
 
 
@@ -132,6 +131,10 @@ sum(idx)
 
 feats$dnmtkoup = rownames(feats) %in% gs_dnmtkoup
 feats$dnmtkoup_methplusplus = rownames(feats) %in% intersect(gs_dnmtkoup, gs_methplusplus)
+feats$wt_dko_l2fc = NA #rajout col log2foldchange
+feats[rownames(d),]$wt_dko_l2fc = d$log2FoldChange
+feats$wt_dko_padj = NA #rajout col padj
+feats[rownames(d),]$wt_dko_padj = d$lpadj
 ```
 
 
