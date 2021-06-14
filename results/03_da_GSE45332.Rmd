@@ -145,8 +145,8 @@ feats[rownames(d),]$wt_dko_padj = d$lpadj
 ```{r}
 feats$l2fc_GSE45332 = NA
 feats$pval_GSE45332 = NA
-feats$l2fc_GSE45332 = NA
-feats$pval_GSE45332 = NA
+feats$l2fc_GSE45332 = d[rownames(feats),]$log2FoldChange
+feats$pval_GSE45332 = d[rownames(feats),]$padj
 ```
 
 

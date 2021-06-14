@@ -15,6 +15,7 @@ output:
 
 ```{r, echo=FALSE, eval=TRUE}
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
+
 ```
 
 # Export features
@@ -22,7 +23,7 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 We export gene as : 
 
 ```{r export_genes}
-WriteXLS::WriteXLS(feats, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusplus.xlsx"))
+# WriteXLS::WriteXLS(feats, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusplus.xlsx"))
 ```
 
 
@@ -33,9 +34,9 @@ WriteXLS::WriteXLS(feats, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusp
 # plot 2 firsts studies
 #threshold
 #study 1
-i = 2
+i = 1
 #study 2
-j = 2
+j = 1
 layout(1, respect=TRUE)
 plot(feats$wt_dko_l2fc, feats$aza_beta, xlab="Log2FoldChange WTvsDKO", ylab="Beta 5AZA")
 idx = intersect(gs_methplusplus, rownames(feats))
@@ -55,9 +56,32 @@ length(corefeats)
 # Expression in GTEx
 
 
+```{r}
+```
+
+
 # Multi omic analysis in in TCGA
 
-...
+```{r eval=TRUE}
+source("common.R")
+
+tcga_project = "TCGA-LUSC"
+gene_symbols =  idx
+
+s_cnv   = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_cnv.rds"))
+s_meth  = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_meth.rds"))
+s_trscr = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
+
+data = get_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)
+
+
+for (gene_symbol in gene_symbols) {
+  print(gene_symbol)
+  # mdata = get_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)
+  
+  try(momic_pattern(gene_symbol, tcga_project))
+}
+```
 
 
 

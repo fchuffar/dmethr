@@ -131,8 +131,16 @@ feats$aza_beta = NA #rajout col log2foldchange
 feats[rownames(stats2),]$aza_beta = stats2$beta
 feats$aza_padj = NA #rajout col padj
 feats[rownames(stats2),]$aza_padj = stats2$padj
-
 ```
+
+
+```{r}
+feats$l2fc_GSE5816 = NA
+feats$pval_GSE5816 = NA
+feats$l2fc_GSE5816 = stats2[rownames(feats),]$beta
+feats$pval_GSE5816 = stats2[rownames(feats),]$padj
+```
+
 
 
 # Session Information
