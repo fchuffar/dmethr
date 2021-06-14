@@ -19,7 +19,7 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 ```{r params}
 source("common.R")
 step = 100
-nb_rnd_feat = 0
+nb_rnd_feat = 2000
 ud_str = 2500
 up_str = dwn_str = ud_str
 prefix = paste0("cgi_", up_str, "_", dwn_str, "_", step, "_", nb_rnd_feat, "")
@@ -81,7 +81,7 @@ if (nb_rnd_feat > 0) {
 
 ```{r rescale_feat_to_fixed_width}
 feats_rescaled = feats
-feats_rescaled[,2] =  floor(feats_rescaled[,2] + feats_rescaled[,3]feats_rescaled$len) / 2
+feats_rescaled[,2] =  floor(feats_rescaled[,2] + feats_rescaled[,3]) / 2
 feats_rescaled[,3] =  feats_rescaled[,2] + 1
 head(feats_rescaled)
 # saveRDS(feats_rescaled, file = "feats_rescaled.rds")

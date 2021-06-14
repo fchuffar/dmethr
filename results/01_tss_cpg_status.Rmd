@@ -162,54 +162,58 @@ legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0("rnd pos +/-",
 ```
 
 
+
+# Clustering 
+
+
 Then we clustering TSS according to there sliced CpG density
 
 PCA on TSS +/-`r ud_str/1000`kb sliced into `r step`b bins is performed.
 
 Component 1 discriminates CpG rich and poor TSS.
 
-```{r label="PCA on mat"}
+```{r clustering}
 mat = mat[!apply(is.na(mat), 1, any),] 
 pca = prcomp(mat, scale=FALSE)
 v = pca$sdev * pca$sdev
 p = v / sum(v) * 100
 
+
 layout(matrix(1:2,1), respect=TRUE)
 barplot(p)
 i = 1
 plot(density(pca$x[,i]), main=paste0("PC", i, "(", signif(p[i], 3), "%)"))
-abline(v=-0.04)
-
-idx = pca$x[,1] < -0.04
-
-plot(apply(mat[idx,], 2, mean), type="l", ylim=c(0, .13), col=1, main="CpG enrichment", xaxt="n")
-lines(apply(mat[!idx,], 2, mean), col=2)
-axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
-legend("topright", legend=c(paste0(sum(idx), " feats"), paste0(sum(!idx), " feats")), col=1:2, lty=1)
 
 
-# layout(matrix(1:6,2), respect=TRUE)
-# for(i in 1:6) {
-#   barplot(pca$rotation[,i], main=paste("contrib PC",i))
-# }
+km = kmeans(pca$x[,1], 2)
+thresh = mean(km$centers)
+abline(v=thresh)
 
-# layout(matrix(1:2,1), respect=TRUE)
-# i=1
-# j=2
-# plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=adjustcolor(1, alpha.f=0.05),
-#   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " feats)")
-# )
-# i=1
-# j=3
-# plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=adjustcolor(1, alpha.f=0.05),
-#   main=paste0("PCA (TSS +/-", ud_str/1000, "kb, ", nrow(mat), " feats)")
-# )
+plot(pca$x[,1], pca$x[,2], col=km$cluster)
+abline(v=thresh)
+
+idx1 = names(res$cluster)[res$cluster==1]
+idx2 = names(res$cluster)[res$cluster==2]
 
 feats$cpg_status  = NA
-feats[names(idx)[!idx],]$cpg_status = "rich"
-feats[names(idx)[idx],]$cpg_status = "poor"
-table(feats$cpg_status)
-feats$cpg_density = NA
+if (mean(mat[idx1,]) < mean(mat[idx2,])) {
+  feats[idx1,]$cpg_status = "poor"
+  feats[idx2,]$cpg_status = "rich"  
+} else {
+  feats[idx1,]$cpg_status = "rich"
+  feats[idx2,]$cpg_status = "poor"
+}
+
+
+
+idx_rich = rownames(feats)[feats$cpg_status%in%"rich"]
+idx_poor = rownames(feats)[feats$cpg_status%in%"poor"]
+
+plot(apply(mat[idx_poor,], 2, mean), type="l", ylim=c(0, .13), col=1, main="CpG enrichment", xaxt="n")
+lines(apply(mat[idx_rich,], 2, mean), col=2)
+axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
+legend("topright", legend=c(paste0("rich (", length(idx_rich), ")"), paste0("poor (", length(idx_poor), ")")), col=1:2, lty=1)
+
 feats[rownames(mat),]$cpg_density = apply(mat, 1, mean)
 # WriteXLS::WriteXLS(feats, "feats_cpg_status.xls")
 ```

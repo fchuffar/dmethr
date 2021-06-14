@@ -60,32 +60,22 @@ gs_cpgrich = rownames(feats)[!is.na(feats$cpg_status) & feats$cpg_status=="rich"
 ```{r}
 dim(feats)
 gs = rownames(feats)
-layout(1, respect=TRUE)
-plot(density(feats$cpg_density, na.rm=TRUE), main="Distribution of CpG density", lwd=3, col="grey", lty=2)
-den_rich = density(feats[feats$cpg_status%in%"rich",]$cpg_density, na.rm=TRUE)
-den_poor = density(feats[feats$cpg_status%in%"poor",]$cpg_density, na.rm=TRUE)
-lines(den_rich$x, den_rich$y * (den_rich$n/nrow(feats)), col=2, lwd=2)
-lines(den_poor$x, den_poor$y * (den_poor$n/nrow(feats)), col=4, lwd=2)
-legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("rich", "poor", "both"), lwd=c(2,2,3))
-
 
 CpG_dens = function() {
   layout(1, respect=TRUE)
-plot(density(feats$cpg_density, na.rm=TRUE), main="Distribution of CpG density", lwd=3, col="grey", lty=2)
-den_rich = density(feats[feats$cpg_status%in%"rich",]$cpg_density, na.rm=TRUE)
-den_poor = density(feats[feats$cpg_status%in%"poor",]$cpg_density, na.rm=TRUE)
-lines(den_rich$x, den_rich$y * (den_rich$n/nrow(feats)), col=2, lwd=2)
-lines(den_poor$x, den_poor$y * (den_poor$n/nrow(feats)), col=4, lwd=2)
-legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("rich", "poor", "both"), lwd=c(2,2,3))
+  plot(density(feats$cpg_density, na.rm=TRUE), main="Distribution of CpG density", lwd=3, col="grey", lty=2)
+  den_rich = density(feats[feats$cpg_status%in%"rich",]$cpg_density, na.rm=TRUE)
+  den_poor = density(feats[feats$cpg_status%in%"poor",]$cpg_density, na.rm=TRUE)
+  lines(den_rich$x, den_rich$y * (den_rich$n/nrow(feats)), col=2, lwd=2)
+  lines(den_poor$x, den_poor$y * (den_poor$n/nrow(feats)), col=4, lwd=2)
+  legend("topright", lty=c(1, 1, 2), col=c("red","blue", "grey"), c("rich", "poor", "both"), lwd=c(2,2,3))
 }
 
 CpG_dens()
 
-pdf(paste0("fig_CpG_dens.pdf"), width=15, height=5)
-CpG_dens()
-dev.off()
-
-
+# pdf(paste0("fig_CpG_dens.pdf"), width=15, height=5)
+# CpG_dens()
+# dev.off()
 ```
 
 
@@ -254,6 +244,19 @@ dev.off()
 ```
 
 ```{r selecting_genes, echo=TRUE, results="verbatim", eval=TRUE}
+
+idx1 = rownames(data)[unlist(hm$rowDendrogram[[1]])]
+idx2 = rownames(data)[unlist(hm$rowDendrogram[[2]])]
+
+feats$cpg_status  = NA
+if (mean(data[idx1,]) < mean(data[idx2,])) {
+  gs_methplusplus = rownames(data)[unlist(hm$rowDendrogram[[2]])]
+  # gs_methminusminus = rownames(data)[unlist(hm$rowDendrogram[[1]])]
+} else {
+  gs_methplusplus = rownames(data)[unlist(hm$rowDendrogram[[1]])]
+  # gs_methminusminus = rownames(data)[unlist(hm$rowDendrogram[[2]])]
+}
+
 gs_methplusplus = rownames(data)[unlist(hm$rowDendrogram[[2]])]
 length(gs_methplusplus)
 ```
