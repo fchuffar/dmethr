@@ -139,17 +139,18 @@ feats[rownames(d),]$wt_dko_padj = d$lpadj
 
 
 
+# Results
 
 
+```{r volcano_plot}
+gse = "GSE45332"
+feats[,paste0("l2fc_", gse)] = NA
+feats[,paste0("pval_", gse)] = NA
+feats[,paste0("l2fc_", gse)] = d[rownames(feats),]$log2FoldChange
+feats[,paste0("pval_", gse)] = d[rownames(feats),]$padj
 
-```{r}
-feats$l2fc_GSE45332 = NA
-feats$pval_GSE45332 = NA
-feats$l2fc_GSE45332 = d[rownames(feats),]$log2FoldChange
-feats$pval_GSE45332 = d[rownames(feats),]$padj
+plot_volcano(feats, gs_methplusplus, gse)
 ```
-
-
 
 # Session Information
 

@@ -1,3 +1,13 @@
+plot_volcano = function (feats, gs_methplusplus, gse) {
+  layout(1, respect=TRUE)
+  plot(feats[,paste0("l2fc_", gse)], -log10(feats[,paste0("pval_", gse)]), col="grey", xlab="log2FoldChange", ylab="adjusted pval")
+  idx = intersect(gs_methplusplus, rownames(feats))
+  points(feats[idx,][,paste0("l2fc_", gse)], -log10(feats[idx,][,paste0("pval_", gse)]), col=2, pch=1)
+  text(feats[idx,][,paste0("l2fc_", gse)], -log10(feats[idx,][,paste0("pval_", gse)]), idx)
+  legend("topleft", pch=1, col=2, "gs_methplusplus")  
+}
+
+
 if (!exists("mreadRDS")) mreadRDS = memoise::memoise(readRDS)
 
 get_genes = function(tcga_project, gene_filename="~/projects/genes/bed_grch38_epimeddb.rds") {

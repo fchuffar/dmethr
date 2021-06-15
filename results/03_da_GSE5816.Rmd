@@ -134,12 +134,19 @@ feats[rownames(stats2),]$aza_padj = stats2$padj
 ```
 
 
-```{r}
-feats$l2fc_GSE5816 = NA
-feats$pval_GSE5816 = NA
-feats$l2fc_GSE5816 = stats2[rownames(feats),]$beta
-feats$pval_GSE5816 = stats2[rownames(feats),]$padj
+
+# Results
+
+
+```{r volcano_plot}
+gse = "GSE5816"
+feats[,paste0("l2fc_", gse)] = NA
+feats[,paste0("pval_", gse)] = NA
+feats[,paste0("l2fc_", gse)] = stats2[rownames(feats),]$beta
+feats[,paste0("pval_", gse)] = stats2[rownames(feats),]$padj
+plot_volcano(feats, gs_methplusplus, gse)
 ```
+
 
 
 
