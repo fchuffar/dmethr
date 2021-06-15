@@ -184,7 +184,7 @@ barplot(p)
 i = 1
 plot(density(pca$x[,i]), main=paste0("PC", i, "(", signif(p[i], 3), "%)"))
 
-
+set.seed(3)
 km = kmeans(pca$x[,1], 2)
 thresh = mean(km$centers)
 abline(v=thresh)
