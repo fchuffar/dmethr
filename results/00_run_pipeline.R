@@ -11,6 +11,7 @@ rmarkdown::render("03_da_GSE5816.Rmd"    , output_file=paste0("03_da_GSE5816_"  
 rmarkdown::render("04_results.Rmd"       , output_file=paste0("04_results_"       , prefix3, ".html"))
 
 
+nb_rnd_feat = 0
 
 rmarkdown::render("01_tss_cpg_status.Rmd")
 rmarkdown::render("02_mapreduce_mean.Rmd")

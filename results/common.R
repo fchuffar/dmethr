@@ -1,8 +1,3 @@
-
-
-
-
-
 if (!exists("mreadRDS")) mreadRDS = memoise::memoise(readRDS)
 
 get_genes = function(tcga_project, gene_filename="~/projects/genes/bed_grch38_epimeddb.rds") {
@@ -393,34 +388,31 @@ momic_pattern = function(gene_symbols, tcga_project, interaction_range=2500, ...
       las = 2)
 }
 
-if (!exists("mreadstudyRDS")) {
-  mreadstudyRDS = memoise::memoise(function(rds_file){
-    s   = readRDS(rds_file)
-    rownames(s$data) = gsub("/", "_", gsub("-", "_", rownames(s$data)))
-    ## index platform by chr
+readstudyRDS = function(rds_file){
+  s = readRDS(rds_file)
+  rownames(s$data) = gsub("/", "_", gsub("-", "_", rownames(s$data)))
+  ## index platform by chr
+  pf_chr_colname = colnames(s$platform)[1]
+  if (pf_chr_colname == "Chromosome") { # Fix it!!
+    chrs = as.character(unique(s$platform[[pf_chr_colname]]))
+    s$stuffs$chrs_indexed_platform = lapply(chrs, function(chr) {
+      # print(chr)
+      idx = rownames(s$platform)[!is.na(s$platform[[pf_chr_colname]]) & s$platform[[pf_chr_colname]]==chr]  
+      ret = s$platform[idx,]
+      return(ret)
+    })
+    names(s$stuffs$chrs_indexed_platform) = chrs
 
-    pf_chr_colname = colnames(s$platform)[1]
-    if (pf_chr_colname == "Chromosome") { # Fix it!!
-      chrs = as.character(unique(s$platform[[pf_chr_colname]]))
-      s$stuffs$chrs_indexed_platform = lapply(chrs, function(chr) {
-        # print(chr)
-        idx = rownames(s$platform)[!is.na(s$platform[[pf_chr_colname]]) & s$platform[[pf_chr_colname]]==chr]  
-        ret = s$platform[idx,]
-        return(ret)
-      })
-      names(s$stuffs$chrs_indexed_platform) = chrs
+    s$stuffs$chrs_indexed_data = lapply(chrs, function(chr) {
+      # print(chr)
+      idx = rownames(s$stuffs$chrs_indexed_platform[[chr]])
+      ret = s$data[idx,]
+      return(ret)
+    })
+    names(s$stuffs$chrs_indexed_data) = chrs      
+  }
+  return(s)
+}
 
-      s$stuffs$chrs_indexed_data = lapply(chrs, function(chr) {
-        # print(chr)
-        idx = rownames(s$stuffs$chrs_indexed_platform[[chr]])
-        ret = s$data[idx,]
-        return(ret)
-      })
-      names(s$stuffs$chrs_indexed_data) = chrs      
-    }
-
-    return(s)
-  })
-} 
-
+if (!exists("mreadstudyRDS")) {mreadstudyRDS = memoise::memoise(mreadstudyRDS)}
 

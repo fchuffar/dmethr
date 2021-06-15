@@ -19,7 +19,7 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 ```{r params}
 source("common.R")
 step = 100
-nb_rnd_feat = 2000
+if (!exists("nb_rnd_feat")) nb_rnd_feat = 2000
 ud_str = 2500
 up_str = dwn_str = ud_str
 prefix = "tss"
