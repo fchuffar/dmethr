@@ -248,7 +248,7 @@ dev.off()
 idx1 = rownames(data)[unlist(hm$rowDendrogram[[1]])]
 idx2 = rownames(data)[unlist(hm$rowDendrogram[[2]])]
 
-feats$cpg_status  = NA
+feats$methplusplus  = NA
 if (mean(data[idx1,]) < mean(data[idx2,])) {
   gs_methplusplus = rownames(data)[unlist(hm$rowDendrogram[[2]])]
   # gs_methminusminus = rownames(data)[unlist(hm$rowDendrogram[[1]])]
@@ -256,11 +256,8 @@ if (mean(data[idx1,]) < mean(data[idx2,])) {
   gs_methplusplus = rownames(data)[unlist(hm$rowDendrogram[[1]])]
   # gs_methminusminus = rownames(data)[unlist(hm$rowDendrogram[[2]])]
 }
-
 length(gs_methplusplus)
-```
 
-```{r}
 feats$methplusplus = rownames(feats) %in% gs_methplusplus
 table(feats$cpg_status, feats$methplusplus, useNA="ifany")
 ```
