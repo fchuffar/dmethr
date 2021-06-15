@@ -105,14 +105,14 @@ CpG density ( nb. of CpG / length of sequence) is computed in sequence of TSS +/
 
 TSS of 1000 random feats is represented there. It shows a CpG enrichment aoroud TSS.
 
-```{r label="heatmap for 1000 rnd feats"}
+```{r label="heatmap for 1000 rnd feats", fig.height=9}
 set.seed(1)
 data = mat[order(binmax[rownames(mat)]),]
 data = data[sort(sample(1:nrow(data), min(nrow(data), 1000))), ]
 colors=c("black",  "red")
 cols = colorRampPalette(colors)(20)
 rownames(data) = NULL
-gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 1000 rnd genes)"), xaxt="n", mar=c(8,5))
+gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 1000 rnd feats)"), xaxt="n", mar=c(8,5))
 ```
 
 

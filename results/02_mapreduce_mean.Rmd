@@ -257,7 +257,6 @@ if (mean(data[idx1,]) < mean(data[idx2,])) {
   # gs_methminusminus = rownames(data)[unlist(hm$rowDendrogram[[2]])]
 }
 
-gs_methplusplus = rownames(data)[unlist(hm$rowDendrogram[[2]])]
 length(gs_methplusplus)
 ```
 
