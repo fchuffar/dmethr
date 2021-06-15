@@ -414,5 +414,5 @@ readstudyRDS = function(rds_file){
   return(s)
 }
 
-if (!exists("mreadstudyRDS")) {mreadstudyRDS = memoise::memoise(mreadstudyRDS)}
+if (!exists("mreadstudyRDS")) {mreadstudyRDS = memoise::memoise(readstudyRDS)}
 
