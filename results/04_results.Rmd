@@ -29,8 +29,7 @@ We export gene as :
 
 # Core feats
 
-```{r}
-
+```{r core feats}
 # plot 2 firsts studies
 #threshold
 #study 1
@@ -56,13 +55,13 @@ length(corefeats)
 # Expression in GTEx
 
 
-```{r}
+```{r gtex}
 ```
 
 
 # Multi omic analysis in in TCGA
 
-```{r eval=TRUE}
+```{r momik, eval=TRUE}
 source("common.R")
 
 tcga_project = "TCGA-LUSC"
@@ -72,13 +71,9 @@ s_cnv   = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_cnv.rds"))
 s_meth  = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_meth.rds"))
 s_trscr = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
 
-data = get_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)
-
-
 for (gene_symbol in gene_symbols) {
   print(gene_symbol)
-  # mdata = get_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)
-  
+  # mdata = get_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)  
   try(momic_pattern(gene_symbol, tcga_project))
 }
 ```
