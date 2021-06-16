@@ -46,19 +46,16 @@ i = 1
 #study 2
 j = 1
 layout(1, respect=TRUE)
-plot(feats$l2fc_GSE45332, feats$l2fc_GSE5816, xlab="l2fc GSE45332 WTvsDKO", ylab="l2fc GSE5816")
+plot(feats$l2fc_GSE45332, feats$l2fc_GSE5816, xlab="l2fc GSE45332 WTvsDKO", ylab="l2fc GSE5816", pch=".", col="grey")
 idx = rownames(feats)[!is.na(feats$methplusplus) & feats$methplusplus]
 points(feats[idx,]$l2fc_GSE45332, feats[idx,]$l2fc_GSE5816, col=2, pch=1)
-abline(h=i, col=2)
-abline(v=j, col=2)
+abline(h=i, col=1, lty=2)
+abline(v=j, col=1, lty=2)
 legend("topleft", pch=1, col=2, "gs_methplusplus")
 
-featsup = rownames(feats[which(feats$l2fc_GSE45332>i & feats$l2fc_GSE5816>j), ])
-#gs_methplusplus = t(gs_methplusplus)
-idx = intersect (featsup, gs_methplusplus)
-corefeats = rownames(feats[idx,])
+# features of interest
+corefeats = rownames(feats)[feats$l2fc_GSE45332>i & feats$l2fc_GSE5816>j & !is.na(feats$methplusplus) & feats$methplusplus]
 length(corefeats) 
-
 ```
 
 # Expression in GTEx
