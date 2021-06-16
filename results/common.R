@@ -226,6 +226,42 @@ build_feats_epic_grch38 = function() {
 
 # from ~/project/01_momik/results/common.R
 
+get_feat_indexed_probes = function(feats_bed6, probes_bed2, up_str, dwn_str) {
+  pf_bed = probes_bed2
+  pf_bed[,3] = pf_bed[,2] + 1
+  pf_bed[,4] = rownames(pf_bed)
+  pf_bed[,5] = 0
+  pf_bed[,6] = "+"
+  pf_bed = pf_bed[!pf_bed[,1]%in%"*",]
+  head(pf_bed)
+  options(scipen=999)
+  write.table(pf_bed, file="illumina_450k_hg38.bed", sep="\t", quote=FALSE,row.names=FALSE, col.names=FALSE)    
+  ## index meth probes by chr
+  chrs = unique(feats_bed6[,1])
+  chrs_indexed_methpf = lapply(chrs, function(chr) {
+    print(chr)
+    idx = rownames(pf_bed)[!is.na(pf_bed[,1]) & pf_bed[,1]==chr]  
+    ret = pf_bed[idx,]
+    return(ret)
+  })
+  names(chrs_indexed_methpf) = chrs
+  ## index probes by gene name
+  print("# indexing probes by gene name")
+  feat_indexed_probes = epimedtools::monitored_apply(feats_bed6, 1, function(gene) {
+    # gene = randomall_genes[1,]genes=readRDS("~/fchuffar/projects/genes/bed_grch38_epimeddb.rds")
+    # print(gene)
+    chr = gene[[1]]
+    meth_platform = chrs_indexed_methpf[[chr]]
+    ret = dmprocr::get_probe_names(gene, meth_platform, pf_chr_colname, pf_pos_colname, up_str, dwn_str) 
+    return(ret)
+  })
+  barplot(table(sapply(feat_indexed_probes, length)))
+  return(feat_indexed_probes)
+}
+if (!exists("mget_feat_indexed_probes")) mget_feat_indexed_probes = memoise::memoise(get_feat_indexed_probes)
+
+
+
 get_multiomic_data = function(gene_symbols, tcga_project, feat_indexed_probes, region_id, interaction_range=2500) {
   # # warning: feat_indexed_probes is a global variable
   s_cnv   = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_cnv.rds"))

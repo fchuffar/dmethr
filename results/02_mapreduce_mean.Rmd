@@ -1,5 +1,5 @@
 ---
-title: "Step 2: methylation status in healthy tissues"
+title: "Step 2: Methylation status in healthy tissues"
 author: "Florence Pittion, Florent Chuffart"
 date: "`r Sys.Date()`"
 output: 
@@ -35,7 +35,7 @@ The goal of this study is to group and compare genes of different categories:
 
 This study is based on following data set:
 
-- methylation data from normal tissues (Illumina 450k: GSE56515, GSE48472, GSE64096, GSE50192", GSE31848", GSE73375)
+- methylation data from normal tissues (Illumina 450k: GSE56515, GSE48472, GSE64096, GSE50192, GSE31848, GSE73375)
 - transcriptomic data HCT116 DNMT DKO vs. WT (RNA-seq: GSE45332)
 
 
@@ -48,7 +48,7 @@ This study is based on following data set:
 
 
 ```{r}
-if (!exists("feats")) {feats = readRDS(paste0("~/projects/01_momik/results/feats_epic_grch38_cpg_status.rds"))}
+if (!exists("feats")) {feats = readRDS(paste0("~/projects/genes/bed_grch38_epimeddb.rds"))}
 ```
 
 ```{r echo=TRUE, results="verbatim"}
@@ -90,53 +90,13 @@ CpG_dens()
 **Promoter methylation status in normal tissues**
 
 ```{r loading_study_meth_all_human_tissues_grch38}
-if (!exists("mreadRDS"))   mreadRDS = memoise::memoise(readRDS) 
 s_meth = mreadRDS("~/projects/all_human_tissues/results/meth/study_meth_all_human_tissues_grch38.rds")
 ```
 
 ```{r process_study_meth_all_human_tissues_grch38, }
-table(s_meth$platform$Chromosome)
-if (!exists("feat_indexed_probes")) {
-  # params
-  pf_chr_colname = "Chromosome"
-  pf_pos_colname = "Start"
-  up_str = 2000
-  dwn_str = 2000  
-  if (!exists("pf_orig")) {
-    pf_orig = s_meth$platform
-    pf_orig = pf_orig[order(pf_orig[[pf_chr_colname]],pf_orig[[pf_pos_colname]]), ]
-    pf_bed = pf_orig[,c(pf_chr_colname, pf_pos_colname)]
-    pf_bed[,3] = pf_bed[,2] + 1
-    pf_bed[,4] = row.names(pf_bed)
-    pf_bed[,5] = 0
-    pf_bed[,6] = "+"
-    pf_bed = pf_bed[!pf_bed[,1]%in%"*",]
-    head(pf_bed)
-    options(scipen=999)
-    write.table(pf_bed, file="illumina_450k_hg38.bed", sep="\t", quote=FALSE,row.names=FALSE, col.names=FALSE)    
-  }  
-  ## index meth probes by chr
-  chrs = unique(feats[gs_cpgrich,1])
-  chrs_indexed_methpf = lapply(chrs, function(chr) {
-    print(chr)
-    idx = rownames(pf_orig)[!is.na(pf_orig[[pf_chr_colname]]) & pf_orig[[pf_chr_colname]]==chr]  
-    ret = pf_orig[idx,]
-    return(ret)
-  })
-  names(chrs_indexed_methpf) = chrs
-  ## index probes by gene name
-  print("# indexing probes by gene name")
-  feat_indexed_probes = epimedtools::monitored_apply(feats[gs_cpgrich,], 1, function(gene) {
-    # gene = randomall_genes[1,]genes=readRDS("~/fchuffar/projects/genes/bed_grch38_epimeddb.rds")
-    # print(gene)
-    chr = gene[[1]]
-    meth_platform = chrs_indexed_methpf[[chr]]
-    ret = dmprocr::get_probe_names(gene, meth_platform, pf_chr_colname, pf_pos_colname, up_str, dwn_str) 
-    return(ret)
-  })
-  barplot(table(sapply(feat_indexed_probes, length)))
-  feat_indexed_probes = feat_indexed_probes[sapply(feat_indexed_probes, length)>5]
-}
+feat_indexed_probes = mget_feat_indexed_probes(feats_bed6=feats[gs_cpgrich,], s_meth$platform[,c("Chromosome", "Start")], up_str=up_str, dwn_str=dwn_str)
+feat_indexed_probes = feat_indexed_probes[sapply(feat_indexed_probes, length)>5]
+barplot(table(sapply(feat_indexed_probes, length)))
 ```
 
 

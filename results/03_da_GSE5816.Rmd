@@ -1,5 +1,5 @@
 ---
-title: "Step 3: expression of genes in GSE5816 (5-aza treated)"
+title: "Step 3: Expression of genes in GSE5816 (5-aza treated)"
 author: "Florence Pittion, Florent Chuffart"
 date: "`r Sys.Date()`"
 output: 
@@ -126,11 +126,11 @@ plot(-log10(stats$pval), -log10(stats2$pval))
 
 
 ```{r}
-#add columns
-feats$aza_beta = NA #rajout col log2foldchange
-feats[rownames(stats2),]$aza_beta = stats2$beta
-feats$aza_padj = NA #rajout col padj
-feats[rownames(stats2),]$aza_padj = stats2$padj
+# #add columns
+# feats$aza_beta = NA #rajout col log2foldchange
+# feats[rownames(stats2),]$aza_beta = stats2$beta
+# feats$aza_padj = NA #rajout col padj
+# feats[rownames(stats2),]$aza_padj = stats2$padj
 ```
 
 

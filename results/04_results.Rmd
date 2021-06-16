@@ -1,5 +1,5 @@
 ---
-title: "Step 4: results"
+title: "Step 4: Results"
 subtitle: "Hunting DNA methylation repression of transcriptional activity"
 author: "Florence Pittion, Florent Chuffart"
 date: "`r Sys.Date()`"
@@ -20,10 +20,19 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 
 # Export features
 
-We export gene as : 
+
+```{r}
+feat_export_filename = paste0("feats.xlsx")
+```
+
+Annotated features are exported as [`r feat_export_filename`](`r feat_export_filename`) file. 
+
+```{r results="verbatim"}
+head(feats)
+```
 
 ```{r export_genes}
-# WriteXLS::WriteXLS(feats, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusplus.xlsx"))
+WriteXLS::WriteXLS(feats, feat_export_filename)
 ```
 
 
@@ -37,14 +46,14 @@ i = 1
 #study 2
 j = 1
 layout(1, respect=TRUE)
-plot(feats$wt_dko_l2fc, feats$aza_beta, xlab="Log2FoldChange WTvsDKO", ylab="Beta 5AZA")
-idx = intersect(gs_methplusplus, rownames(feats))
-points(feats[idx,]$wt_dko_l2fc, feats[idx,]$aza_beta, col=2, pch=1)
+plot(feats$l2fc_GSE45332, feats$l2fc_GSE5816, xlab="l2fc GSE45332 WTvsDKO", ylab="l2fc GSE5816")
+idx = rownames(feats)[!is.na(feats$methplusplus) & feats$methplusplus]intersect(gs_methplusplus, rownames(feats))
+points(feats[idx,]$l2fc_GSE45332, feats[idx,]$l2fc_GSE5816, col=2, pch=1)
 abline(h=i, col=2)
 abline(v=j, col=2)
 legend("topleft", pch=1, col=2, "gs_methplusplus")
 
-featsup = rownames(feats[which(feats$wt_dko_l2fc>i & feats$aza_beta>j), ])
+featsup = rownames(feats[which(feats$l2fc_GSE45332>i & feats$l2fc_GSE5816>j), ])
 #gs_methplusplus = t(gs_methplusplus)
 idx = intersect (featsup, gs_methplusplus)
 corefeats = rownames(feats[idx,])

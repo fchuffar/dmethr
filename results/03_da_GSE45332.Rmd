@@ -1,5 +1,5 @@
 ---
-title: "Step 3: expression of genes in GSE45332 (DNMT double KO)"
+title: "Step 3: Expression of genes in GSE45332 (DNMT double KO)"
 author: "Florence Pittion, Florent Chuffart"
 date: "`r Sys.Date()`"
 output: 
@@ -118,23 +118,23 @@ stoda::gseaplot(v=stoda_input, gs=gs_methplusplus)
 
 
 ```{r selecting_feats3, echo=TRUE, results="verbatim"}
-idx = 
-  (!is.na(d$padj) & d$lpadj > 50 & d$log2FoldChange > 0) | 
-  (!is.na(d$padj) & d$log2FoldChange > 3)
-sum(idx)
-gs_dnmtkoup = rownames(d)[idx]
-length(gs_dnmtkoup)
-
-
-idx = !is.na(d$padj) & d$lpadj > -log10(0.05) & d$log2FoldChange > 1 & rownames(d) %in% gs_methplusplus
-sum(idx)
-
-feats$dnmtkoup = rownames(feats) %in% gs_dnmtkoup
-feats$dnmtkoup_methplusplus = rownames(feats) %in% intersect(gs_dnmtkoup, gs_methplusplus)
-feats$wt_dko_l2fc = NA #rajout col log2foldchange
-feats[rownames(d),]$wt_dko_l2fc = d$log2FoldChange
-feats$wt_dko_padj = NA #rajout col padj
-feats[rownames(d),]$wt_dko_padj = d$lpadj
+# idx =
+#   (!is.na(d$padj) & d$lpadj > 50 & d$log2FoldChange > 0) |
+#   (!is.na(d$padj) & d$log2FoldChange > 3)
+# sum(idx)
+# gs_dnmtkoup = rownames(d)[idx]
+# length(gs_dnmtkoup)
+#
+#
+# idx = !is.na(d$padj) & d$lpadj > -log10(0.05) & d$log2FoldChange > 1 & rownames(d) %in% gs_methplusplus
+# sum(idx)
+#
+# feats$dnmtkoup = rownames(feats) %in% gs_dnmtkoup
+# feats$dnmtkoup_methplusplus = rownames(feats) %in% intersect(gs_dnmtkoup, gs_methplusplus)
+# feats$wt_dko_l2fc = NA #rajout col log2foldchange
+# feats[rownames(d),]$wt_dko_l2fc = d$log2FoldChange
+# feats$wt_dko_padj = NA #rajout col padj
+# feats[rownames(d),]$wt_dko_padj = d$lpadj
 ```
 
 
