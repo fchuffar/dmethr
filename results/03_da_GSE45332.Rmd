@@ -117,39 +117,19 @@ stoda::gseaplot(v=stoda_input, gs=gs_methplusplus)
 
 
 
-```{r selecting_feats3, echo=TRUE, results="verbatim"}
-# idx =
-#   (!is.na(d$padj) & d$lpadj > 50 & d$log2FoldChange > 0) |
-#   (!is.na(d$padj) & d$log2FoldChange > 3)
-# sum(idx)
-# gs_dnmtkoup = rownames(d)[idx]
-# length(gs_dnmtkoup)
-#
-#
-# idx = !is.na(d$padj) & d$lpadj > -log10(0.05) & d$log2FoldChange > 1 & rownames(d) %in% gs_methplusplus
-# sum(idx)
-#
-# feats$dnmtkoup = rownames(feats) %in% gs_dnmtkoup
-# feats$dnmtkoup_methplusplus = rownames(feats) %in% intersect(gs_dnmtkoup, gs_methplusplus)
-# feats$wt_dko_l2fc = NA #rajout col log2foldchange
-# feats[rownames(d),]$wt_dko_l2fc = d$log2FoldChange
-# feats$wt_dko_padj = NA #rajout col padj
-# feats[rownames(d),]$wt_dko_padj = d$lpadj
-```
-
-
 
 # Results
 
-
-```{r volcano_plot}
+```{r}
 gse = "GSE45332"
 feats[,paste0("l2fc_", gse)] = NA
 feats[,paste0("pval_", gse)] = NA
 feats[,paste0("l2fc_", gse)] = d[rownames(feats),]$log2FoldChange
 feats[,paste0("pval_", gse)] = d[rownames(feats),]$padj
 
-plot_volcano(feats, gs_methplusplus, gse)
+```
+
+```{r child="03_da_results.Rmd"}
 ```
 
 # Session Information
