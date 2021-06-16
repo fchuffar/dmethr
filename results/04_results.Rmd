@@ -47,7 +47,7 @@ i = 1
 j = 1
 layout(1, respect=TRUE)
 plot(feats$l2fc_GSE45332, feats$l2fc_GSE5816, xlab="l2fc GSE45332 WTvsDKO", ylab="l2fc GSE5816")
-idx = rownames(feats)[!is.na(feats$methplusplus) & feats$methplusplus]intersect(gs_methplusplus, rownames(feats))
+idx = rownames(feats)[!is.na(feats$methplusplus) & feats$methplusplus]
 points(feats[idx,]$l2fc_GSE45332, feats[idx,]$l2fc_GSE5816, col=2, pch=1)
 abline(h=i, col=2)
 abline(v=j, col=2)
