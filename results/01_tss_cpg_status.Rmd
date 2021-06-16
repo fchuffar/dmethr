@@ -184,16 +184,26 @@ barplot(p)
 i = 1
 plot(density(pca$x[,i]), main=paste0("PC", i, "(", signif(p[i], 3), "%)"))
 
-set.seed(3)
-km = kmeans(pca$x[,1], 2)
-thresh = mean(km$centers)
-abline(v=thresh)
+#set.seed(3)
+#km = kmeans(pca$x[,1], 2)
+#thresh = mean(km$centers)
+#abline(v=thresh)
 
-plot(pca$x[,1], pca$x[,2], col=km$cluster)
-abline(v=thresh)
+#plot(pca$x[,1], pca$x[,2], col=km$cluster)
+#abline(v=thresh)
 
-idx1 = names(km$cluster)[km$cluster==1]
-idx2 = names(km$cluster)[km$cluster==2]
+#idx1 = names(km$cluster)[km$cluster==1]
+#idx2 = names(km$cluster)[km$cluster==2]
+
+library(mclust)
+em = Mclust(pca$x[,1], G=2)
+plot(em, what = "density")
+summary(em)
+plot(pca$x[,1], pca$x[,2], col=em$classification)
+
+
+idx1 = names(em$classification)[em$classification==1]
+idx2 = names(em$classification)[em$classification==2]
 
 feats$cpg_status  = NA
 if (mean(mat[idx1,]) < mean(mat[idx2,])) {
