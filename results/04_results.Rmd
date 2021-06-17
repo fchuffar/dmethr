@@ -11,14 +11,14 @@ output:
     number_sections: true
 ---
 
-
+# Step 4: Results
 
 ```{r, echo=FALSE, eval=TRUE}
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
 
 ```
 
-# Export features
+## Export features
 
 
 ```{r}
@@ -36,7 +36,7 @@ WriteXLS::WriteXLS(feats, feat_export_filename)
 ```
 
 
-# Core feats
+## Core feats
 
 ```{r core feats}
 # plot 2 firsts studies
@@ -63,7 +63,10 @@ length(corefeats)
 ```
 
 ```{r}
-corefeat_export_filename = paste0("corefeats.xlsx")
+if (length(corefeats!=0)){
+  corefeat_export_filename = paste0("corefeats.xlsx")
+}
+
 ```
 
 Annotated core features are exported as [`r corefeat_export_filename`](`r corefeat_export_filename`) file. 
@@ -78,13 +81,13 @@ WriteXLS::WriteXLS(tmp_d, corefeat_export_filename)
 ```
 
 
-# Expression in GTEx
+## Expression in GTEx
 
 
 ```{r gtex, fig.height=9}
 study_gtex_filename = "~/projects/gtex/results/study_gtex.rds"
 s = mreadRDS(study_gtex_filename)  
-
+if (length(corefeats!=0)){
 tmp_idx_features = intersect(corefeats, rownames(s$data))
 
 # ```{r label="sort data by sample"}
@@ -212,10 +215,11 @@ foo = plot_expr_hm(
   cexRow=0.6                       , 
   cexCol=0.6
 )
+}
 ```
 
 
-# Multi omic analysis in in TCGA
+## Multi omic analysis in in TCGA
 
 ```{r momik, eval=TRUE}
 source("common.R")
@@ -232,10 +236,12 @@ for (gene_symbol in ) {
   # mdata = get_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)  
   try(momic_pattern(gene_symbol, tcga_project))
 }
+#pval multiomic linkage score
 ```
 
 
 
+## Survival
 
 ```{r survival}
 s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
@@ -250,3 +256,4 @@ for (gene_symbol in gene_symbols[1:min(6, length(gene_symbols))]) {
 
 
 
+```
