@@ -37,9 +37,10 @@ for (feature_pretreatment in feature_pretreatments) {
       nb_rnd_feat=nb_rnd_feat, 
       nb_cpg_rich=length(idx_rich),
       nb_methpp=length(gs_methplusplus),
-      nb_genes=length(corefeats)#, 
+      nb_genes=length(corefeats), 
       #pval_surv=1,
-      #pval_momik=1
+      #pval_momik=1,
+      NULL
     )
     if (is.null(stats)) {
       stats = tmp_list
