@@ -21,7 +21,7 @@
 # prefix3 = paste0(feature_pretreatment, "_", nb_rnd_feat)
 # rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
 # 
-nb_rnd_feat=2000
+nb_rnd_feat = 2000
 ud_strs = c(2500, 1000, 500)
 feature_pretreatments = c("cen", "raw")
 
