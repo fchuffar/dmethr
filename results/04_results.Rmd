@@ -218,14 +218,35 @@ foo = plot_expr_hm(
 }
 ```
 
+## Survival
+
+```{r survival, eval=TRUE}
+gene_symbols =  corefeats
+s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
+
+pv_logrank = sapply(gene_symbols, function(gene_symbol) {  
+  idx_sample = rownames(s$exp_grp)[!is.na(s$exp_grp$os)]
+  ss = s$exp_grp[idx_sample,]$os
+  v = s$data[gene_symbol, idx_sample]
+  epimedtools::coxres(ss=ss, v=v)[[1]]
+})
+gene_symbols = gene_symbols[order(pv_logrank)]
+
+for (gene_symbol in gene_symbols[1:min(6, length(gene_symbols))]) {
+  idx_sample = rownames(s$exp_grp)[!is.na(s$exp_grp$os)]
+  ss = s$exp_grp[idx_sample,]$os
+  v = s$data[gene_symbol, idx_sample]
+  try(epimedtools::plot_survival_panel_simple2(ss=ss, v=v, main=gene_symbol))
+}  
+```
+
+
+
 
 ## Multi omic analysis in in TCGA
 
 ```{r momik, eval=TRUE}
-source("common.R")
-
 tcga_project = "TCGA-LUSC"
-gene_symbols =  corefeats
 
 s_cnv   = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_cnv.rds"))
 s_meth  = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_meth.rds"))
@@ -240,18 +261,6 @@ for (gene_symbol in gene_symbols[1:min(6, length(gene_symbols))]) {
 ```
 
 
-
-## Survival
-
-```{r survival, eval=TRUE}
-s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
-for (gene_symbol in gene_symbols[1:min(6, length(gene_symbols))]) {
-  idx_sample = rownames(s$exp_grp)[!is.na(s$exp_grp$os)]
-  ss = s$exp_grp[idx_sample,]$os
-  v = s$data[gene_symbol, idx_sample]
-  try(epimedtools::plot_survival_panel_simple2(ss=ss, v=v, main=gene_symbol))
-}  
-```
 
 
 
