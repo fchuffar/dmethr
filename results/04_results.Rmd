@@ -243,25 +243,6 @@ for (gene_symbol in gene_symbols[1:6]) {
 
 ## Survival
 
-
-## compare pretreatments (center, raw), lenght (2500, 1000, 250)
-
-
-|              | param |   |   |        |   |   |
-|:------------:|:-----:|:-:|:-:|:------:|:-:|:-:|
-|              |  raw        | center       |
-|    ud_str    |       |   |   |        |   |   |
-|   cpg_rich   |       |   |   |        |   |   |
-|    meth ++   |       |   |   |        |   |   |
-|   nb genes   |       |   |   |        |   |   |
-| gene's names |       |   |   |        |   |   |
-
-```{r}
-
-length(idx_rich)
-length(gs_methplusplus)
-
-
 ```{r}
 s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
 for (gene_symbol in gene_symbols[1:6]) {
