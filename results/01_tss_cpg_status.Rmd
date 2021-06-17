@@ -18,9 +18,9 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 
 ```{r}
 source("common.R")
-step = 100
+if (!exists("step")) step = 100
 if (!exists("nb_rnd_feat")) nb_rnd_feat = 2000
-ud_str = 2500
+if (!exists("ud_str")) ud_str = 2500
 up_str = dwn_str = ud_str
 prefix = "tss"
 prefix = paste0(prefix, "_", up_str, "_", dwn_str, "_", step, "_", nb_rnd_feat, "")
@@ -316,3 +316,42 @@ legend("topright", legend=c(paste0("rich (", length(idx_rich), ")"), paste0("poo
 feats[rownames(mat),]$cpg_density = apply(mat, 1, mean)
 # WriteXLS::WriteXLS(feats, "feats_cpg_status.xls")
 ```
+
+
+
+
+
+
+
+
+```{r}
+i=1
+for (j in 2:3) {
+  layout(1, respect=TRUE)
+  plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=cols)
+
+  layout(matrix(1:9, 3, byrow=FALSE), respect=TRUE)
+
+  threshs_i = quantile(pca$x[,i], c(1/3, 2/3))
+  threshs_j = quantile(pca$x[,j], c(1/3, 2/3))
+
+  idx_i = idx_j = list()
+  idx_i[[1]] = rownames(pca$x)[pca$x[,i] <  threshs_i[1]]
+  idx_i[[2]] = rownames(pca$x)[pca$x[,i] >= threshs_i[1] & pca$x[,i] < threshs_i[2]]
+  idx_i[[3]] = rownames(pca$x)[pca$x[,i] >= threshs_i[2] ]
+  idx_j[[1]] = rownames(pca$x)[pca$x[,j] <  threshs_j[1]]
+  idx_j[[2]] = rownames(pca$x)[pca$x[,j] >= threshs_j[1] & pca$x[,j] < threshs_j[2]]
+  idx_j[[3]] = rownames(pca$x)[pca$x[,j] >= threshs_j[2] ]
+
+  for (it in 1:3) {
+    for (jt in 1:3) {
+      idx = intersect(idx_i[[it]], idx_j[[jt]])
+      plot(apply(mat[idx,], 2, mean),  col=1, type="l", ylim=c(0, .13), main=paste0("PC", i, "Q", it, " PC", j, "Q" , jt), xaxt="n", ylab="CpG density")
+      axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
+    }
+  }  
+}
+```
+
+
+
