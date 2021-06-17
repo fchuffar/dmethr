@@ -18,12 +18,12 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 
 ```{r}
 source("common.R")
-if (!exists("step")) step = 100
+if (!exists("stp")) stp = 100
 if (!exists("nb_rnd_feat")) nb_rnd_feat = 2000
 if (!exists("ud_str")) ud_str = 2500
 up_str = dwn_str = ud_str
 prefix = "tss"
-prefix = paste0(prefix, "_", up_str, "_", dwn_str, "_", step, "_", nb_rnd_feat, "")
+prefix = paste0(prefix, "_", up_str, "_", dwn_str, "_", stp, "_", nb_rnd_feat, "")
 ```
 
 ```{r globals variables}
@@ -39,7 +39,7 @@ DNA methylation is one of several epigenetic mechanisms that cells use to contro
 - level of methylation of the promoter region in normal tissues, 
 - level of expression in a demethylating context. 
 
-The aim is to define a set of genes whose promoter region is CpG-rich and widely methylated in most tissues and whose expression is up-regulated in a demethylating context. The second objective of this study is to investigate whether this subset of genes could be enriched in cancer aggressiveness biomarkers. To investigate the first question, we are developing dmethr a three-step dedicated pipeline, and apply it on publicly available datasets.
+The aim is to define a set of genes whose promoter region is CpG-rich and widely methylated in most tissues and whose expression is up-regulated in a demethylating context. The second objective of this study is to investigate whether this subset of genes could be enriched in cancer aggressiveness biomarkers. To investigate the first question, we are developing dmethr a three-stp dedicated pipeline, and apply it on publicly available datasets.
 
 
 
@@ -91,7 +91,7 @@ length(seq)
 ```
 
 ```{r Slice DNA sequences and count CpG density}
-mat = get_matbin_from_seq(seq, up_str, dwn_str, step)
+mat = get_matbin_from_seq(seq, up_str, dwn_str, stp)
 head(mat)
 dim(mat)
 
@@ -113,7 +113,7 @@ head(feats)
 
 
 
-CpG density ( nb. of CpG / length of sequence) is computed in sequence of TSS +/-`r ud_str/1000`kb sliced into `r step` bins.
+CpG density ( nb. of CpG / length of sequence) is computed in sequence of TSS +/-`r ud_str/1000`kb sliced into `r stp` bins.
 
 TSS of 1000 random feats is represented there. It shows a CpG enrichment aoroud TSS.
 
@@ -157,7 +157,7 @@ if (feature_pretreatment == "cen") {
   feats$strand_orig = feats[,6]  
   feats$tss = ifelse(feats[,6]=="+", feats[,2], feats[,3])
   # feats[,2] = feats$tss - (feats[,6]=="-")+0
-  feats[,2] = feats$tss - ud_str + step*feats$binmax + floor(step/2)
+  feats[,2] = feats$tss - ud_str + stp*feats$binmax + floor(stp/2)
   feats[,3] = feats[,2] + 1
   head(feats)
 
@@ -170,7 +170,7 @@ if (feature_pretreatment == "cen") {
   length(seq)
   # ```
   # ```{r mat_cpg_binmax}
-  mat = get_matbin_from_seq(seq, up_str, dwn_str, step)
+  mat = get_matbin_from_seq(seq, up_str, dwn_str, stp)
   head(mat)
   dim(mat)
   binmax = apply(mat, 1, function(l) {
@@ -266,7 +266,7 @@ legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0("rnd pos +/-",
 
 Then we clustering TSS according to there sliced CpG density
 
-PCA on TSS +/-`r ud_str/1000`kb sliced into `r step`b bins is performed.
+PCA on TSS +/-`r ud_str/1000`kb sliced into `r stp`b bins is performed.
 
 Component 1 discriminates CpG rich and poor TSS.
 
@@ -317,13 +317,7 @@ if (mean(mat[idx1,]) < mean(mat[idx2,])) {
 idx_rich = rownames(feats)[feats$cpg_status%in%"rich"]
 idx_poor = rownames(feats)[feats$cpg_status%in%"poor"]
 
-
-
-
-plot(pca$x[,1], pca$x[,2], col=feats$cpg_status%in%"rich"+1)
-
-
-
+plot(pca$x[,1], pca$x[,2], col=feats[rownames(pca$x),]$cpg_status%in%"rich"+1)
 
 plot(apply(mat[idx_poor,], 2, mean), type="l", ylim=c(0, .13), col=1, main="CpG enrichment", xaxt="n")
 lines(apply(mat[idx_rich,], 2, mean), col=2)
