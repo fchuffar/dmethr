@@ -18,9 +18,9 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 
 ```{r}
 source("common.R")
-step = 100
+if (!exists("step")) step = 100
 if (!exists("nb_rnd_feat")) nb_rnd_feat = 2000
-ud_str = 2500
+if (!exists("ud_str")) ud_str = 2500
 up_str = dwn_str = ud_str
 prefix = "tss"
 prefix = paste0(prefix, "_", up_str, "_", dwn_str, "_", step, "_", nb_rnd_feat, "")
@@ -33,13 +33,22 @@ rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
 
 # Purpose
 
-The main goal of this study is to define CpG status of genome region around TSS by computing CpG density from genome sequence.
+DNA methylation is one of several epigenetic mechanisms that cells use to control gene expression. Since many cancers have low levels of DNA methylation compared to most mammalian somatic tissues, we want to investigate the implication of DNA methylation as a key regulator of gene expression contributing to cancer development . The first objective of this study is to group genes according to the three following characteristics: 
 
-It happends in 2 steps : 
-  
-  - extract genome sequence around TSS
-  - count the number of CG in the sequence
+- CpG density of their promoter region, 
+- level of methylation of the promoter region in normal tissues, 
+- level of expression in a demethylating context. 
 
+The aim is to define a set of genes whose promoter region is CpG-rich and widely methylated in most tissues and whose expression is up-regulated in a demethylating context. The second objective of this study is to investigate whether this subset of genes could be enriched in cancer aggressiveness biomarkers. To investigate the first question, we are developing dmethr a three-step dedicated pipeline, and apply it on publicly available datasets.
+
+
+
+**Data**
+
+This study is based on following data set:
+
+- methylation data from normal tissues (Illumina 450k: GSE56515, GSE48472, GSE64096, GSE50192", GSE31848", GSE73375)
+- transcriptomic data HCT116 DNMT DKO vs. WT (RNA-seq: GSE45332)
 
 # Features
 
@@ -288,11 +297,11 @@ library(mclust)
 em = Mclust(pca$x[,1], G=2)
 plot(em, what = "density")
 summary(em)
-plot(pca$x[,1], pca$x[,2], col=em$classification)
 
 
 idx1 = names(em$classification)[em$classification==1]
 idx2 = names(em$classification)[em$classification==2]
+
 
 feats$cpg_status  = NA
 if (mean(mat[idx1,]) < mean(mat[idx2,])) {
@@ -308,10 +317,18 @@ if (mean(mat[idx1,]) < mean(mat[idx2,])) {
 idx_rich = rownames(feats)[feats$cpg_status%in%"rich"]
 idx_poor = rownames(feats)[feats$cpg_status%in%"poor"]
 
+
+
+
+plot(pca$x[,1], pca$x[,2], col=feats$cpg_status%in%"rich"+1)
+
+
+
+
 plot(apply(mat[idx_poor,], 2, mean), type="l", ylim=c(0, .13), col=1, main="CpG enrichment", xaxt="n")
 lines(apply(mat[idx_rich,], 2, mean), col=2)
 axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
-legend("topright", legend=c(paste0("rich (", length(idx_rich), ")"), paste0("poor (", length(idx_poor), ")")), col=1:2, lty=1)
+legend("topright", legend=c(paste0("rich (", length(idx_rich), ")"), paste0("poor (", length(idx_poor), ")")), col=2:1, lty=1)
 
 feats[rownames(mat),]$cpg_density = apply(mat, 1, mean)
 # WriteXLS::WriteXLS(feats, "feats_cpg_status.xls")
