@@ -238,12 +238,3 @@ for (gene_symbol in gene_symbols) {
 
 
 
-
-# Session Information
-
-```{r, results="verbatim"}
-sessionInfo()
-```
-
-
-

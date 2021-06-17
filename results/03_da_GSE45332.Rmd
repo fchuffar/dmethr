@@ -16,7 +16,7 @@ output:
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
 ```
 
-```{r params}
+```{r}
 da_gse = "GSE45332"
 ```
 
@@ -78,15 +78,6 @@ sum(idx)
 
 ```
 
-We export gene as : 
-
-```{r export_genes}
-feats$dnmtkoup = rownames(feats) %in% gs_dnmtkoup
-feats$dnmtkoup_methplusplus = rownames(feats) %in% intersect(gs_dnmtkoup, gs_methplusplus)
-#WriteXLS::WriteXLS(feats, paste0("01_dnmt_genes_", version, "_dnmtkoup_methplusplus.xlsx"))
-```
-
-
 
 ```{r eval=FALSE}
 gsea_input = d[!is.na(d$log2FoldChange),c("log2FoldChange", "lpadj")]
@@ -130,12 +121,6 @@ feats[,paste0("pval_", gse)] = d[rownames(feats),]$padj
 ```
 
 ```{r child="03_da_results.Rmd"}
-```
-
-# Session Information
-
-```{r, results="verbatim"}
-sessionInfo()
 ```
 
 

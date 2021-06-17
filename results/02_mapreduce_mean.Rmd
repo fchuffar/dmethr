@@ -101,34 +101,26 @@ barplot(table(sapply(feat_indexed_probes, length)))
 
 
 ```{r label="reduction of signal by tissue"}
-if (!exists("meth_by_tissues_by_gene")) {
+get_meth_by_tissues_by_gene = function (feats, feat_indexed_probes, s_meth, key, reducer_func1, reducer_func2) {
   print("reduction of signal by tissue then by gene")
-  key = "tissue_group_level1"
   print(table(s_meth$exp_grp[[key]]))
   tissues = na.omit(sort(unique(s_meth$exp_grp[[key]])))
 
-  indicator_func1 = mean
   tmp_meth_data = s_meth$data[unique(unlist(feat_indexed_probes)),]
   meth_by_tissues = sapply(tissues, function(tissue) {
     # tissue = tissues[1]
     print(tissue)
     sample_idx = rownames(s_meth$exp_grp)[s_meth$exp_grp[[key]] %in% tissue]
     if (length(sample_idx) > 1) {
-      tmp_meth_by_tissues = epimedtools::monitored_apply(mod=50000, tmp_meth_data[,sample_idx], 1, indicator_func1, na.rm=TRUE)      
+      tmp_meth_by_tissues = epimedtools::monitored_apply(mod=50000, tmp_meth_data[,sample_idx], 1, reducer_func1, na.rm=TRUE)      
     } else {
-      tmp_meth_by_tissues = indicator_func1(tmp_meth_data[,sample_idx], na.rm=TRUE)
+      tmp_meth_by_tissues = reducer_func1(tmp_meth_data[,sample_idx], na.rm=TRUE)
     }
     return(tmp_meth_by_tissues)
   })
   head(meth_by_tissues)
   dim(meth_by_tissues)
   sum(is.na(meth_by_tissues))
-  # saveRDS(meth_by_tissues, "meth_by_tissues_level1.rds")
-  # ```
-  #
-  #
-  # ```{r label="reduction of signal by gene"}
-  indicator_func2 = mean
   tmp_meth_data = meth_by_tissues
   dim(tmp_meth_data)
   meth_by_tissues_by_gene = epimedtools::monitored_apply(mod=10, feats[names(feat_indexed_probes),], 1, function(gene) {
@@ -136,18 +128,26 @@ if (!exists("meth_by_tissues_by_gene")) {
     # print(gene[[4]])
     probe_idx = feat_indexed_probes[[gene[[4]]]]
     if (length(probe_idx) > 1) {
-      tmp_meth_by_tissues_by_gene = apply(tmp_meth_data[probe_idx,], 2, indicator_func2, na.rm=TRUE)    
+      tmp_meth_by_tissues_by_gene = apply(tmp_meth_data[probe_idx,], 2, reducer_func2, na.rm=TRUE)    
     } else {
-      tmp_meth_by_tissues_by_gene  = sapply(tmp_meth_data[probe_idx,], indicator_func2, na.rm=TRUE) 
+      tmp_meth_by_tissues_by_gene  = sapply(tmp_meth_data[probe_idx,], reducer_func2, na.rm=TRUE) 
     }
     return(tmp_meth_by_tissues_by_gene)
   })
   meth_by_tissues_by_gene = t(meth_by_tissues_by_gene)
   dim(meth_by_tissues_by_gene)
-  sum(is.na(meth_by_tissues_by_gene))
-# saveRDS(meth_by_tissues_by_gene, "meth_by_tissues_by_gene.rds")
+  sum(is.na(meth_by_tissues_by_gene))    
+  return(meth_by_tissues_by_gene)
 }
+  
+if (!exists("mget_meth_by_tissues_by_gene")) {mget_meth_by_tissues_by_gene = memoise::memoise(get_meth_by_tissues_by_gene)}
+reducer_func1 = mean
+reducer_func2 = mean
+key = "tissue_group_level1"
+meth_by_tissues_by_gene = mget_meth_by_tissues_by_gene(feats, feat_indexed_probes, s_meth, key, reducer_func1, reducer_func2)
 ```
+
+# Heatmap
 
 From Illumina 450k studies, we obtain a methylation matrix of `r ncol(s_meth$data)` samples, 
 dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues 
@@ -162,6 +162,8 @@ Then for each genes promoter group of probes, we compute the mean of mean methyl
 We obtain an `r nrow(meth_by_tissues_by_gene)` genes by `r ncol(meth_by_tissues_by_gene)` tissues mean of mean methylation value matrix.
 
 Heatmap on the methylation value matrix clearly shows a subset of genes with highly methylated promoter.
+
+## Figure
 
 ```{r label="clustering and heatmap", fig.height=9}
 data = meth_by_tissues_by_gene

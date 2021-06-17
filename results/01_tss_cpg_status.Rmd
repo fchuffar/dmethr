@@ -16,7 +16,7 @@ output:
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide")
 ```
 
-```{r params}
+```{r}
 source("common.R")
 step = 100
 if (!exists("nb_rnd_feat")) nb_rnd_feat = 2000
@@ -44,7 +44,8 @@ It happends in 2 steps :
 # Features
 
 ```{r}
-feats = readRDS("~/projects/genes/bed_grch38_epimeddb.rds")
+feats_orig = readRDS("~/projects/genes/bed_grch38_epimeddb.rds")[,1:6]
+feats = feats_orig
 head(feats)
 dim(feats)
 ```
@@ -81,21 +82,23 @@ length(seq)
 ```
 
 ```{r Slice DNA sequences and count CpG density}
-# mat_filename = paste0("mat_", prefix, ".rds")
-# if (!file.exists(mat_filename)) {
-  mat = get_matbin_from_seq(seq, up_str, dwn_str, step)
-#   saveRDS(mat, mat_filename)
-# }
-# mat = readRDS(mat_filename)
+mat = get_matbin_from_seq(seq, up_str, dwn_str, step)
 head(mat)
 dim(mat)
 
 binmax = apply(mat, 1, function(l) {
-  maxIndex = which(l==max(l))[1]
+  maxIndex = which(l%in%max(l, na.rm=TRUE))[1]
 })
 head(binmax)
 feats$binmax = NA
 feats[names(binmax),]$binmax = binmax
+
+
+cpg_density = apply(mat, 1, mean, na.rm=TRUE)
+feats$cpg_density = NA
+feats[names(cpg_density),]$cpg_density = cpg_density
+
+
 head(feats)
 ```
 
@@ -115,6 +118,92 @@ rownames(data) = NULL
 gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 1000 rnd feats)"), xaxt="n", mar=c(8,5))
 ```
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Centered features
+
+
+```{r centered, fig.height=9}
+if (feature_pretreatment == "cen") {
+  # stop("EFN")
+  feats$start_orig = feats[,2] 
+  feats$end_orig = feats[,3]  
+  feats$strand_orig = feats[,6]  
+  feats$tss = ifelse(feats[,6]=="+", feats[,2], feats[,3])
+  # feats[,2] = feats$tss - (feats[,6]=="-")+0
+  feats[,2] = feats$tss - ud_str + step*feats$binmax + floor(step/2)
+  feats[,3] = feats[,2] + 1
+  head(feats)
+
+  seq_filename = paste0("seq_centered_", prefix, ".rds")
+  if (!file.exists(seq_filename)) {
+    seq = get_seq_from_bed(feats, up_str, dwn_str, hg38_chrom_sizes)
+    saveRDS(seq, seq_filename)
+  }
+  seq = readRDS(seq_filename)
+  length(seq)
+  # ```
+  # ```{r mat_cpg_binmax}
+  mat = get_matbin_from_seq(seq, up_str, dwn_str, step)
+  head(mat)
+  dim(mat)
+  binmax = apply(mat, 1, function(l) {
+    maxIndex = which(l==max(l))[1]
+  })
+  head(binmax)
+  feats$binmax = NA
+  feats[names(binmax),]$binmax = binmax
+  head(feats)
+  # ```
+  # ```{r label="heatmap for 1000 rnd feats", fig.height=9}
+  set.seed(1)
+  data = mat[order(binmax[rownames(mat)]),]
+  data = data[sort(sample(1:nrow(data), min(nrow(data), 1000))), ]
+  colors=c("black",  "red")
+  cols = colorRampPalette(colors)(20)
+  rownames(data) = NULL
+  gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 1000 rnd feats)"), xaxt="n", mar=c(8,5))  
+} 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# CpG density
 
 CpG density distribution is represented there. 
 
@@ -227,11 +316,3 @@ legend("topright", legend=c(paste0("rich (", length(idx_rich), ")"), paste0("poo
 feats[rownames(mat),]$cpg_density = apply(mat, 1, mean)
 # WriteXLS::WriteXLS(feats, "feats_cpg_status.xls")
 ```
-
-# Session Information
-
-```{r, results="verbatim"}
-sessionInfo()
-```
-
-
