@@ -339,7 +339,7 @@ feats[rownames(mat),]$cpg_density = apply(mat, 1, mean)
 i=1
 for (j in 2:3) {
   layout(1, respect=TRUE)
-  plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=cols)
+  plot(pca$x[,i], pca$x[,j], xlab=paste0("PC", i, "(", signif(p[i], 3), "%)"), ylab=paste0("PC", j, "(", signif(p[j], 3), "%)"), pch=16, col=col=feats[rownames(pca$x),]$cpg_status%in%"rich"+1)
 
   layout(matrix(1:9, 3, byrow=FALSE), respect=TRUE)
 
