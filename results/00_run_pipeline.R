@@ -21,7 +21,7 @@
 # prefix3 = paste0(feature_pretreatment, "_", nb_rnd_feat)
 # rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
 # 
-nb_rnd_feat = 2000
+nb_rnd_feat = 0
 ud_strs = c(2500, 1000, 500)
 feature_pretreatments = c("cen", "raw")
 
@@ -29,8 +29,8 @@ stats = NULL
 for (feature_pretreatment in feature_pretreatments) {
   print(feature_pretreatment)
   for (ud_str in ud_strs) {
-    prefix3 = paste0(feature_pretreatment, "_", ud_str, "_")
-    rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_",nb_rnd_feat, "_", prefix3, ".html"))
+    prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat)
+    rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
     tmp_list = list(
       feature_pretreatment=feature_pretreatment, 
       ud_str=ud_str, 

@@ -243,17 +243,16 @@ for (gene_symbol in gene_symbols[1:min(6, length(gene_symbols))]) {
 
 ## Survival
 
-```{r survival}
+```{r survival, eval=TRUE}
 s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
 for (gene_symbol in gene_symbols[1:min(6, length(gene_symbols))]) {
   idx_sample = rownames(s$exp_grp)[!is.na(s$exp_grp$os)]
   ss = s$exp_grp[idx_sample,]$os
   v = s$data[gene_symbol, idx_sample]
-  epimedtools::plot_survival_panel_simple2(ss=ss, v=v, main=gene_symbol)
+  try(epimedtools::plot_survival_panel_simple2(ss=ss, v=v, main=gene_symbol))
 }  
 ```
 
 
 
 
-```
