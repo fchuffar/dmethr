@@ -222,6 +222,7 @@ foo = plot_expr_hm(
 
 ```{r survival, eval=TRUE}
 gene_symbols =  corefeats
+tcga_project = "TCGA-LUSC"
 s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
 
 pv_logrank = sapply(gene_symbols, function(gene_symbol) {  
