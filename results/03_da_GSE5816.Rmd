@@ -151,8 +151,8 @@ abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
 plot(stats2$beta,-log10(stats2$padj), pch=".")
 abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
 
-plot(stats$beta, stats2$beta)
-plot(-log10(stats$pval), -log10(stats2$pval))
+#plot(stats$beta, stats2$beta)
+#plot(-log10(stats$pval), -log10(stats2$pval))
 ```
 
 
