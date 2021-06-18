@@ -7,35 +7,23 @@ plot_volcano(feats, gs_methplusplus, gse)
 ## GSEA
 
 ```{r}
-et_gsea_plot = function(den_vec_name, n_top, enrichement, i) {
+et_gsea_plot = function(expression_vector, gene_set) {
   # den_vec_name = "DEN14TuvsDEN14NT"
   # n_top = 500
   # enrichement = "ENRICHED"
   # i = idx_kc[1]
 
-  prefix = paste0(den_vec_name, "_", n_top, "_", enrichement)
-  print(paste(den_vec_name, enrichement, n_top))
-  den_vec = den_vecs[[den_vec_name]]
-  y = den_vec[idx_genes]
-  if (enrichement=="ENRICHED") {
-    top = names(rev(sort(y)))[1:n_top]
-  } else {
-    top = names(sort(y))[1:n_top]
-  }
+  prefix = paste0("gs_methplusplus")
 
+  top = gene_set
   gs_filename = paste0("gs_", prefix, ".grp")
   write.table(top, gs_filename, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
 
-
-
-  x = d[idx_genes,i] - mean_nt[idx_genes]
-
-  gsea_input = data.frame(names(x), x)
+  gsea_input = data.frame(names(expression_vector), expression_vector)
   gsea_input = gsea_input[order(gsea_input[,2]),]
-  gsea_input_filename = paste0(i, "_gsea_input.rnk")
   print(paste("gsea_input were exported in", gsea_input_filename, "file."))
+  gsea_input_filename = paste0("gsea_input.rnk")
   write.table(gsea_input, gsea_input_filename, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
-
 
   gsea_input = read.table(gsea_input_filename, row.names=1)
   stoda_input = gsea_input[,1]
@@ -84,6 +72,13 @@ et_gsea_plot = function(den_vec_name, n_top, enrichement, i) {
   par(mar=c(5.1, 4.1, 4.1, 2.1))
   return(NULL)
 }
+
+expression_vector = feats[,paste0("l2fc_", gse)]
+names(expression_vector) = rownames(feats)
+expression_vector = na.omit(expression_vector)
+gene_set = gs_methplusplus
+
+et_gsea_plot(expression_vector, gene_set)
 
 ```
 
