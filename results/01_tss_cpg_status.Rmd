@@ -52,6 +52,10 @@ This study is based on following data set:
 
 ## Features
 
+We use definition of transcripts proposed by UCSC, version hg38 (`genome`).
+
+
+
 ```{r}
 feats_orig = readRDS("~/projects/genes/bed_grch38_epimeddb.rds")[,1:6]
 feats = feats_orig
@@ -79,6 +83,7 @@ if (nb_rnd_feat > 0) {
 
 
 ## CpG enrichment of features
+
 
 ```{r Extract DNA sequences of TSS +/- ud_str bp}
 seq_filename = paste0("seq_", prefix, ".rds")
@@ -174,6 +179,7 @@ if (feature_pretreatment == "cen") {
 
 
 ## CpG density
+
 
 CpG density distribution is represented there. 
 
