@@ -23,6 +23,7 @@ version="hg38"
 
 ```{r}
 if (!exists("feats")) {feats = readRDS(paste0("~/projects/genes/bed_grch38_epimeddb.rds"))}
+if (!exists("reducer_func2_name")) {reducer_func2_name = "mean"}
 ```
 
 ```{r echo=TRUE, results="verbatim"}
@@ -128,7 +129,7 @@ get_meth_by_tissues_by_gene = function (feats, feat_indexed_probes, s_meth, key,
   
 if (!exists("mget_meth_by_tissues_by_gene")) {mget_meth_by_tissues_by_gene = memoise::memoise(get_meth_by_tissues_by_gene)}
 reducer_func1 = mean
-reducer_func2 = mean
+reducer_func2 = get(reducer_func2_name)
 key = "tissue_group_level1"
 meth_by_tissues_by_gene = mget_meth_by_tissues_by_gene(feats, feat_indexed_probes, s_meth, key, reducer_func1, reducer_func2)
 ```

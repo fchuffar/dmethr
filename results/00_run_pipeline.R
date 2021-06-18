@@ -10,10 +10,13 @@
 # rmarkdown::render("04_results.Rmd"       , output_file=paste0("04_results_"       , prefix3, ".html"))
 
 
-nb_rnd_feat = 500
-feature_pretreatment = "cen"
-prefix3 = paste0(feature_pretreatment, "_", nb_rnd_feat)
-rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
+# nb_rnd_feat = 500
+# feature_pretreatment = "cen"
+# prefix3 = paste0(feature_pretreatment, "_", nb_rnd_feat)
+# rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
+
+
+
 # 
 # nb_rnd_feat = 2000
 # feature_pretreatment = "raw"
@@ -21,15 +24,16 @@ rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeli
 # prefix3 = paste0(feature_pretreatment, "_", nb_rnd_feat)
 # rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
 # 
-nb_rnd_feat = 500
+nb_rnd_feat = 0
 ud_strs = c(2500, 1000, 500)
 feature_pretreatments = c("cen", "raw")
+reducer_func2_name = "mean"
 
 stats = NULL
 for (feature_pretreatment in feature_pretreatments) {
   print(feature_pretreatment)
   for (ud_str in ud_strs) {
-    prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat)
+    prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
     rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
     tmp_list = list(
       feature_pretreatment=feature_pretreatment, 
@@ -52,12 +56,16 @@ for (feature_pretreatment in feature_pretreatments) {
 
 stats
 
+layout(matrix(1:3, 1), respect=TRUE)
 for(ud_str in ud_strs){
-  prefix3 = paste0("raw_", ud_str, "_", nb_rnd_feat)
+  feature_pretreatment = "raw"
+  prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
   featsout_raw = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
-  prefix3 = paste0("cen_", ud_str, "_", nb_rnd_feat)
+  feature_pretreatment = "cen"
+  prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
   featsout_cen = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
-  plot(featsout_raw$nb_probes, featsout_cen$nb_probes, main=ud_str)
+  plot(jitter(featsout_raw$nb_probes), jitter(featsout_cen$nb_probes), main=ud_str)
+  abline(a=0, b=1)
 }
 
 
