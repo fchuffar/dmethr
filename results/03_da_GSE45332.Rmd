@@ -19,7 +19,9 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 ```{r}
 da_gse = "GSE45332"
 ```
+# Step 3.1 : Expression of genes in GSE45332 (DNMT double KO)
 
+## Study
 We used the study GSE45332 to perform differential analysis of HCT116 cell lines transcriptome in wild type vs. DNMT double KO context.
 
 Form the differential analysis we obtain a vector of log2foldchange.
@@ -30,17 +32,17 @@ GSEA clearly show that the previously define genesets (genes with promoter highl
 d = read.table("~/projects/hadaca/results/GSE45332/04_deseq2/tables/KOvsWT.complete.txt", header=TRUE, stringsAsFactors=FALSE, row.names=1)
 d$lpadj = -log10(d$padj + 10^-300)
 # head(d)
-dim(d)
+#dim(d)
 # intersect(row.names(d), row.names(feats))
-layout(1, respect=TRUE)
-plot(d$log2FoldChange, d$lpadj, col="grey", xlab="log2FoldChange", ylab="adjusted pval")
+#layout(1, respect=TRUE)
+#plot(d$log2FoldChange, d$lpadj, col="grey", xlab="log2FoldChange", ylab="adjusted pval")
 
-idx = gs = c("C3"  , "CYR61", "DCAF4L1", "DNAH17", "HKDC1"   , "IGF2BP1",  "IL1A", "KRT7" , "NES"    , "SDC4"  , "SERPINE1", "TGM2"   ,  "VIM")
-text(d[idx,]$log2FoldChange, d[idx,]$lpadj, rownames(d[idx,]))
+#idx = gs = c("C3"  , "CYR61", "DCAF4L1", "DNAH17", "HKDC1"   , "IGF2BP1",  "IL1A", "KRT7" , "NES"    , "SDC4"  , "SERPINE1", "TGM2"   ,  "VIM")
+#text(d[idx,]$log2FoldChange, d[idx,]$lpadj, rownames(d[idx,]))
 
-idx = intersect(gs_methplusplus, rownames(d))
-points(d[idx,]$log2FoldChange, d[idx,]$lpadj, col=2, pch=1)
-legend("topleft", pch=1, col=2, "gs_methplusplus")
+#idx = intersect(gs_methplusplus, rownames(d))
+#points(d[idx,]$log2FoldChange, d[idx,]$lpadj, col=2, pch=1)
+#legend("topleft", pch=1, col=2, "gs_methplusplus")
 
 #layout(1, respect=TRUE)
 #boxplot(abs(d[idx,]$log2FoldChange)~d[idx,]$log2FoldChange>0, xlab="log2FoldChange > 0", ylab="|log2FoldChange|")
@@ -100,16 +102,7 @@ stoda::gseaplot(v=stoda_input, gs=gs_methplusplus)
 ```
 
 
-
-![](./enplot_gs_methplusplus.grp_1.png)
-
-
-
-
-
-
-
-# Results
+## Results
 
 ```{r}
 gse = "GSE45332"

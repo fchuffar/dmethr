@@ -1,10 +1,10 @@
-## Volcano plot
+### Volcano plot
 
 ```{r}
 plot_volcano(feats, gs_methplusplus, gse)
 ```
 
-## GSEA
+### GSEA
 
 ```{r}
 et_gsea_plot = function(expression_vector, gene_set) {

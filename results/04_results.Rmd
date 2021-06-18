@@ -11,7 +11,7 @@ output:
     number_sections: true
 ---
 
-# Step 4: Results
+# Step 4 : Results
 
 ```{r, echo=FALSE, eval=TRUE}
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
@@ -222,6 +222,7 @@ foo = plot_expr_hm(
 
 ```{r survival, eval=TRUE}
 gene_symbols =  corefeats
+tcga_project = "TCGA-LUSC"
 s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
 
 pv_logrank = sapply(gene_symbols, function(gene_symbol) {  
@@ -243,7 +244,7 @@ for (gene_symbol in gene_symbols[1:min(6, length(gene_symbols))]) {
 
 
 
-## Multi omic analysis in in TCGA
+## Multi omic analysis in TCGA
 
 ```{r momik, eval=TRUE}
 tcga_project = "TCGA-LUSC"

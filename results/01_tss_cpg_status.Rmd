@@ -31,7 +31,8 @@ hg38_chrom_sizes  = read.table("~/projects/genes/hg38.chrom.sizes", stringsAsFac
 rownames(hg38_chrom_sizes) = hg38_chrom_sizes[,1]
 ```
 
-# Purpose
+# Step 1: CpG status of region surrounding TSS
+## Purpose
 
 DNA methylation is one of several epigenetic mechanisms that cells use to control gene expression. Since many cancers have low levels of DNA methylation compared to most mammalian somatic tissues, we want to investigate the implication of DNA methylation as a key regulator of gene expression contributing to cancer development . The first objective of this study is to group genes according to the three following characteristics: 
 
@@ -41,8 +42,6 @@ DNA methylation is one of several epigenetic mechanisms that cells use to contro
 
 The aim is to define a set of genes whose promoter region is CpG-rich and widely methylated in most tissues and whose expression is up-regulated in a demethylating context. The second objective of this study is to investigate whether this subset of genes could be enriched in cancer aggressiveness biomarkers. To investigate the first question, we are developing dmethr a three-stp dedicated pipeline, and apply it on publicly available datasets.
 
-
-
 **Data**
 
 This study is based on following data set:
@@ -50,7 +49,7 @@ This study is based on following data set:
 - methylation data from normal tissues (Illumina 450k: GSE56515, GSE48472, GSE64096, GSE50192", GSE31848", GSE73375)
 - transcriptomic data HCT116 DNMT DKO vs. WT (RNA-seq: GSE45332)
 
-# Features
+## Features
 
 ```{r}
 feats_orig = readRDS("~/projects/genes/bed_grch38_epimeddb.rds")[,1:6]
@@ -78,7 +77,7 @@ if (nb_rnd_feat > 0) {
 ```
 
 
-# CpG enrichment of features
+## CpG enrichment of features
 
 ```{r Extract DNA sequences of TSS +/- ud_str bp}
 seq_filename = paste0("seq_", prefix, ".rds")
@@ -112,7 +111,6 @@ head(feats)
 ```
 
 
-
 CpG density ( nb. of CpG / length of sequence) is computed in sequence of TSS +/-`r ud_str/1000`kb sliced into `r stp` bins.
 
 TSS of 1000 random feats is represented there. It shows a CpG enrichment aoroud TSS.
@@ -127,26 +125,7 @@ rownames(data) = NULL
 gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 1000 rnd feats)"), xaxt="n", mar=c(8,5))
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Centered features
+`r if(feature_pretreatment == "cen") "## Centered features"`
 
 
 ```{r centered, fig.height=9}
@@ -193,26 +172,7 @@ if (feature_pretreatment == "cen") {
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# CpG density
+## CpG density
 
 CpG density distribution is represented there. 
 
@@ -261,7 +221,7 @@ legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0("rnd pos +/-",
 
 
 
-# Clustering 
+## Clustering 
 
 
 Then we clustering TSS according to there sliced CpG density
