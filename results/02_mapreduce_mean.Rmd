@@ -18,34 +18,8 @@ species="Homo_sapiens"
 version="hg38"
 ```
 
-# Requirements
-
-# Aim and data
-
-**Aim**
-
-The goal of this study is to group and compare genes of different categories: 
-
-- CpG-rich versus CpG-poor Promoters
-- level of methylation of the promoter in most of normal tissues
-- expression reactivation in demethylating context
-- testis restricted genes
-
-**Data**
-
-This study is based on following data set:
-
-- methylation data from normal tissues (Illumina 450k: GSE56515, GSE48472, GSE64096, GSE50192, GSE31848, GSE73375)
-- transcriptomic data HCT116 DNMT DKO vs. WT (RNA-seq: GSE45332)
-
-
-
-# Pipeline
-
-**Genes with CpG rich feats**
-
-
-
+# Step 2 : Methylation status in healthy tissues
+## Genes with CpG rich feats
 
 ```{r}
 if (!exists("feats")) {feats = readRDS(paste0("~/projects/genes/bed_grch38_epimeddb.rds"))}
@@ -147,7 +121,7 @@ key = "tissue_group_level1"
 meth_by_tissues_by_gene = mget_meth_by_tissues_by_gene(feats, feat_indexed_probes, s_meth, key, reducer_func1, reducer_func2)
 ```
 
-# Heatmap
+## Heatmap
 
 From Illumina 450k studies, we obtain a methylation matrix of `r ncol(s_meth$data)` samples, 
 dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues 
@@ -163,7 +137,6 @@ We obtain an `r nrow(meth_by_tissues_by_gene)` genes by `r ncol(meth_by_tissues_
 
 Heatmap on the methylation value matrix clearly shows a subset of genes with highly methylated promoter.
 
-## Figure
 
 ```{r label="clustering and heatmap", fig.height=9}
 data = meth_by_tissues_by_gene

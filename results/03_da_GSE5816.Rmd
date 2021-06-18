@@ -10,14 +10,13 @@ output:
     number_sections: true
 ---
 
-
+# Step 3.2 : Expression of genes in GSE5816 (5-aza treated)
 
 ```{r, echo=FALSE, eval=TRUE}
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
 ```
 
-
-**5AZA**
+## Study
 
 ```{r}
 s = readRDS("~/projects/study_gpl570/study_GSE5816_trscr_gs.rds")
@@ -155,12 +154,7 @@ abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
 #plot(-log10(stats$pval), -log10(stats2$pval))
 ```
 
-
-
-
-
-# Results
-
+## Results
 
 ```{r}
 gse = "GSE5816"
