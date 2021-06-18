@@ -10,10 +10,10 @@
 # rmarkdown::render("04_results.Rmd"       , output_file=paste0("04_results_"       , prefix3, ".html"))
 
 
-# nb_rnd_feat = 2000
-# feature_pretreatment = "cen"
-# prefix3 = paste0(feature_pretreatment, "_", nb_rnd_feat)
-# rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
+nb_rnd_feat = 500
+feature_pretreatment = "cen"
+prefix3 = paste0(feature_pretreatment, "_", nb_rnd_feat)
+rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
 # 
 # nb_rnd_feat = 2000
 # feature_pretreatment = "raw"
@@ -21,7 +21,7 @@
 # prefix3 = paste0(feature_pretreatment, "_", nb_rnd_feat)
 # rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
 # 
-nb_rnd_feat = 0
+nb_rnd_feat = 500
 ud_strs = c(2500, 1000, 500)
 feature_pretreatments = c("cen", "raw")
 
@@ -51,6 +51,17 @@ for (feature_pretreatment in feature_pretreatments) {
 }
 
 stats
+
+for(ud_str in ud_strs){
+  prefix3 = paste0("raw_", ud_str, "_", nb_rnd_feat)
+  featsout_raw = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
+  prefix3 = paste0("cen_", ud_str, "_", nb_rnd_feat)
+  featsout_cen = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
+  plot(featsout_raw$nb_probes, featsout_cen$nb_probes, main=ud_str)
+}
+
+
+
 # rmarkdown::render("01_tss_cpg_status.Rmd")
 # rmarkdown::render("02_mapreduce_mean.Rmd")
 # rmarkdown::render("03_da_GSE45332.Rmd"   )

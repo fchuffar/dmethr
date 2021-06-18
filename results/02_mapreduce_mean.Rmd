@@ -70,7 +70,19 @@ s_meth = mreadRDS("~/projects/all_human_tissues/results/meth/study_meth_all_huma
 ```{r process_study_meth_all_human_tissues_grch38, }
 feat_indexed_probes = mget_feat_indexed_probes(feats_bed6=feats[gs_cpgrich,], s_meth$platform[,c("Chromosome", "Start")], up_str=up_str, dwn_str=dwn_str)
 feat_indexed_probes = feat_indexed_probes[sapply(feat_indexed_probes, length)>5]
-barplot(table(sapply(feat_indexed_probes, length)))
+
+
+tmp_len = sapply(feat_indexed_probes, length)
+tmp_len
+barplot(table(tmp_len))
+
+
+#feats$nb_probes =  NA
+#feats[names(tmp_len),]$nb_probes = tmp_len
+feats$nb_probes = tmp_len[rownames(feats)]
+dim(feats)
+length(tmp_len)
+
 ```
 
 
