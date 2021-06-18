@@ -22,6 +22,7 @@ da_gse = "GSE45332"
 # Step 3.1 : Expression of genes in GSE45332 (DNMT double KO)
 
 ## Study
+
 We used the study GSE45332 to perform differential analysis of HCT116 cell lines transcriptome in wild type vs. DNMT double KO context.
 
 Form the differential analysis we obtain a vector of log2foldchange.

@@ -19,6 +19,10 @@ version="hg38"
 ```
 
 # Step 2 : Methylation status in healthy tissues
+
+CpG-rich associated genes are clustered according to their methylation status in a publicly  available  dataset  of  normal  tissues  (GSE56515,  GSE48472,  GSE64096,  GSE50192,  GSE31848,GSE73375).
+
+
 ## Genes with CpG rich feats
 
 ```{r}

@@ -47,7 +47,8 @@ The aim is to define a set of genes whose promoter region is CpG-rich and widely
 This study is based on following data set:
 
 - methylation data from normal tissues (Illumina 450k: GSE56515, GSE48472, GSE64096, GSE50192", GSE31848", GSE73375)
-- transcriptomic data HCT116 DNMT DKO vs. WT (RNA-seq: GSE45332)
+- transcriptomic data HCT116 DNMT DKO vs. WT (RNA-seq: GSE45332) 
+- transcriptomic microarray from control and 5-azacytidine treated lung cancer cell lines (GSE5816)
 
 ## Features
 
