@@ -35,7 +35,7 @@ et_gsea_plot = function(expression_vector, gene_set) {
   unlink(outdir, recursive=TRUE)
 
   cmd = "/Applications/GSEA_4.1.0/gsea-cli.sh"
-  args = paste0(" GSEAPreranked -gmx ", gs_filename, " -collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -rnk ", gsea_input_filename, " -scoring_scheme weighted -rpt_label my_analysis -create_svgs false -include_only_symbols true -make_sets true -plot_top_x 20 -rnd_seed timestamp -set_max 1000 -set_min 15 -zip_report false -out ", outdir, "")
+  args = paste0(" GSEAPreranked -gmx ", gs_filename, " -collapse No_Collapse -mode Max_probe -norm meandiv -nperm 1000 -rnk ", gsea_input_filename, " -scoring_scheme weighted -rpt_label my_analysis -create_svgs false -include_only_symbols true -make_sets true -plot_top_x 20 -rnd_seed timestamp -set_max 10000 -set_min 15 -zip_report false -out ", outdir, "")
   print(paste(cmd, args))
   system2(cmd, args)
 
@@ -78,6 +78,7 @@ names(expression_vector) = rownames(feats)
 expression_vector = na.omit(expression_vector)
 gene_set = gs_methplusplus
 
+layout(matrix(1:2, 1), respect=TRUE)
 et_gsea_plot(expression_vector, gene_set)
 
 ```
