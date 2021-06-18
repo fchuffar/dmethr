@@ -21,8 +21,8 @@ et_gsea_plot = function(expression_vector, gene_set) {
 
   gsea_input = data.frame(names(expression_vector), expression_vector)
   gsea_input = gsea_input[order(gsea_input[,2]),]
-  print(paste("gsea_input were exported in", gsea_input_filename, "file."))
   gsea_input_filename = paste0("gsea_input.rnk")
+  print(paste("gsea_input were exported in", gsea_input_filename, "file."))
   write.table(gsea_input, gsea_input_filename, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
 
   gsea_input = read.table(gsea_input_filename, row.names=1)
