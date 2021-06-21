@@ -64,7 +64,7 @@ length(corefeats)
 
 ```{r}
 if (length(corefeats!=0)){
-  corefeat_export_filename = paste0("corefeats.xlsx")
+  corefeat_export_filename = paste0("corefeats_", prefix3, ".xlsx")
 }
 
 ```
@@ -255,26 +255,52 @@ s_trscr = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"
 
 
 
+# pvals =c()
+# 
+# for (gene_symbol in gene_symbols[1:min(6, length(gene_symbols))]) {
+#   print(gene_symbol)
+#   mdata = get_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)  
+#   mdata$d 
+#   head(mdata$d)
+#   Y=mdata$d[,gene_symbol]
+#   X=apply(mdata$d[,mdata$probes],1,mean)
+#   m= lm(X~Y)
+#   sm=summary(m)
+#   fstat=sm$fstatistic
+#   pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
+#   pvals = c(pvals, pval)
+#   
+#   try(momic_pattern(gene_symbol, tcga_project))
+# }
+# layout(1, respect=TRUE)
+# plot(density(-log10(pvals)))
+#pval multiomic linkage score
+
+
 pvals =c()
 
-for (gene_symbol in gene_symbols[1:min(6, length(gene_symbols))]) {
+for (gene_symbol in gene_symbols[1:length(gene_symbols)]) {
   print(gene_symbol)
-  mdata = get_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)  
-  mdata$d 
-  head(mdata$d)
-  Y=mdata$d[,gene_symbol]
-  X=apply(mdata$d[,mdata$probes],1,mean)
-  m= lm(X~Y)
-  sm=summary(m)
-  fstat=sm$fstatistic
-  pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
-  pvals = c(pvals, pval)
-  
-  try(momic_pattern(gene_symbol, tcga_project))
+  mdata = try(mget_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)) 
+  if (class(mdata)!= "try-error"){
+    if (!is.null(mdata$d)) {
+      mdata$d 
+      head(mdata$d)
+      Y=mdata$d[,gene_symbol]
+      X=apply(mdata$d[,mdata$probes],1,mean)
+      m= lm(X~Y)
+      sm=summary(m)
+      fstat=sm$fstatistic
+      pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
+      pvals = c(pvals, pval)
+    } else {
+      warning(paste0("probleme with ", gene_symbol))
+    }
+  }
+  #try(momic_pattern(gene_symbol, tcga_project))
 }
 layout(1, respect=TRUE)
 plot(density(-log10(pvals)))
-#pval multiomic linkage score
 ```
 
 
