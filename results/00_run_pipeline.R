@@ -56,6 +56,8 @@ for (feature_pretreatment in feature_pretreatments) {
 
 stats
 
+#beta_reg = c()
+
 layout(matrix(1:3, 1), respect=TRUE)
 for(ud_str in ud_strs){
   feature_pretreatment = "raw"
@@ -66,9 +68,16 @@ for(ud_str in ud_strs){
   featsout_cen = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
   plot(jitter(featsout_raw$nb_probes), jitter(featsout_cen$nb_probes), main=ud_str)
   abline(a=0, b=1)
+  
+  X = featsout_cen$nb_probes
+  Y = featsout_raw$nb_probes
+  reg = lm(X~Y)
+  plot(X, Y, main=ud_str, xlab="raw", ylab="center")
+  abline(reg)
+  beta_reg = c(beta_reg, reg$coefficients[[2]])
 }
 
-
+beta_reg
 
 # rmarkdown::render("01_tss_cpg_status.Rmd")
 # rmarkdown::render("02_mapreduce_mean.Rmd")
