@@ -390,6 +390,7 @@ get_matbin_from_seq = function(seq, up_str, dwn_str, step) {
   colnames(mat) = paste0("binmax ", ifelse(offset<0, "-", "+"), abs(offset), "kb")
   return(mat)  
 }
+if (!exists("mget_matbin_from_seq")) {mget_matbin_from_seq = memoise::memoise(get_matbin_from_seq)}
 
 
 get_seq_from_bed = function(bed, up_str, dwn_str, chrom_sizes, genome=BSgenome.Hsapiens.UCSC.hg38::Hsapiens) {

@@ -96,7 +96,7 @@ length(seq)
 ```
 
 ```{r Slice DNA sequences and count CpG density}
-mat = get_matbin_from_seq(seq, up_str, dwn_str, stp)
+mat = mget_matbin_from_seq(seq, up_str, dwn_str, stp)
 head(mat)
 dim(mat)
 
@@ -155,7 +155,7 @@ if (feature_pretreatment == "cen") {
   length(seq)
   # ```
   # ```{r mat_cpg_binmax}
-  mat = get_matbin_from_seq(seq, up_str, dwn_str, stp)
+  mat = mget_matbin_from_seq(seq, up_str, dwn_str, stp)
   head(mat)
   dim(mat)
   binmax = apply(mat, 1, function(l) {
