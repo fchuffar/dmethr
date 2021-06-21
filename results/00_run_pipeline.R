@@ -56,7 +56,7 @@ for (feature_pretreatment in feature_pretreatments) {
 
 stats
 
-#beta_reg = c()
+beta_reg = c()
 
 layout(matrix(1:3, 1), respect=TRUE)
 for(ud_str in ud_strs){
