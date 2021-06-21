@@ -27,33 +27,36 @@
 nb_rnd_feat = 0
 ud_strs = c(2500, 1000, 500)
 feature_pretreatments = c("cen", "raw")
-reducer_func2_name = c("mean", "max")
+reducer_func2_names = c("mean", "max")
+
 
 stats = NULL
 for (feature_pretreatment in feature_pretreatments) {
   print(feature_pretreatment)
   for (ud_str in ud_strs) {
-    prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-    rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
-    tmp_list = list(
-      feature_pretreatment=feature_pretreatment, 
-      ud_str=ud_str, 
-      nb_rnd_feat=nb_rnd_feat, 
-      nb_cpg_rich=length(idx_rich),
-      nb_methpp=length(gs_methplusplus),
-      nb_genes=length(corefeats), 
-      #pval_surv=1,
-      #pval_momik=1,
-      NULL
-    )
-    if (is.null(stats)) {
-      stats = tmp_list
-    } else{
-      stats = rbind(stats, tmp_list)
+    print(ud_str)
+    for(reducer_func2_name in reducer_func2_names) {
+      prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
+      rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
+      tmp_list = list(
+        feature_pretreatment=feature_pretreatment, 
+        ud_str=ud_str, 
+        nb_rnd_feat=nb_rnd_feat, 
+        nb_cpg_rich=length(idx_rich),
+        nb_methpp=length(gs_methplusplus),
+        nb_genes=length(corefeats), 
+        #pval_surv=1,
+        #pval_momik=1,
+        NULL
+      )
+      if (is.null(stats)) {
+        stats = tmp_list
+      } else{
+        stats = rbind(stats, tmp_list)
+      }
     }
   }
 }
-
 stats
 
 beta_reg = c()
