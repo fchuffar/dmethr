@@ -27,7 +27,7 @@
 nb_rnd_feat = 0
 ud_strs = c(2500, 1000, 500)
 feature_pretreatments = c("cen", "raw")
-reducer_func2_name = "max"
+reducer_func2_name = c("mean", "max")
 
 stats = NULL
 for (feature_pretreatment in feature_pretreatments) {
@@ -84,6 +84,5 @@ beta_reg
 # rmarkdown::render("03_da_GSE45332.Rmd"   )
 # rmarkdown::render("03_da_GSE5816.Rmd"    )
 # rmarkdown::render("04_results.Rmd"       )
-
 
 
