@@ -156,6 +156,7 @@ data = meth_by_tissues_by_gene
 dim(data)
 sum(apply(is.na(data), 1, any))
 data = data[!apply(is.na(data), 1, any), ]
+data = data[!apply(is.infinite(data), 1, any), ]
 dim(data)
 
 # clustering base on correlation for tissues
@@ -178,7 +179,7 @@ dendrogram="both"
 colors=c("cyan", "black", "red")
 cols = colorRampPalette(colors)(20)
 
-hm = gplots::heatmap.2(data, Rowv=Rowv, Colv=Colv, dendrogram=dendrogram, trace="none", col=cols, main=paste0("Mean of mean (", nrow(data), " genes x ", ncol(data), " tissues)"), mar=c(10,5), useRaster=TRUE)
+hm = gplots::heatmap.2(data, Rowv=Rowv, Colv=Colv, dendrogram=dendrogram, trace="none", col=cols, main=paste0(reducer_func2_name, " of mean (", nrow(data), " genes x ", ncol(data), " tissues)"), mar=c(10,5), useRaster=TRUE)
 
 
 heatmap_meth= function() {

@@ -221,9 +221,9 @@ foo = plot_expr_hm(
 ## Survival
 
 ```{r survival, eval=TRUE}
-gene_symbols =  corefeats
 tcga_project = "TCGA-LUSC"
 s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
+gene_symbols =  intersect(corefeats, rownames(s$data))
 
 pv_logrank = sapply(gene_symbols, function(gene_symbol) {  
   idx_sample = rownames(s$exp_grp)[!is.na(s$exp_grp$os)]

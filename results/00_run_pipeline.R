@@ -27,7 +27,7 @@
 nb_rnd_feat = 0
 ud_strs = c(2500, 1000, 500)
 feature_pretreatments = c("cen", "raw")
-reducer_func2_name = "mean"
+reducer_func2_name = "max"
 
 stats = NULL
 for (feature_pretreatment in feature_pretreatments) {
