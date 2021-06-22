@@ -98,8 +98,9 @@ stats
 
 gses = c("GSE5816", "GSE45332")
 
+layout(matrix(1:2,1), respect=TRUE)
 for (gse in gses) {
-  #plot(0,0, col=0, xlim=c(0,100); ylim=c(0,10))
+  plot(0,0, col=0, xlim=c(0,100), ylim=c(0,.2), main=gse)
   for (feature_pretreatment in feature_pretreatments) {
     print(feature_pretreatment)
     for (ud_str in ud_strs) {
@@ -110,7 +111,7 @@ for (gse in gses) {
         rownames(featsout) = featsout[,4]
         gene_symbols = rownames(featsout[featsout$methplusplus,])[order(featsout[featsout$methplusplus,][[paste0("l2fc_", gse)]], decreasing=TRUE)][1:100]
         pvals = sapply(gene_symbols, function(gene_symbol) {
-          print(gene_symbol)
+          #print(gene_symbol)
           mdata = try(mget_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)) 
           if (class(mdata) != "try-error"){
             if ((!is.null(mdata$d)) & (gene_symbol %in% colnames(mdata$d))) {
@@ -132,8 +133,8 @@ for (gse in gses) {
             return(NULL)
           }
         })  
-        #plot(density(unlist(-log10(pvals)), na.rm=TRUE))
-        #lines(density(-log10(featsout$pval_omic), na.rm=TRUE), col=which(ud_str==ud_strs))
+        #plot(density(-log10(unlist(pvals)), na.rm=TRUE))
+        lines(density(-log10(unlist(pvals)), na.rm=TRUE, bw=3), col=which(ud_str==ud_strs))
       }
     }
   }
