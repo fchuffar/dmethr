@@ -239,6 +239,7 @@ for (gene_symbol in gene_symbols[1:min(6, length(gene_symbols))]) {
   v = s$data[gene_symbol, idx_sample]
   try(epimedtools::plot_survival_panel_simple2(ss=ss, v=v, main=gene_symbol))
 }  
+
 ```
 
 
