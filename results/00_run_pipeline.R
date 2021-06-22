@@ -48,7 +48,7 @@ for (feature_pretreatment in feature_pretreatments) {
 
 stop("ici")
 
-# meta analisis strat here
+# meta analisis start here
 
 if (!exists("mread.xlsx")) {mread.xlsx = memoise::memoise(openxlsx::read.xlsx)}
     
@@ -86,21 +86,11 @@ stats
 
 
 
-
-
-
-
-
-
-
-
-
-
 gses = c("GSE5816", "GSE45332")
 
 layout(matrix(1:2,1), respect=TRUE)
 for (gse in gses) {
-  plot(0,0, col=0, xlim=c(0,100), ylim=c(0,.2), main=gse)
+  plot(0,0, col=0, xlim=c(0,100), ylim=c(0,.1), main=gse)
   for (feature_pretreatment in feature_pretreatments) {
     print(feature_pretreatment)
     for (ud_str in ud_strs) {
@@ -141,43 +131,130 @@ for (gse in gses) {
 }
 
 
+gses = c("GSE5816", "GSE45332")
 
-
-
-
-
-
-
-
-
-
-
-
-
-pvals =c()
-
-for (gene_symbol in gene_symbols[1:length(gene_symbols)]) {
-  print(gene_symbol)
-  mdata = try(mget_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)) 
-  if (class(mdata)!= "try-error"){
-    if (!is.null(mdata$d)) {
-      mdata$d 
-      head(mdata$d)
-      Y=mdata$d[,gene_symbol]
-      X=apply(mdata$d[,mdata$probes],1,mean)
-      m= lm(X~Y)
-      sm=summary(m)
-      fstat=sm$fstatistic
-      pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
-      pvals = c(pvals, pval)
-    } else {
-      warning(paste0("probleme with ", gene_symbol))
+layout(matrix(1:2,1), respect=TRUE)
+for (gse in gses) {
+  plot(0,0, col=0, xlim=c(0,100), ylim=c(0,.1), main=gse)
+  for (feature_pretreatment in feature_pretreatments) {
+    print(feature_pretreatment)
+    for (ud_str in ud_strs) {
+      print(ud_str)
+      for(reducer_func2_name in reducer_func2_names) {
+        prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
+        featsout = mread.xlsx (paste0("feats_", prefix3, ".xlsx"))
+        rownames(featsout) = featsout[,4]
+        gene_symbols = rownames(featsout[featsout$methplusplus,])[order(featsout[featsout$methplusplus,][[paste0("l2fc_", gse)]], decreasing=TRUE)][1:100]
+        pvals = sapply(gene_symbols, function(gene_symbol) {
+          #print(gene_symbol)
+          mdata = try(mget_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)) 
+          if (class(mdata) != "try-error"){
+            if ((!is.null(mdata$d)) & (gene_symbol %in% colnames(mdata$d))) {
+              mdata$d 
+              head(mdata$d)
+              Y=mdata$d[,gene_symbol]
+              X=apply(mdata$d[,mdata$probes],1,mean)
+              m= lm(X~Y)
+              sm=summary(m)
+              fstat=sm$fstatistic
+              pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
+              return(pval)
+            } else {
+              warning(paste0("probleme with ", gene_symbol))
+              return(NULL)
+            }
+          } else {
+            warning(paste0("probleme with ", gene_symbol))
+            return(NULL)
+          }
+        })  
+        #plot(density(-log10(unlist(pvals)), na.rm=TRUE))
+        lines(density(-log10(unlist(pvals)), na.rm=TRUE, bw=3), col=which(feature_pretreatment==feature_pretreatments))
+      }
     }
   }
-  #try(momic_pattern(gene_symbol, tcga_project))
 }
-layout(1, respect=TRUE)
-plot(density(-log10(pvals)))
+
+gses = c("GSE5816", "GSE45332")
+
+layout(matrix(1:2,1), respect=TRUE)
+for (gse in gses) {
+  plot(0,0, col=0, xlim=c(0,100), ylim=c(0,.1), main=gse)
+  for (feature_pretreatment in feature_pretreatments) {
+    print(feature_pretreatment)
+    for (ud_str in ud_strs) {
+      print(ud_str)
+      for(reducer_func2_name in reducer_func2_names) {
+        prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
+        featsout = mread.xlsx (paste0("feats_", prefix3, ".xlsx"))
+        rownames(featsout) = featsout[,4]
+        gene_symbols = rownames(featsout[featsout$methplusplus,])[order(featsout[featsout$methplusplus,][[paste0("l2fc_", gse)]], decreasing=TRUE)][1:100]
+        pvals = sapply(gene_symbols, function(gene_symbol) {
+          #print(gene_symbol)
+          mdata = try(mget_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)) 
+          if (class(mdata) != "try-error"){
+            if ((!is.null(mdata$d)) & (gene_symbol %in% colnames(mdata$d))) {
+              mdata$d 
+              head(mdata$d)
+              Y=mdata$d[,gene_symbol]
+              X=apply(mdata$d[,mdata$probes],1,mean)
+              m= lm(X~Y)
+              sm=summary(m)
+              fstat=sm$fstatistic
+              pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
+              return(pval)
+            } else {
+              warning(paste0("probleme with ", gene_symbol))
+              return(NULL)
+            }
+          } else {
+            warning(paste0("probleme with ", gene_symbol))
+            return(NULL)
+          }
+        })  
+        #plot(density(-log10(unlist(pvals)), na.rm=TRUE))
+        lines(density(-log10(unlist(pvals)), na.rm=TRUE, bw=3), col=which(reducer_func2_name==reducer_func2_names))
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+# pvals =c()
+# 
+# for (gene_symbol in gene_symbols[1:length(gene_symbols)]) {
+#   print(gene_symbol)
+#   mdata = try(mget_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project))
+#   if (class(mdata)!= "try-error"){
+#     if (!is.null(mdata$d)) {
+#       mdata$d
+#       head(mdata$d)
+#       Y=mdata$d[,gene_symbol]
+#       X=apply(mdata$d[,mdata$probes],1,mean)
+#       m= lm(X~Y)
+#       sm=summary(m)
+#       fstat=sm$fstatistic
+#       pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
+#       pvals = c(pvals, pval)
+#     } else {
+#       warning(paste0("probleme with ", gene_symbol))
+#     }
+#   }
+#   #try(momic_pattern(gene_symbol, tcga_project))
+# }
+# layout(1, respect=TRUE)
+# plot(density(-log10(pvals)))
 
 
 
@@ -221,12 +298,6 @@ for(ud_str in ud_strs){
 }
 beta_reg
 
-# rmarkdown::render("01_tss_cpg_status.Rmd")
-# rmarkdown::render("02_mapreduce_mean.Rmd")
-# rmarkdown::render("03_da_GSE45332.Rmd"   )
-# rmarkdown::render("03_da_GSE5816.Rmd"    )
-# rmarkdown::render("04_results.Rmd"       )
-
 
 
 
@@ -262,43 +333,3 @@ for (feature_pretreatment in feature_pretreatments) {
   }
 }
 
-
-
-
-corefeatsout_raw_2500_0_mean = openxlsx::read.xlsx ("corefeats_raw_2500_0_mean.xlsx")
-corefeatsout_raw_1000_0_mean = openxlsx::read.xlsx ("corefeats_raw_1000_0_mean.xlsx")
-corefeatsout_raw_500_0_mean = openxlsx::read.xlsx ("corefeats_raw_500_0_mean.xlsx")
-corefeatsout_raw_2500_0_max = openxlsx::read.xlsx ("corefeats_raw_2500_0_max.xlsx")
-corefeatsout_raw_1000_0_max = openxlsx::read.xlsx ("corefeats_raw_1000_0_max.xlsx")
-corefeatsout_raw_500_0_max = openxlsx::read.xlsx ("corefeats_raw_500_0_max.xlsx")
-corefeatsout_cen_2500_0_mean = openxlsx::read.xlsx ("corefeats_cen_2500_0_mean.xlsx")
-corefeatsout_cen_1000_0_mean = openxlsx::read.xlsx ("corefeats_cen_1000_0_mean.xlsx")
-corefeatsout_cen_500_0_mean = openxlsx::read.xlsx ("corefeats_cen_500_0_mean.xlsx")
-corefeatsout_cen_2500_0_max = openxlsx::read.xlsx ("corefeats_cen_2500_0_max.xlsx")
-corefeatsout_cen_1000_0_max = openxlsx::read.xlsx ("corefeats_cen_1000_0_max.xlsx")
-corefeatsout_cen_500_0_max = openxlsx::read.xlsx ("corefeats_cen_500_0_max.xlsx")
-# 
-# 
- plot(density(-log10(corefeatsout_raw_2500_0_mean$pvals), col=1))
-lines(density(-log10(corefeatsout_raw_1000_0_mean$pvals)), col=corefeatsout_raw_1000_0_mean$pvals+1)
-lines(density(-log10(corefeatsout_raw_500_0_mean$pvals)), col=corefeatsout_raw_1000_0_mean$pvals+2)
-lines(density(-log10(corefeatsout_raw_2500_0_max$pvals)), col=corefeatsout_raw_2500_0_max$pvals+3)
-lines(density(-log10(corefeatsout_raw_1000_0_max$pvals)), col=corefeatsout_raw_1000_0_max$pvals+4)
-lines(density(-log10(corefeatsout_raw_500_0_max$pvals)), col=corefeatsout_raw_500_0_max$pvals+5)
-# lines(density(-log10(corefeatsout_cen_2500_0_mean$pvals)), col=corefeatsout_cen_2500_0_mean$pvals+6)
-# lines(density(-log10(corefeatsout_cen_1000_0_mean$pvals)), col=corefeatsout_cen_1000_0_mean$pvals+7)
-# lines(density(-log10(corefeatsout_cen_500_0_mean$pvals)), col=corefeatsout_cen_500_0_mean$pvals+8)
-# lines(density(-log10(corefeatsout_cen_2500_0_max$pvals)), col=corefeatsout_cen_2500_0_max$pvals+9)
-# lines(density(-log10(corefeatsout_cen_1000_0_max$pvals)), col=corefeatsout_cen_1000_0_max$pvals+10)
-# lines(density(-log10(corefeatsout_cen_500_0_max$pvals)), col=corefeatsout_cen_500_0_max$pvals+11)
-
-
-# pvals
-# 
-# for (ud_str in ud_strs){
-#   for(feature_pretreatment in feature_pretreatments){
-#     for(reducer_func2_name in reducer_func2_names){
-#       
-# }
-# }
-# }
