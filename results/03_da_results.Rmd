@@ -18,7 +18,7 @@ et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
 ```
 
 
-figure: In a de methylatingh context, methplusplus genes are particularly re-activated.
-A) plot shows on x-axis..., on y-axis..., red dot are ...
-B) the boxplot shows ...
-C) the enrichement plot is obtained using GSEA, its show a particular enrichamnet of metplusplus genes in différemntial analysis ...
+In a demethylating context, `r gs_name` genes are particularly upregulated.
+A) The volcano plot shows the results of the differential analysis of `r gse` data for the model `model`. The x-axis the represents the `log2FoldChange` of the model and the y-axis the the $-log10(pval_{Fisher})$. Red dots are the `r gs_name` genes.
+B) The boxplot shows the `log2FoldChange` distribution for the `r gs_name` genes in red and for other genes in grey. We perform the Mann-Whitney U test and conclude that `r gs_name` genes are particularly over expressed in the model `r model` with a significant pvalue of `r signif(utest$p.value, 3)`.
+C) The enrichement plot is obtained using GSEA software [broad]. it illustrates that over expressed genes are particularly enriched in `r gs_name` genes.

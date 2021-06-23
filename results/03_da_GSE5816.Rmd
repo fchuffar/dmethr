@@ -144,17 +144,18 @@ stats2 = mcompute_anadiff(s, idx_1ct, idx_3hi)
 stats2 = t(stats2)
 stats2 = data.frame(stats2)
 stats2$padj = p.adjust(stats2$pval, method = "BH")
-layout(matrix(1:2,1), respect = TRUE)
-plot(stats2$beta,-log10(stats2$pval), pch=".")
-abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
-plot(stats2$beta,-log10(stats2$padj), pch=".")
-abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
+
+# layout(matrix(1:2,1), respect = TRUE)
+# plot(stats2$beta,-log10(stats2$pval), pch=".")
+# abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
+# plot(stats2$beta,-log10(stats2$padj), pch=".")
+# abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
 
 #plot(stats$beta, stats2$beta)
 #plot(-log10(stats$pval), -log10(stats2$pval))
 ```
 
-## Figure
+### Figure
 
 ```{r}
 gse = "GSE5816"

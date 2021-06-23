@@ -1,3 +1,153 @@
+expression_in_gtex = function(gene_symbols) {
+  
+  study_gtex_filename = "~/projects/gtex/results/study_gtex.rds"
+  s = mreadRDS(study_gtex_filename)  
+  if (length(gene_symbols)!=0) {
+    tmp_idx_features = intersect(gene_symbols, rownames(s$data))
+
+    # ```{r label="sort data by sample"}
+    tissues = rev(names(sort(table(s$exp_grp$tissue_group_level1))))
+    s$exp_grp = s$exp_grp[s$exp_grp$tissue_group_level1 %in% tissues,]
+    s$exp_grp$tissue_group_level1 = factor(s$exp_grp$tissue_group_level1, levels=tissues)
+    idx_samples = rownames(s$exp_grp)[order(s$exp_grp$tissue_group_level1)]
+    s$data = s$data[,idx_samples]
+    s$exp_grp = s$exp_grp[idx_samples,]
+    # ```
+    # ```{r label="normalization"}
+    data = normalization(s$data[tmp_idx_features,], "zscore_rows")
+    data = data[!apply(is.na(data), 1, any),]
+    # ```
+    # ```{r label="clustering each tissue group"}
+    outputs = lapply(tissues, function (tissue) {
+      # tissue = "prostate"
+      print(tissue)
+      idx_sample = rownames(s$exp_grp)[s$exp_grp$tissue_group_level1 == tissue]
+      d = data[,idx_sample]
+      sum(is.na(d))
+      d = d[apply(d, 1, any),]
+      foo = plot_expr_hm(
+        data=d                           ,
+        rsc=NULL                         , 
+        csc=NULL                         , 
+        nb_grp_row=4                     ,
+        nb_grp_col=4                     , 
+        main=tissue                      , 
+        hcmeth_cols="eucl_dist"          , 
+        hcmeth_rows="eucl_dist"          , 
+        normalization=FALSE              , 
+        ordering_func=median             , 
+        colors=c("cyan", "black", "red") , 
+        PCA=FALSE                        ,
+        PLOT_MAIN_HM=FALSE
+      )
+      dendro = as.dendrogram(foo$hc_col)  
+      sample = foo$hc_col$labels[foo$hc_col$order][ceiling(length(foo$hc_col$order)/2)]
+      tissue = tissue
+      list(dendro=dendro, sample=sample, tissue=tissue)
+    })
+    dendro_cols = do.call(merge, lapply(outputs, "[[", "dendro"))
+    labels = sapply(outputs, "[[", "tissue")
+    names(labels) = sapply(outputs, "[[", "sample")
+    # ```
+    # ```{r}
+    # data = s$data[tmp_idx_features,]
+
+    colors = c("cyan", "black", "red")
+    cols = colorRampPalette(colors)(20)
+    main=""
+
+    tmp_tab = table(s$exp_grp$tissue_group_level1)
+    ColSideColors = unlist(apply(cbind(data.frame(tmp_tab), col=rep(c("white", "grey"), length(tmp_tab))[1:length(tmp_tab)]), 1, function (l) {
+      rep(l[[3]], as.numeric(l[[2]]))
+    }))
+
+    # colnames by tissues
+    tmp_data = data
+    tmp_cn = colnames(tmp_data)
+    names(tmp_cn) = tmp_cn
+    tmp_cn[] = NA
+    tmp_cn
+    tmp_cn[names(labels)] = labels
+    colnames(tmp_data) = tmp_cn
+    # colnames(tmp_data)
+
+
+    tmp_data[tmp_data < -4 ] = -4
+    tmp_data[tmp_data > 4 ] = 4
+    foo = plot_expr_hm(
+      data=tmp_data                    ,
+      rsc=NULL                         , 
+      csc=ColSideColors                , 
+      Colv=dendro_cols                  , 
+      main=""                          , 
+      hcmeth_cols=FALSE                , 
+      hcmeth_rows="cor"                , 
+      normalization=FALSE              , 
+      ordering_func=median             , 
+      colors=c("cyan", "black", "red") , 
+      PCA=FALSE                        ,
+      PLOT_MAIN_HM=TRUE                ,
+      cexRow=0.6                       , 
+      cexCol=0.6
+    )
+
+    # ```
+    #
+    # ```{r}
+
+    Rowv = as.dendrogram(foo$hc_row)
+
+    tmp_data = t(apply(data, 1, function(l) {
+      # l = data [1,]
+      # bp = boxplot(l~s$exp_grp[colnames(data),]$tissue_group_level1, las=2)
+      m = lm(l~s$exp_grp[colnames(data),]$tissue_group_level1)
+      tmp_coef =  m$coefficients
+
+      oo = tmp_coef[1]
+      tmp_coef = tmp_coef  + tmp_coef[1]
+      tmp_coef[1] =  oo 
+      names(tmp_coef) = c(levels(s$exp_grp$tissue_group_level1)[1], do.call(rbind, strsplit(names(tmp_coef)[-1], "tissue_group_level1"))[,2])
+      # points(tmp_coef, col=2)
+      tmp_coef
+    }))
+
+    RowSideColors = rep("white", nrow(data))
+
+    tmp_data[tmp_data < -4 ] = -4
+    tmp_data[tmp_data > 4 ] = 4
+    foo = plot_expr_hm(
+      data=tmp_data                    ,
+      rsc=RowSideColors                , 
+      csc=NULL                         , 
+      Rowv=Rowv                        ,
+      # Colv=dendro_cols                  ,
+      main=""                          , 
+      hcmeth_cols=FALSE                , 
+      hcmeth_rows="cor"                , 
+      normalization=FALSE              , 
+      ordering_func=median             , 
+      colors=c("cyan", "black", "red") , 
+      PCA=FALSE                        ,
+      PLOT_MAIN_HM=TRUE                ,
+      cexRow=0.6                       , 
+      cexCol=0.6
+    )
+  }
+}
+
+truncate_survival = function(s, censoring_time) {
+  ## ending survival study at XX months
+  censoring_time = 60
+  s$exp_grp$dead = as.logical(s$exp_grp$dead)
+  idx = which(s$exp_grp$os_months>censoring_time)
+  if (length(idx) > 0) {
+    s$exp_grp[idx,]$os_months = censoring_time         # replace by truncation value
+    s$exp_grp[idx,]$dead = FALSE               # replace deaths by censors  
+  }
+  s$exp_grp$os = survival::Surv(s$exp_grp$os_months, s$exp_grp$dead)  
+  return(s)
+}
+
 et_gsea_plot = function(expression_vector, gene_set, prefix, nperm=1000) {
   # den_vec_name = "DEN14TuvsDEN14NT"
   # n_top = 500

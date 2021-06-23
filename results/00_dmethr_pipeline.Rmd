@@ -22,6 +22,7 @@ if (!exists("nb_rnd_feat"))          { nb_rnd_feat = 0              ;}
 if (!exists("ud_str"))               { ud_str = 2500                ;}
 if (!exists("feature_pretreatments")){ feature_pretreatment = "raw" ;}
 if (!exists("reducer_func2_names"))  { reducer_func2_name = "mean" ;}
+prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)  
 ```
 
 ```{r child="01_tss_cpg_status.Rmd"}
@@ -39,7 +40,7 @@ if (!exists("reducer_func2_names"))  { reducer_func2_name = "mean" ;}
 ```{r child="03_da_GSE5816.Rmd"}
 ```
 
-```{r child="04_results.Rmd", eval=FALSE}
+```{r child="04_results.Rmd"}
 ```
 
 

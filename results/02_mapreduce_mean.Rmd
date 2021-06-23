@@ -216,5 +216,9 @@ gs_name = "methplusplus"
 
 feats[[gs_name]] = rownames(feats) %in% gs_methplusplus
 table(feats$cpg_status, feats[[gs_name]], useNA="ifany")
+
+# expression_in_gtex(rownames(feats)[feats[[gs_name]]])
+
+
 ```
 

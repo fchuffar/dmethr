@@ -104,7 +104,7 @@ stoda::gseaplot(v=stoda_input, gs=gs_methplusplus)
 ```
 
 
-## Figure
+### Figure
 
 ```{r}
 gse = "GSE45332"
