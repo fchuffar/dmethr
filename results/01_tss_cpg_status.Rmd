@@ -335,39 +335,87 @@ for (j in 2:3) {
 
 
 
-## Figures poster
+## Figure
 
-```{r}
-
+```{r, fig.height=9}
 gs_cpgrich = rownames(feats)[!is.na(feats$cpg_status) & feats$cpg_status=="rich"]
 gs = rownames(feats)
 
+par(mar=c(5.1, 4.1, 4.1, 2.1))
 
-layout(matrix(1:4, 2, byrow = TRUE), respect=TRUE)
+layout_mat = 
+cbind(
+  rbind(
+    matrix(1, nrow=3, ncol=3),
+    rbind(
+      c(3,3,2),
+      c(5,5,4),
+      c(5,5,4)
+    )
+  ),
+  rbind(
+    matrix(6, nrow=2, ncol=3),
+    matrix(7, nrow=4, ncol=3)
+  )
+)
+layout_mat
+layout(layout_mat, respect=TRUE)
 
-plot(density(nb_cpg_tss),ylim=c(0,100), main="A : CpG Enrichment Distribution", xlab="CpG density", ylab="", yaxt="n")
-lines(density(nb_cpg_rnd, na.rm=TRUE), col=2)
-legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0("rnd pos +/-", ud_str/1000, "kb")), col=4:2, lty=1)
+par(mar=c(5.1, 4.1, 4.1, 2.1))
+plot(density(nb_cpg_tss),ylim=c(0,100), main="CpG density distribution", xlab="CpG density", ylab="", yaxt="n")
+lines(density(nb_cpg_rnd, na.rm=TRUE), col=4)
+legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0(2*ud_str/1000, "kb random positions")), col=c(1,4), lty=1)
+fig_label("A", cex=3)
 
+
+par(mar=c(2.5, 2.5, 4.1, 2.1))
+foo = barplot(p)
+axis(1, at=nrow(foo)/2, "% explained var. by PC", tick=FALSE)
+par(mar=c(0, 4.1, 4.1, 0))
 i = 1
-plot(density(pca$x[,i]), main=paste0("B : ACP Results : PC", i, "(", signif(p[i], 3), "%)"))
+plot(density(pca$x[,i]), main="EM clustering", xlab="", ylab="", xaxt="n", yaxt="n")
+fig_label("B", cex=3)
 
-plot(pca$x[,1], pca$x[,2], col=feats[rownames(pca$x),]$cpg_status%in%"rich"+1, main="C : Esperance Maximisation Clustering")
+par(mar=c(5.1, 0, 0, 2.1))
+i = 2
+den = density(pca$x[,i])
+plot(den$y, den$x, type="l", xlab="", ylab="", xaxt="n", yaxt="n")
 
-plot(apply(mat[idx_poor,], 2, mean), type="l", ylim=c(0, .13), col=1, main="D : Clustering CpG Enrichment", xaxt="n")
+par(mar=c(5.1, 4.1, 0, 0))
+plot(pca$x[,1], pca$x[,2], col=adjustcolor(feats[rownames(pca$x),]$cpg_status%in%"rich"+1, alpha.f=.5), xlab=paste0("PC", 1, "(", signif(p[1], 3), "%)"), ylab=paste0("PC",2, "(", signif(p[2], 3), "%)"))
+
+par(mar=c(5.1, 4.1, 4.1, 2.1))
+plot(apply(mat[idx_poor,], 2, mean), type="l", ylim=c(0, .13), col=1, main="Average CpG density profiles", xaxt="n", ylab="CpG density", xlab="")
 lines(apply(mat[idx_rich,], 2, mean), col=2)
 axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
 legend("topright", legend=c(paste0("rich (", length(idx_rich), ")"), paste0("poor (", length(idx_poor), ")")), col=2:1, lty=1)
+fig_label("C", cex=3)
+
+par(mar=c(5.1, 4.1, 4.1, 2.1))
+plot(0, main="heatmap")
+fig_label("D", cex=3)
+
+
+
+
+
 
 set.seed(1)
 data = mat[order(feats[rownames(mat),]$cpg_status) , ]
-data = data[sort(sample(1:nrow(data), min(nrow(data), 4000))), ]
+data = data[sort(sample(1:nrow(data), min(nrow(data), 500))), ]
+rownames(data) = feats[rownames(data),]$cpg_status
 colors=c("black",  "red")
 cols = colorRampPalette(colors)(20)
-rownames(data) = NULL
-gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 1000 rnd feats)"), xaxt="n", mar=c(8,5))
+# rownames(data) = NULL
+gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, ", nrow(data), " rnd feats)"), xaxt="n", mar=c(8,5))
 ```
 
 
  
-Figure a) This distribution shows the CpG proportion of selected features compared to ramdom position , x axis is the CpG density and y axis the features density. To process CpG density information we built a matrix with features and 100bp sliced bin and applied a PCA on it. Figure b) this ditribution shows the first principal component of this PCA representing 36,9% of variance. We decided to identify two clusters by using  an esperance maximisation clustering on this first PCA component. Figure c) shows this clustering, with first principal component on x axis and second principal component on y axis. Finally Figure d) is a CpG status (rich and poor) heatmap repartition. The distribution is on top, x axis is the position on the sequence around TSS and y axis is the CpG density.
+**Clustering of features according to CpG density of genomique region surounding the transcription start site (TSS).**
+For each feature we compute the CpG density of the TSS +/-`r ud_str/1000`kb region by counting the number of CG motif in the DNA sequence divided by the length of the sequence. 
+**Panel A** - The distribution of these values (black curve) shows 2 populations, when the distribution of CpG density of 1000 random genomic regions of `r 2*ud_str/1000`kb (blue curve) shows 1 population. The CpG density of random regions orverlaps the feature population with the lowest CpG density. We qualify this population as *CpG poor* features, by opposition to the second population qualify as *CpG rich* feature. In order to separate these two population we i) perform a PCA on the features and ii) apply an EM-clustering algorithm on the first principal component. 
+To perfom PCA on features we split genomic region of TSS +/- `r ud_str/1000`kb into `r stp/1000`kb bins. We compute the CpG density of each bin, then we obtain a CpG density matrix of `r nrow(mat)` features and `r ncol(mat)` bins. The heatmap of the panel E shows a 500 random feature sampling of this matrix. 
+**Panel B** - 
+this ditribution shows the first principal component of this PCA representing 36,9% of variance. We decided to identify two clusters by using  an esperance maximisation clustering on this first PCA component. Figure c) shows this clustering, with first principal component on x axis and second principal component on y axis. Finally Figure 
+**Panel C** - The average CpG density profile of the `r length(idx_rich)` CpG rich features (resp. `r length(idx_poor)` CpG poor features) cluster is plot in red (resp. in black) cluster is a CpG status (rich and poor) heatmap repartition. The distribution is on top, x axis is the position on the sequence around TSS and y axis is the CpG density.
