@@ -21,7 +21,7 @@ if (!exists("tcga_project"))         { tcga_project = "TCGA-LUSC"   ;}
 if (!exists("nb_rnd_feat"))          { nb_rnd_feat = 0              ;}
 if (!exists("ud_str"))               { ud_str = 2500                ;}
 if (!exists("feature_pretreatments")){ feature_pretreatment = "raw" ;}
-if (!exists("reducer_func2_names"))  { reducer_func2_names = "mean" ;}
+if (!exists("reducer_func2_names"))  { reducer_func2_name = "mean" ;}
 ```
 
 ```{r child="01_tss_cpg_status.Rmd"}
@@ -30,13 +30,16 @@ if (!exists("reducer_func2_names"))  { reducer_func2_names = "mean" ;}
 ```{r child="02_mapreduce_mean.Rmd"}
 ```
 
+# Step 3: Activation in demethylating context
+
+
 ```{r child="03_da_GSE45332.Rmd"}
 ```
 
 ```{r child="03_da_GSE5816.Rmd"}
 ```
 
-```{r child="04_results.Rmd"}
+```{r child="04_results.Rmd", eval=FALSE}
 ```
 
 

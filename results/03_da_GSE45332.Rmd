@@ -19,9 +19,10 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 ```{r}
 da_gse = "GSE45332"
 ```
-# Step 3.1 : Expression of genes in GSE45332 (DNMT double KO)
 
-## Study
+## GSE45332
+
+### Dataset
 
 We used the study GSE45332 to perform differential analysis of HCT116 cell lines transcriptome in wild type vs. DNMT double KO context.
 
@@ -67,7 +68,7 @@ d$lpadj = -log10(d$padj + 10^-300)
 
 
 
-```{r selecting_genes3, echo=TRUE, results="verbatim"}
+```{r selecting_genes3}
 idx = 
   (!is.na(d$padj) & d$lpadj > 50 & d$log2FoldChange > 0) | 
   (!is.na(d$padj) & d$log2FoldChange > 3)
@@ -103,10 +104,11 @@ stoda::gseaplot(v=stoda_input, gs=gs_methplusplus)
 ```
 
 
-## Results
+## Figure
 
 ```{r}
 gse = "GSE45332"
+model = "DNMT DKO vs. WT (ref.)"
 feats[,paste0("l2fc_", gse)] = NA
 feats[,paste0("pval_", gse)] = NA
 feats[,paste0("l2fc_", gse)] = d[rownames(feats),]$log2FoldChange

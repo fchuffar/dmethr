@@ -17,6 +17,111 @@ output:
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
 
 ```
+## Big Picture
+
+```{r}
+if (! exists("momik_pvals")) {
+  genes_singleton = mget_genes(tcga_project)
+  genes = genes_singleton$genes
+
+  s_meth = mreadRDS("~/projects/all_human_tissues/results/meth/study_meth_all_human_tissues_grch38.rds")
+  feat_indexed_probes = mget_feat_indexed_probes(feats_bed6=genes, s_meth$platform[,c("Chromosome", "Start")], up_str=max(ud_strs), dwn_str=max(ud_strs))
+  tmp_gs = intersect(names(feat_indexed_probes), rownames(genes))
+  momik_pvals = epimedtools::monitored_apply(mod=10, t(t(tmp_gs)), 1, function(gene_symbol) {
+    #print(gene_symbol)
+    feat = genes[gene_symbol,]
+    tss = ifelse(feat[[6]]=="+", feat[[2]], feat[[3]])
+    interaction_range=2500
+    region_id = paste0(feat[[1]], ":", tss-interaction_range, "-", tss+interaction_range)      
+    feat_indexed_probes[[region_id]] = feat_indexed_probes[[gene_symbol]]
+    mdata = try(mget_multiomic_data(region_id=region_id, gene_symbols=gene_symbol, tcga_project=tcga_project, feat_indexed_probes=feat_indexed_probes))   
+    if (class(mdata) != "try-error"){
+      if ((!is.null(mdata$d)) & (gene_symbol %in% colnames(mdata$d))) {
+        mdata$d 
+        head(mdata$d)
+        Y=mdata$d[,gene_symbol]
+        X=apply(mdata$d[,mdata$probes],1,mean, na.rm=TRUE)
+        m= lm(X~Y)
+        sm=summary(m)
+        fstat=sm$fstatistic
+        pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
+        return(pval)
+      } else {
+        warning(paste0("probleme with ", gene_symbol))
+        return(NULL)
+      }
+    } else {
+      warning(paste0("probleme with ", gene_symbol))
+      return(NULL)
+    }
+  })  
+  names(momik_pvals) = tmp_gs  
+  momik_pvals = unlist(momik_pvals)
+}
+feats$momik_pvals = NA
+feats[names(momik_pvals),]$momik_pvals = momik_pvals
+
+
+if (! exists("survival_pvalhrs")) {
+  genes_singleton = mget_genes(tcga_project)
+  genes = genes_singleton$genes
+
+  s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
+  tmp_gs = intersect(rownames(feats), rownames(s$data))
+  survival_pvalhrs = epimedtools::monitored_apply(mod=10, t(t(tmp_gs)), 1, function(gene_symbol) {
+    idx_sample = rownames(s$exp_grp)[!is.na(s$exp_grp$os)]
+    ss = s$exp_grp[idx_sample,]$os
+    v = s$data[gene_symbol, idx_sample]
+    pv = epimedtools::coxres(ss=ss, v=v)[[1]]
+    hr = epimedtools::coxres(ss=ss, v=v)[[4]]
+    ret = c(pv=pv, hr=hr)
+    return(ret)
+  })  
+  survival_pvalhrs = t(survival_pvalhrs)
+  rownames(survival_pvalhrs) = tmp_gs
+  survival_pvalhrs[is.na(survival_pvalhrs[,2]),2] = 1
+  survival_hrs = unlist(survival_pvalhrs[,2])
+  survival_pvals = unlist(survival_pvalhrs[,1])
+}
+feats$survival_pvals = NA
+feats[rownames(survival_pvalhrs),]$survival_pvals = survival_pvalhrs[,1]
+feats$survival_hrs = NA
+feats[rownames(survival_pvalhrs),]$survival_hrs = survival_pvalhrs[,2]
+
+# layout(matrix(1:2,1), respect=TRUE)
+# plot(feats$survival_hrs, -log10(feats$survival_pvals))
+# idx = rownames(feats)[feats[[gs_name]]]
+# points(feats[idx,]$survival_hrs, -log10(feats[idx,]$survival_pvals), col="red")
+
+
+
+# plot(-log10(feats$survival_pvals), -log10(feats$momik_pvals), pch=ifelse(feats$cpg_status %in% "rich", "black", "grey"), col=adjustcolor(1, alpha.f=.3), pch=".")
+
+layout(1, respect=TRUE)
+plot(-log10(feats$momik_pvals), -log10(feats$survival_pvals), col=adjustcolor(1, alpha.f=.3), xlab="multi-omic score")
+abline(h=-log10(0.05), lty=2)
+
+# idx = rownames(feats)[feats$cpg_status %in% "rich"]
+# points(-log10(feats[idx,]$survival_pvals), -log10(feats[idx,]$momik_pvals), col="red")
+
+idx = rownames(feats)[feats[[gs_name]]]
+points(-log10(feats[idx,]$momik_pvals), -log10(feats[idx,]$survival_pvals), col="red")
+
+
+
+ntop=100
+
+idx2 = idx[order(feats[idx,]$l2fc_GSE45332, decreasing=TRUE)][1:ntop]
+# feats[idx2,]$l2fc_GSE45332
+points(-log10(feats[idx2,]$momik_pvals), -log10(feats[idx2,]$survival_pvals), col=adjustcolor("blue", alpha.f=.8), pch=16)
+
+idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
+# feats[idx2,]$l2fc_GSE45332
+points(-log10(feats[idx3,]$momik_pvals), -log10(feats[idx3,]$survival_pvals), col=adjustcolor("green", alpha.f=.8), pch=16)
+
+idx4 = interest(idx[feats[idx,]$survival_pvals < 0.05]) 
+```
+
 
 ## Export features
 

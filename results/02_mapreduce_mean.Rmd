@@ -211,7 +211,10 @@ if (mean(data[idx1,]) < mean(data[idx2,])) {
 }
 length(gs_methplusplus)
 
-feats$methplusplus = rownames(feats) %in% gs_methplusplus
-table(feats$cpg_status, feats$methplusplus, useNA="ifany")
+
+gs_name = "methplusplus"
+
+feats[[gs_name]] = rownames(feats) %in% gs_methplusplus
+table(feats$cpg_status, feats[[gs_name]], useNA="ifany")
 ```
 
