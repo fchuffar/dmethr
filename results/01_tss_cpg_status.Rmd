@@ -335,3 +335,39 @@ for (j in 2:3) {
 
 
 
+## Figures poster
+
+```{r}
+
+gs_cpgrich = rownames(feats)[!is.na(feats$cpg_status) & feats$cpg_status=="rich"]
+gs = rownames(feats)
+
+
+layout(matrix(1:4, 2, byrow = TRUE), respect=TRUE)
+
+plot(density(nb_cpg_tss),ylim=c(0,100), main="A : CpG Enrichment Distribution", xlab="CpG density", ylab="", yaxt="n")
+lines(density(nb_cpg_rnd, na.rm=TRUE), col=2)
+legend("topright", c(paste0("tss +/-", ud_str/1000, "kb"), paste0("rnd pos +/-", ud_str/1000, "kb")), col=4:2, lty=1)
+
+i = 1
+plot(density(pca$x[,i]), main=paste0("B : ACP Results : PC", i, "(", signif(p[i], 3), "%)"))
+
+plot(pca$x[,1], pca$x[,2], col=feats[rownames(pca$x),]$cpg_status%in%"rich"+1, main="C : Esperance Maximisation Clustering")
+
+plot(apply(mat[idx_poor,], 2, mean), type="l", ylim=c(0, .13), col=1, main="D : Clustering CpG Enrichment", xaxt="n")
+lines(apply(mat[idx_rich,], 2, mean), col=2)
+axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
+legend("topright", legend=c(paste0("rich (", length(idx_rich), ")"), paste0("poor (", length(idx_poor), ")")), col=2:1, lty=1)
+
+set.seed(1)
+data = mat[order(feats[rownames(mat),]$cpg_status) , ]
+data = data[sort(sample(1:nrow(data), min(nrow(data), 4000))), ]
+colors=c("black",  "red")
+cols = colorRampPalette(colors)(20)
+rownames(data) = NULL
+gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, 1000 rnd feats)"), xaxt="n", mar=c(8,5))
+```
+
+
+ 
+Figure a) This distribution shows the CpG proportion of selected features compared to ramdom position , x axis is the CpG density and y axis the features density. To process CpG density information we built a matrix with features and 100bp sliced bin and applied a PCA on it. Figure b) this ditribution shows the first principal component of this PCA representing 36,9% of variance. We decided to identify two clusters by using  an esperance maximisation clustering on this first PCA component. Figure c) shows this clustering, with first principal component on x axis and second principal component on y axis. Finally Figure d) is a CpG status (rich and poor) heatmap repartition. The distribution is on top, x axis is the position on the sequence around TSS and y axis is the CpG density.
