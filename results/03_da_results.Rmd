@@ -11,14 +11,14 @@ names(expression_vector) = rownames(feats)
 expression_vector = expression_vector[!is.na(expression_vector)]
 
 utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, gs_name, "others"), las=2)
-boxplot(expression_vector~ifelse(names(expression_vector)%in%gene_set, gs_name, "others"), main=paste0("Mann-Whitney U test (pval=", signif(utest$p.value, 3), ")"), ylab=paste0("log2FoldChange"), xlab="", col=adjustcolor(c("red", "grey"), alpha.f=.5))  
+boxplot(rank(expression_vector)~ifelse(names(expression_vector)%in%gene_set, gs_name, "others"), main=paste0("Mann-Whitney U test (pval=", signif(utest$p.value, 3), ")"), ylab=paste0("rank(log2FoldChange)"), xlab="", col=adjustcolor(c("red", "grey"), alpha.f=.5))  
 
 et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
 
 ```
 
 
-In a demethylating context, `r gs_name` genes are particularly upregulated.
-A) The volcano plot shows the results of the differential analysis of `r gse` data for the model `model`. The x-axis the represents the `log2FoldChange` of the model and the y-axis the the $-log10(pval_{Fisher})$. Red dots are the `r gs_name` genes.
-B) The boxplot shows the `log2FoldChange` distribution for the `r gs_name` genes in red and for other genes in grey. We perform the Mann-Whitney U test and conclude that `r gs_name` genes are particularly over expressed in the model `r model` with a significant pvalue of `r signif(utest$p.value, 3)`.
-C) The enrichement plot is obtained using GSEA software [broad]. it illustrates that over expressed genes are particularly enriched in `r gs_name` genes.
+In a demethylating context, *`r gs_name`* genes are particularly upregulated.
+A) The volcano plot shows the results of the differential analysis of `r gse` data for the model `r model`. The x-axis the represents the `log2FoldChange` of the model and the y-axis the the $-log10(pval_{Fisher})$. Red dots are the *`r gs_name`* genes.
+B) The boxplot shows the distribution of genes ranks obtained from `log2FoldChange` for the *`r gs_name`*. The *`r gs_name`* genes are in red and the other genes are in grey. We perform the Mann-Whitney U test and conclude that *`r gs_name`* genes are particularly over expressed in the model `r model` with a significant pvalue of `r signif(utest$p.value, 3)`.
+C) The enrichement plot is obtained using GSEA software. it illustrates that over expressed genes in `r model` are enriched in *`r gs_name`* genes.

@@ -720,7 +720,7 @@ get_feat_indexed_probes = function(feats_bed6, probes_bed2, up_str, dwn_str) {
   pf_bed[,6] = "+"
   pf_bed = pf_bed[!pf_bed[,1]%in%"*",]
   head(pf_bed)
-  options(scipen=999)
+  # options(scipen=999)
   write.table(pf_bed, file="illumina_450k_hg38.bed", sep="\t", quote=FALSE,row.names=FALSE, col.names=FALSE)    
   ## index meth probes by chr
   chrs = unique(feats_bed6[,1])
