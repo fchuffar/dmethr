@@ -16,6 +16,13 @@ output:
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
 ```
 
+```{r}
+if (!exists("tcga_project"))         { tcga_project = "TCGA-LUSC"   ;}
+if (!exists("nb_rnd_feat"))          { nb_rnd_feat = 0              ;}
+if (!exists("ud_str"))               { ud_str = 2500                ;}
+if (!exists("feature_pretreatments")){ feature_pretreatment = "raw" ;}
+if (!exists("reducer_func2_names"))  { reducer_func2_names = "mean" ;}
+```
 
 ```{r child="01_tss_cpg_status.Rmd"}
 ```
