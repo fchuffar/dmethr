@@ -186,19 +186,15 @@ corefeats = rownames(feats)[
 length(corefeats) 
 ```
 
-```{r}
-if (length(corefeats!=0)){
-  corefeat_export_filename = paste0("corefeats_", prefix3, ".xlsx")
-}
-
-```
-
 
 ```{r results="verbatim", eval=FALSE}
-Annotated core features are exported as [`r corefeat_export_filename`](`r corefeat_export_filename`) file. 
-head(corefeats)
-tmp_d = feats[corefeats,]
-WriteXLS::WriteXLS(tmp_d, corefeat_export_filename)
+# Annotated core features are exported as [`r corefeat_export_filename`](`r corefeat_export_filename`) file. 
+if (length(corefeats!=0)){
+  corefeat_export_filename = paste0("corefeats_", prefix3, ".xlsx")
+  head(corefeats)
+  tmp_d = feats[corefeats,]
+  WriteXLS::WriteXLS(tmp_d, corefeat_export_filename)
+}
 ```
 
 
