@@ -17,7 +17,7 @@ output:
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
 ```
 
-## Figure
+## Multiomic
 
 ```{r}
 if (! exists("momik_pvalbetas")) {
@@ -58,18 +58,13 @@ if (! exists("momik_pvalbetas")) {
     }
   })  
   names(momik_pvalbetas) = tmp_gs  
-  momik_pvalbetas = unlist(momik_pvalbetas)
-
-  momik_pvalbetas = t(momik_pvalbetas)
-  rownames(momik_pvalbetas) = tmp_gs
-  momik_pvalbetas[is.na(momik_pvalbetas[,2]),2] = 1
+  momik_pvalbetas = do.call(rbind,momik_pvalbetas)
 }
 feats$momik_pvals = NA
-feats[names(momik_pvalbetas),]$momik_pvals = momik_pvalbetas[,2]
+feats[rownames(momik_pvalbetas),]$momik_pvals = momik_pvalbetas[,2]
 feats$momik_betas = NA
-feats[names(momik_pvalbetas),]$momik_betas = momik_pvalbetas[,1]
-
-
+feats[rownames(momik_pvalbetas),]$momik_betas = momik_pvalbetas[,1]
+feats$momik_lpvals = -log10(feats$momik_pvals)
 
 
 if (! exists("survival_pvalhrs")) {
@@ -93,33 +88,118 @@ if (! exists("survival_pvalhrs")) {
       pv = 1
       hr = 1
     }
-    ret = c(pv=pv, hr=hr)
+    ret = c(hr=hr, pv=pv)
     return(ret)
   })  
   survival_pvalhrs = t(survival_pvalhrs)
   rownames(survival_pvalhrs) = tmp_gs
-  survival_pvalhrs[is.na(survival_pvalhrs[,2]),2] = 1
-  survival_hrs = unlist(survival_pvalhrs[,2])
-  survival_pvals = unlist(survival_pvalhrs[,1])
+  survival_pvalhrs[is.na(survival_pvalhrs[,1]),1] = 1
 }
 feats$survival_pvals = NA
-feats[rownames(survival_pvalhrs),]$survival_pvals = survival_pvalhrs[,1]
+feats[rownames(survival_pvalhrs),]$survival_pvals = survival_pvalhrs[,2]
 feats$survival_hrs = NA
-feats[rownames(survival_pvalhrs),]$survival_hrs = survival_pvalhrs[,2]
-
-# layout(matrix(1:2,1), respect=TRUE)
-# plot(feats$survival_hrs, -log10(feats$survival_pvals))
-# idx = rownames(feats)[feats[[gs_name]]]
-# points(feats[idx,]$survival_hrs, -log10(feats[idx,]$survival_pvals), col="red")
-
-
-
-# plot(-log10(feats$survival_pvals), -log10(feats$momik_pvals), pch=ifelse(feats$cpg_status %in% "rich", "black", "grey"), col=adjustcolor(1, alpha.f=.3), pch=".")
+feats[rownames(survival_pvalhrs),]$survival_hrs = survival_pvalhrs[,1]
+feats$survival_lpvals = -log10(feats$survival_pvals)
 
 ntop=100
 idx = rownames(feats)[feats[[gs_name]]]
 idx2 = idx[order(feats[idx,]$l2fc_GSE45332, decreasing=TRUE)][1:ntop]
 idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
+
+
+```
+
+## Figure
+
+```{r fig.width=15, fig.height=15}
+gene_symbols = (union(idx2, idx3)) 
+gene_symbols = gene_symbols[order(feats[gene_symbols,]$momik_pvals)][1:min(6, length(gene_symbols))]
+
+layout_mat2 = cbind(matrix(1, nrow=6, ncol=5), c(2:7))
+layout_mat2 
+layout(layout_mat2, respect=TRUE)
+plot(feats$momik_betas, feats$momik_lpvals, col="grey")
+points(feats[idx,]$momik_betas, feats[idx,]$momik_lpvals  , col="red")
+points(feats[idx2,]$momik_betas, feats[idx2,]$momik_lpvals, col="blue", pch=16)
+points(feats[idx3,]$momik_betas, feats[idx3,]$momik_lpvals, col="purple", pch=16)
+text(feats[gene_symbols,]$momik_betas, feats[gene_symbols,]$momik_lpvals, gene_symbols, col=adjustcolor(1, alpha.f=1), pos=c(1,3))
+
+legend("topright", 
+  c("genes", paste0(gs_name, " genes"), paste0(gs_name, " genes upregulated GSE45332 DA"), paste0(gs_name, " genes upregulated GSE5816 DA")), 
+  pch=c(1, 1, 16, 16), 
+  col=c("grey", "red", "blue", "purple"),
+  lty=c(0,0,0,0)
+)
+
+fig_label("A", cex=3)
+
+gene_set = idx
+gs_name = "momik_betas"
+expression_vector = feats[,gs_name]
+names(expression_vector) = rownames(feats)
+expression_vector = expression_vector[!is.na(expression_vector)]
+et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+fig_label("B", cex=3)
+
+gs_name = "momik_lpvals"
+expression_vector = feats[,gs_name]
+names(expression_vector) = rownames(feats)
+expression_vector = expression_vector[!is.na(expression_vector)]
+et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+fig_label("C", cex=3)
+
+gene_set = idx2
+gs_name = "momik_betas"
+expression_vector = feats[,gs_name]
+names(expression_vector) = rownames(feats)
+expression_vector = expression_vector[!is.na(expression_vector)]
+et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+fig_label("D", cex=3)
+
+gs_name = "momik_lpvals"
+expression_vector = feats[,gs_name]
+names(expression_vector) = rownames(feats)
+expression_vector = expression_vector[!is.na(expression_vector)]
+et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+fig_label("E", cex=3)
+
+gene_set = idx3
+gs_name = "momik_betas"
+expression_vector = feats[,gs_name]
+names(expression_vector) = rownames(feats)
+expression_vector = expression_vector[!is.na(expression_vector)]
+et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+fig_label("F", cex=3)
+
+gs_name = "momik_lpvals"
+expression_vector = feats[,gs_name]
+names(expression_vector) = rownames(feats)
+expression_vector = expression_vector[!is.na(expression_vector)]
+et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+fig_label("G", cex=3)
+```
+
+
+```{r}
+tcga_project = "TCGA-LUSC"
+s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
+s = truncate_survival(s, 60)
+idx_sample = rownames(s$exp_grp)[!is.na(s$exp_grp$os)]
+
+
+foo = sapply(gene_symbols, function(gene_symbol) {
+  ss = s$exp_grp[idx_sample,]$os
+  v = s$data[gene_symbol, idx_sample]
+  par(mar=c(2.5, 2.5, 4.1, 2.1))
+  try(momic_pattern(gene_symbol, tcga_project))
+  ret
+})
+```
+
+
+## Survival
+
+```{r survival, eval=TRUE}
 gene_symbols = intersect(intersect(idx[feats[idx,]$survival_pvals < 0.05], idx[-log10(feats[idx,]$momik_pvals)>5]), union(idx2, idx3)) 
 gene_symbols = gene_symbols[order(feats[gene_symbols,]$momik_pvals)][1:min(20, length(gene_symbols))]
 
@@ -141,14 +221,8 @@ legend("topright",
   col=c("grey", "red", "blue", "purple", "black"),
   lty=c(0,0,0,0,2)
 )
-# stop("EFN")
-```
 
 
-
-
-
-```{r survival, eval=TRUE}
 tcga_project = "TCGA-LUSC"
 s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
 s = truncate_survival(s, 60)
