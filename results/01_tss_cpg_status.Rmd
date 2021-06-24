@@ -2,12 +2,9 @@
 title: "Step 1: CpG status of region surrounding TSS"
 author: "Florence Pittion, Florent Chuffart"
 date: "`r Sys.Date()`"
-output: 
-  rmarkdown::html_document:
-    toc: true
-    toc_float: true
-    toc_depth: 3
-    number_sections: true
+output:
+  pdf_document:
+    keep_tex: true
 ---
 
 
@@ -405,7 +402,7 @@ data = data[sort(sample(1:nrow(data), min(nrow(data), 500))), ]
 rownames(data) = feats[rownames(data),]$cpg_status
 colors=c("black",  "red")
 cols = colorRampPalette(colors)(20)
-foo = image(t(data), col=cols, xaxt="n", yaxt="n", main="CpG density profiles of 500 random features")
+foo = image(t(data), col=cols, xaxt="n", yaxt="n", main="CpG density profiles of 500 random features", useRaster=TRUE)
 axis(1, c(0,.5, 1), c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
 axis(2, c(
   0,

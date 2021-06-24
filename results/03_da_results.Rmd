@@ -19,6 +19,6 @@ et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
 
 
 In a demethylating context, *`r gs_name`* genes are particularly upregulated.
-A) The volcano plot shows the results of the differential analysis of `r gse` data for the model `r model`. The x-axis the represents the `log2FoldChange` of the model and the y-axis the the $-log10(pval_{Fisher})$. Red dots are the *`r gs_name`* genes.
-B) The boxplot shows the distribution of genes ranks obtained from `log2FoldChange` for the *`r gs_name`*. The *`r gs_name`* genes are in red and the other genes are in grey. We perform the Mann-Whitney U test and conclude that *`r gs_name`* genes are particularly over expressed in the model `r model` with a significant pvalue of `r signif(utest$p.value, 3)`.
-C) The enrichement plot is obtained using GSEA software. it illustrates that over expressed genes in `r model` are enriched in *`r gs_name`* genes.
+**(A)** The volcano plot shows the results of the differential analysis of `r gse` data for the model `r model`. The x-axis the represents the `log2FoldChange` of the model and the y-axis the the $-log10(pval_{Fisher})$. Red dots are the *`r gs_name`* genes.
+**(B)** The boxplot shows the distribution of genes ranks obtained from `log2FoldChange` for the *`r gs_name`*. The *`r gs_name`* genes are in red and the other genes are in grey. We perform the Mann-Whitney U test and conclude that *`r gs_name`* genes are particularly over expressed in the model `r model` with a significant pvalue of $`r signif(utest$p.value, 3)`.$
+**(C)** The enrichement plot is obtained using GSEA software. it illustrates that over expressed genes in `r model` are enriched in *`r gs_name`* genes.
