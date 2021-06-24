@@ -81,11 +81,18 @@ if (! exists("survival_pvalhrs")) {
 
   tmp_gs = intersect(rownames(feats), rownames(s$data))
   survival_pvalhrs = epimedtools::monitored_apply(mod=10, t(t(tmp_gs)), 1, function(gene_symbol) {
+    # gene_symbol = "MIR6723"
+    # print(gene_symbol)
     idx_sample = rownames(s$exp_grp)[!is.na(s$exp_grp$os)]
     ss = s$exp_grp[idx_sample,]$os
     v = s$data[gene_symbol, idx_sample]
-    pv = epimedtools::coxres(ss=ss, v=v)[[1]]
-    hr = epimedtools::coxres(ss=ss, v=v)[[4]]
+    pv = try(epimedtools::coxres(ss=ss, v=v)[[1]])
+    if (class(pv)!="try-error") {
+      hr = epimedtools::coxres(ss=ss, v=v)[[4]]
+    } else {
+      pv = 1
+      hr = 1
+    }
     ret = c(pv=pv, hr=hr)
     return(ret)
   })  
