@@ -379,7 +379,7 @@ par(mar=c(0, 4.1, 4.1, 0))
 i = 1
 den=density(pca$x[,i])
   plot(den, main="EM clustering", xlab="", ylab="", xaxt="n", yaxt="n", col="grey")
-abline (v=max(pca$x[idx_rich,i]))
+abline (v=max(pca$x[idx_rich,i]), lty="dotted")
 den_rich = density(pca$x[idx_rich,i], na.rm=TRUE, bw=den$bw)  
 den_poor = density(pca$x[idx_poor,i], na.rm=TRUE, bw=den$bw)
 lines(den_rich$x, den_rich$y * (den_rich$n/nrow(pca$x)), col=2, lwd=2)
