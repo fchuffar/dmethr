@@ -111,14 +111,14 @@ idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
 
 ## Figure
 
-```{r fig.width=15, fig.height=15}
+```{r fig.height=9}
 gene_symbols = (union(idx2, idx3)) 
 gene_symbols = gene_symbols[order(feats[gene_symbols,]$momik_pvals)][1:min(6, length(gene_symbols))]
 
 layout_mat2 = cbind(matrix(1, nrow=6, ncol=5), c(2:7))
 layout_mat2 
 layout(layout_mat2, respect=TRUE)
-plot(feats$momik_betas, feats$momik_lpvals, col="grey")
+plot(feats$momik_betas, feats$momik_lpvals, col="grey", xlim=c(-0.2,0.2), main="transcriptome~methylome")
 points(feats[idx,]$momik_betas, feats[idx,]$momik_lpvals  , col="red")
 points(feats[idx2,]$momik_betas, feats[idx2,]$momik_lpvals, col="blue", pch=16)
 points(feats[idx3,]$momik_betas, feats[idx3,]$momik_lpvals, col="purple", pch=16)

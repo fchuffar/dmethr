@@ -16,7 +16,6 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 
 ## GSE5816
 
-### Dataset
 
 ```{r}
 s = readRDS("~/projects/study_gpl570/study_GSE5816_trscr_gs.rds")
@@ -155,7 +154,6 @@ stats2$padj = p.adjust(stats2$pval, method = "BH")
 #plot(-log10(stats$pval), -log10(stats2$pval))
 ```
 
-### Figure
 
 ```{r}
 gse = "GSE5816"
