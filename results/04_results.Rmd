@@ -195,8 +195,9 @@ fig_label("B", cex=3)
 ```
 
 **Figure** Correlation between gene expression and TSS+/-2.5kb methylation in TCGA-LUSC dataset. 
-**(A)** For each gene we perform a linar regression of its expression according to the average methylation of its TSS+/-2.5kb and draw the corresponding volcano plot. The x-axis represents the linear regression coeficient of the model and y-axis repressents -lop10 of the Fisher p-value. Genes are drawn as grey circles when `methplusplus` genes are drawn as red circles. The top `r ntop` genes of the model `r models[[1]]` (resp. `r models[[2]]`) in gse `r gse[[1]]` (resp. `r gse[[2]]`) dataset in drawn as blue (resp. purple) dot. The plot shows that most of gene expression increase when their TSS+/-2.5kb methylation decrease. 
+**(A)** For each gene we perform a linar regression of its expression according to the average methylation of its TSS+/-2.5kb and draw the corresponding volcano plot. The x-axis represents the linear regression coeficient of the model and y-axis repressents -lop10 of the Fisher p-value. Genes are drawn as grey circles when `methplusplus` genes are drawn as red circles. The top `r ntop` genes of the model `r models[[1]]` (resp. `r models[[2]]`) in gse `r gses[[1]]` (resp. `r gses[[2]]`) dataset in drawn as blue (resp. purple) dot. The plot shows that most of gene expression increase when their TSS+/-2.5kb methylation decrease. 
 **(B)** It is particularly true for TSPYL5. The y-axis represents the TCGA-LUSC patients ordered according to their TSPYL5 level of expression (left sub-panel). The TSPYL5 TSS+/-2.5kb methylation heatmap (right sub-panel) shows that a low TSPYL5 expression is associated to a strong methylation (in red) of the region surrounding TSPYL5 TSS when high expression of TSPYL5 is associated to a demethylation of the same genomic region.  
+**(C)** The Enrichment plot of the `methplusplus` genes 
 
 
 
