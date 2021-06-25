@@ -17,8 +17,6 @@ output:
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
 ```
 
-## Multiomic
-
 ```{r}
 if (! exists("momik_pvalbetas")) {
   genes_singleton = mget_genes(tcga_project)
@@ -102,7 +100,7 @@ feats[rownames(survival_pvalhrs),]$survival_hrs = survival_pvalhrs[,1]
 feats$survival_lpvals = -log10(feats$survival_pvals)
 
 ntop=100
-idx = rownames(feats)[feats[[gs_name]]]
+idx = rownames(feats)[feats[["methplusplus"]]]
 idx2 = idx[order(feats[idx,]$l2fc_GSE45332, decreasing=TRUE)][1:ntop]
 idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
 
@@ -115,22 +113,33 @@ idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
 gene_symbols = (union(idx2, idx3)) 
 gene_symbols = gene_symbols[order(feats[gene_symbols,]$momik_pvals)][1:min(6, length(gene_symbols))]
 
-layout_mat2 = cbind(matrix(1, nrow=6, ncol=5), c(2:7))
+layout_mat2 = cbind(
+  rbind(
+    matrix(1, nrow=4, ncol=4),
+    cbind(
+      matrix(6, nrow=2, ncol=1),
+      matrix(5, nrow=2, ncol=3)
+    )
+  ),
+  rbind(
+    matrix(2, nrow=2, ncol=2),
+    matrix(3, nrow=2, ncol=2),
+    matrix(4, nrow=2, ncol=2)
+  )
+)
 layout_mat2 
 layout(layout_mat2, respect=TRUE)
-plot(feats$momik_betas, feats$momik_lpvals, col="grey", xlim=c(-0.2,0.2), main="transcriptome~methylome")
+plot(feats$momik_betas, feats$momik_lpvals, col="grey", xlim=c(-0.2,0.2), main="gene expression ~ TSS+/-2.5kb methylation", xlab="linear regression coefficient", ylab="-log10(Fisher p-value)")
 points(feats[idx,]$momik_betas, feats[idx,]$momik_lpvals  , col="red")
 points(feats[idx2,]$momik_betas, feats[idx2,]$momik_lpvals, col="blue", pch=16)
 points(feats[idx3,]$momik_betas, feats[idx3,]$momik_lpvals, col="purple", pch=16)
 text(feats[gene_symbols,]$momik_betas, feats[gene_symbols,]$momik_lpvals, gene_symbols, col=adjustcolor(1, alpha.f=1), pos=c(1,3))
-
 legend("topright", 
-  c("genes", paste0(gs_name, " genes"), paste0(gs_name, " genes upregulated GSE45332 DA"), paste0(gs_name, " genes upregulated GSE5816 DA")), 
+  c("genes", paste0("methplusplus", " genes"), paste0("methplusplus", " genes upregulated GSE45332 DA"), paste0(gs_name, " genes upregulated GSE5816 DA")), 
   pch=c(1, 1, 16, 16), 
   col=c("grey", "red", "blue", "purple"),
   lty=c(0,0,0,0)
 )
-
 fig_label("A", cex=3)
 
 gene_set = idx
@@ -138,46 +147,57 @@ gs_name = "momik_betas"
 expression_vector = feats[,gs_name]
 names(expression_vector) = rownames(feats)
 expression_vector = expression_vector[!is.na(expression_vector)]
-et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
-fig_label("B", cex=3)
-
-gs_name = "momik_lpvals"
-expression_vector = feats[,gs_name]
-names(expression_vector) = rownames(feats)
-expression_vector = expression_vector[!is.na(expression_vector)]
-et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3)
 fig_label("C", cex=3)
+
+# gs_name = "momik_lpvals"
+# expression_vector = feats[,gs_name]
+# names(expression_vector) = rownames(feats)
+# expression_vector = expression_vector[!is.na(expression_vector)]
+# et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+# fig_label("C", cex=3)
 
 gene_set = idx2
 gs_name = "momik_betas"
-expression_vector = feats[,gs_name]
-names(expression_vector) = rownames(feats)
+expression_vector = feats[idx,gs_name]
+names(expression_vector) = idx
 expression_vector = expression_vector[!is.na(expression_vector)]
-et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_GSE45332"), nperm=3)
 fig_label("D", cex=3)
 
-gs_name = "momik_lpvals"
-expression_vector = feats[,gs_name]
-names(expression_vector) = rownames(feats)
-expression_vector = expression_vector[!is.na(expression_vector)]
-et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
-fig_label("E", cex=3)
+# gs_name = "momik_lpvals"
+# expression_vector = feats[idx,gs_name]
+# names(expression_vector) = idx
+# expression_vector = expression_vector[!is.na(expression_vector)]
+# et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+# fig_label("E", cex=3)
 
 gene_set = idx3
 gs_name = "momik_betas"
-expression_vector = feats[,gs_name]
-names(expression_vector) = rownames(feats)
+expression_vector = feats[idx,gs_name]
+names(expression_vector) = idx
 expression_vector = expression_vector[!is.na(expression_vector)]
-et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
-fig_label("F", cex=3)
+et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_GSE5816"), nperm=3)
+fig_label("E", cex=3)
 
-gs_name = "momik_lpvals"
-expression_vector = feats[,gs_name]
-names(expression_vector) = rownames(feats)
-expression_vector = expression_vector[!is.na(expression_vector)]
-et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
-fig_label("G", cex=3)
+# gs_name = "momik_lpvals"
+# expression_vector = feats[idx,gs_name]
+# names(expression_vector) = idx
+# expression_vector = expression_vector[!is.na(expression_vector)]
+# et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+# fig_label("G", cex=3)
+
+
+momic_pattern("TSPYL5", tcga_project, LAYOUT=FALSE)
+fig_label("B", cex=3)
+
+# stop("EFN")
 ```
+
+**Figure** Correlation between gene expression and TSS+/-2.5kb methylation in TCGA-LUSC dataset. 
+**(A)** For each gene we perform a linar regression of its expression according to the average methylation of its TSS+/-2.5kb and draw the corresponding volcano plot. The x-axis represents the linear regression coeficient of the model and y-axis repressents -lop10 of the Fisher p-value. Genes are drawn as grey circles when `methplusplus` genes are drawn as red circles. The top `r ntop` genes of the model `r model[[1]]` (resp. `r model[[2]]`) in gse `r gse[[1]]` (resp. `r gse[[2]]`) dataset in drawn as blue (resp. purple) dot. The plot shows that most of gene expression increase when their TSS+/-2.5kb methylation decrease. 
+**(B)** It is particularly true for TSPYL5. The y-axis represents the TCGA-LUSC patients ordered according to their TSPYL5 level of expression (left sub-panel). The TSPYL5 TSS+/-2.5kb methylation heatmap (right sub-panel) shows that a low TSPYL5 expression is associated to a strong methylation (in red) of the region surrounding TSPYL5 TSS when high expression of TSPYL5 is associated to a demethylation of the same genomic region.  
+
 
 
 ```{r}
@@ -188,18 +208,14 @@ idx_sample = rownames(s$exp_grp)[!is.na(s$exp_grp$os)]
 
 
 foo = sapply(gene_symbols, function(gene_symbol) {
-  ss = s$exp_grp[idx_sample,]$os
-  v = s$data[gene_symbol, idx_sample]
-  par(mar=c(2.5, 2.5, 4.1, 2.1))
   try(momic_pattern(gene_symbol, tcga_project))
-  ret
 })
 ```
 
 
 ## Survival
 
-```{r survival, eval=TRUE}
+```{r survival, eval=FALSE}
 gene_symbols = intersect(intersect(idx[feats[idx,]$survival_pvals < 0.05], idx[-log10(feats[idx,]$momik_pvals)>5]), union(idx2, idx3)) 
 gene_symbols = gene_symbols[order(feats[gene_symbols,]$momik_pvals)][1:min(20, length(gene_symbols))]
 
@@ -267,6 +283,25 @@ Cancer Lett. 2018 Apr 28;420:80-90. doi: 10.1016/j.canlet.2018.01.060. Epub 2018
 PMID: 29409808
 
 
+Linc00221 modulates cisplatin resistance in non-small-cell lung cancer via sponging miR-519a.
+Tang H, et al. Biochimie, 2019 Jul. PMID 31029744
+
+Mitochondria localization and dimerization are required for CIDE-B to induce apoptosis.
+Chen Z, Guo K, Toh SY, Zhou Z, Li P.
+J Biol Chem. 2000 Jul 28;275(30):22619-22. doi: 10.1074/jbc.C000207200.
+PMID: 10837461
+
+Dual promoters control the cell-specific expression of the human cell death-inducing DFF45-like effector B gene.
+Da L, Li D, Yokoyama KK, Li T, Zhao M.
+Biochem J. 2006 Feb 1;393(Pt 3):779-88. doi: 10.1042/BJ20051027.
+PMID: 16248853 Free PMC article.
+
+Targeting therapy-resistant lung cancer stem cells via disruption of the AKT/TSPYL5/PTEN positive-feedback loop
+In-Gyu Kim, Jei-Ha Lee, Seo-Yeon Kim, Chang-Kyu Heo, Rae-Kwon Kim & Eun-Wie Cho 
+Communications Biology volume 4, Article number: 778 (2021) Cite this article
+
+TSPYL5 is involved in cell growth and the resistance to radiation in A549 cells via the regulation of p21(WAF1/Cip1) and PTEN/AKT pathway
+Eun Jin Kim  1 , So Yong Lee, Tae Rim Kim, Soo Im Choi, Eun Wie Cho, Kug Chan Kim, In Gyu Kim
 
 
 

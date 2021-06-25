@@ -951,29 +951,35 @@ get_multiomic_data = function(gene_symbols, tcga_project, feat_indexed_probes, r
 if (!exists("mget_multiomic_data")) {mget_multiomic_data = memoise::memoise(get_multiomic_data)}
 
 
-momic_pattern = function(gene_symbols, tcga_project, interaction_range=2500, ...) {    
+momic_pattern = function(gene_symbols, tcga_project, interaction_range=2500, LAYOUT=TRUE, ...) {    
   data = get_multiomic_data(gene_symbols=gene_symbols, tcga_project=tcga_project, interaction_range=interaction_range, ...)
-  par(mar=c(10, 4.1, 4.1, 2.1))
-  layout(matrix(c(1,2,2,2,2), 1))
+  if (LAYOUT) {layout(matrix(c(2,1,1,1,1), 1))}
   # layout(matrix(c(1, 1, 2, 2, 2, 2), 2), respect=TRUE)
   # transcriptome
   # par(mar=c(10, 4.1, 4.1, 2.1))
-  plot(data$d[,gene_symbols[1]], 1:length(data$d[,gene_symbols[1]]), 
-    main=paste(data$gene_symbol, tcga_project), 
-    xlab="log2(normalized expression)", 
-    ylab=paste0(nrow(data$d), " samples"), 
-    yaxt="n"
-  ) 
   # methylome
   colors = c("cyan", "black", "red")
   cols = colorRampPalette(colors)(20)
   breaks = seq(0, 1, length.out = length(cols) + 1)
-  main = paste0("methylome TSS+/-", interaction_range)
+  main = paste0(tcga_project, " ", data$gene_symbol, " expression and TSS+/-", interaction_range/1000, "kb methylation")
   # par(mar=c(10, 4.1, 4.1, 2.1))
-  image(t(data$d[,data$probes]), col=cols, breaks=breaks, xaxt="n", 
-      yaxt="n", main=main)
-  axis(1, (1:nrow(t(data$d[,data$probes])) - 1)/(nrow(t(data$d[,data$probes])) - 1), rownames(t(data$d[,data$probes])), 
-      las = 2)
+
+  par(mar=c(5.7, 0, 4.1, 2.1))
+  image(t(data$d[,data$probes]), col=cols, breaks=breaks, xaxt="n", yaxt="n", main=main)
+  axis(1, (1:nrow(t(data$d[,data$probes])) - 1)/(nrow(t(data$d[,data$probes])) - 1), rownames(t(data$d[,data$probes])), las = 2)
+
+  par(mar=c(5.7, 4.1, 4.1, 0))
+  plot(data$d[,gene_symbols[1]], (seq(0,1,length=nrow(data$d)+1)[-1]) - .5/nrow(data$d), 
+    main="", 
+    xlab="log2(expression)", 
+    ylab=paste0(nrow(data$d), " samples"), 
+    yaxt="n",
+    ylim=c(0,1), 
+    type="l",
+    lwd=3,
+    yaxs = "i"
+  ) 
+  par(mar=c(5.1, 4.1, 4.1, 2.1))
 }
 
 readstudyRDS = function(rds_file){
