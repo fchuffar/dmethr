@@ -18,6 +18,9 @@ output:
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
 ```
 
+# Objectiv
+
+
 ```{r}
 if (!exists("tcga_project"))         { tcga_project = "TCGA-LUSC"   ;}
 if (!exists("nb_rnd_feat"))          { nb_rnd_feat = 0              ;}

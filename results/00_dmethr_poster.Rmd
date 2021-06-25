@@ -1,0 +1,393 @@
+---
+title: "DNA methylation repression of transcriptional activity and its reactivation in a demethylating context"
+author: "F. Pittion     , E. Bourova-Flin, S. Khochbin    , S. Rousseaux   , F. Chuffart"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true    
+  pdf_document:
+    keep_tex: true
+---
+
+
+
+
+
+```{r, echo=FALSE, eval=TRUE}
+# rmarkdown::render("00_dmethr_pipeline.Rmd") ; rmarkdown::render("00_dmethr_poster.Rmd") ; rmarkdown::render("00_dmethr_poster.Rmd", output_format="word_document") ; rmarkdown::render("00_dmethr_poster.Rmd", output_format="pdf_document")
+knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
+```
+
+# Objectives
+
+DNA methylation is one of several epigenetic mechanisms that cells use to control gene expression. Since many cancers have low levels of DNA methylation compared to most mammalian somatic tissues [Nordor 2017] [Zhang 2021], we want to investigate the implication of DNA methylation as a key regulator of gene expression contributing to cancer development [Jones 2012] [Shi 2020].
+The first objective of this study is to group genes according to the three following characteristics: i) CpG density of their promoter region, ii) level of methylation of the promoter region in normal tissues, iii) level of expression in a demethylating context. The aim is to define a set of genes whose promoter region is CpG-rich and widely methylated in most tissues and whose expression is up-regulated in a demethylating context. 
+**We wish to validate that the expression of these genes in cancer is particularly regulated by the methylation of their promoter region.**
+To investigate this question, we are developing \verb+dmethr+ {(\url{http://github.com/fchuffar/dmethr/})}, a three-step dedicated pipeline, and apply it on publicly available datasets.
+
+
+```{r}
+if (!exists("tcga_project"))         { tcga_project = "TCGA-LUSC"   ;}
+if (!exists("nb_rnd_feat"))          { nb_rnd_feat = 0              ;}
+if (!exists("ud_str"))               { ud_str = 2500                ;}
+if (!exists("feature_pretreatments")){ feature_pretreatment = "raw" ;}
+if (!exists("reducer_func2_names"))  { reducer_func2_name = "mean" ;}
+prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)  
+```
+
+# Step 1: Promoter region CpG status
+
+```{r, fig.height=9}
+gs_cpgrich = rownames(feats)[!is.na(feats$cpg_status) & feats$cpg_status=="rich"]
+gs = rownames(feats)
+
+par(mar=c(5.1, 4.1, 4.1, 2.1))
+
+layout_mat = 
+cbind(
+  rbind(
+    matrix(1, nrow=3, ncol=3),
+    rbind(
+      c(3,3,2),
+      c(5,5,4),
+      c(5,5,4)
+    )
+  ),
+  rbind(
+    matrix(6, nrow=2, ncol=3),
+    matrix(7, nrow=4, ncol=3)
+  )
+)
+layout_mat
+layout(layout_mat, respect=TRUE)
+
+par(mar=c(5.1, 4.1, 4.1, 2.1))
+plot(density(nb_cpg_tss),ylim=c(0,100), main="DNA sequence average CpG density distribution", xlab="CpG density", ylab="", yaxt="n", xlim=c(0, .08))
+lines(density(nb_cpg_rnd, na.rm=TRUE), col=4)
+legend("topright", c(paste0("tss +/-", ud_str/1000, "kb sequences"), paste0(2*ud_str/1000, "kb hg38 random sequences")), col=c(1,4), lty=1)
+fig_label("A", cex=3)
+
+
+
+par(mar=c(2.5, 2.5, 4.1, 2.1))
+foo = barplot(p[1:10], yaxt="n")
+axis(1, at=nrow(foo)/2, "% explained var. by PC", tick=FALSE)
+axis(2, at=c(0, 10, 20, 30, 40), c(0, 10, 20, 30, 40), las=2)
+par(mar=c(0, 4.1, 4.1, 0))
+i = 1
+den=density(pca$x[,i])
+  plot(den, main="EM clustering", xlab="", ylab="", xaxt="n", yaxt="n", col="grey")
+abline (v=max(pca$x[idx_rich,i]), lty="dotted")
+den_rich = density(pca$x[idx_rich,i], na.rm=TRUE, bw=den$bw)  
+den_poor = density(pca$x[idx_poor,i], na.rm=TRUE, bw=den$bw)
+lines(den_rich$x, den_rich$y * (den_rich$n/nrow(pca$x)), col=2, lwd=2)
+lines(den_poor$x, den_poor$y * (den_poor$n/nrow(pca$x)), col=1, lwd=2)
+fig_label("B", cex=3)
+
+par(mar=c(5.1, 0, 0, 2.1))
+i = 2
+den = density(pca$x[,i])
+den_rich = density(pca$x[idx_rich,i], na.rm=TRUE, bw=den$bw)
+den_poor = density(pca$x[idx_poor,i], na.rm=TRUE, bw=den$bw)
+plot(den$y, den$x, type="l", xlab="", ylab="", xaxt="n", yaxt="n", col="grey")
+lines(den_rich$y * (den_rich$n/nrow(pca$x)), den_rich$x, col=2, lwd=2)
+lines(den_poor$y* (den_poor$n/nrow(pca$x)), den_poor$x , col=1, lwd=2)
+
+
+par(mar=c(5.1, 4.1, 0, 0))
+plot(pca$x[,1], pca$x[,2], col=adjustcolor(feats[rownames(pca$x),]$cpg_status%in%"rich"+1, alpha.f=.5), xlab=paste0("PC", 1, "(", signif(p[1], 3), "%)"), ylab=paste0("PC",2, "(", signif(p[2], 3), "%)"))
+
+par(mar=c(5.1, 4.1, 4.1, 2.1))
+plot(apply(mat[idx_poor,], 2, mean), type="l", ylim=c(0, .13), col=1, main="Cluster average CpG density profiles", xaxt="n", ylab="CpG density", xlab="")
+lines(apply(mat[idx_rich,], 2, mean), col=2)
+axis(1, at=c(0, ncol(mat)/2, ncol(mat)), label=c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
+legend("topright", legend=c(paste0("rich (", length(idx_rich), ")"), paste0("poor (", length(idx_poor), ")")), col=2:1, lty=1)
+fig_label("C", cex=3)
+
+par(mar=c(5.1, 4.1, 4.1, 2.1))
+# plot(0, main="heatmap")
+
+
+
+
+
+data = mat[order(feats[rownames(mat),]$cpg_status) , ]
+set.seed(1)
+data = data[sort(sample(1:nrow(data), min(nrow(data), 500))), ]
+rownames(data) = feats[rownames(data),]$cpg_status
+colors=c("black",  "red")
+cols = colorRampPalette(colors)(20)
+foo = image(t(data), col=cols, xaxt="n", yaxt="n", main="CpG density profiles of 500 random features", useRaster=TRUE)
+axis(1, c(0,.5, 1), c(paste0("TSS -", ud_str/1000, "kb"), "TSS", paste0("TSS +", ud_str/1000, "kb")))
+axis(2, c(
+  0,
+  sum(rownames(data)=="poor")/nrow(data)/2, 
+  sum(rownames(data)=="poor")/nrow(data), 
+  sum(rownames(data)=="poor")/nrow(data) + sum(rownames(data)=="rich")/nrow(data)/2,  
+  1), c("", paste0("CpG poor ()", sum(rownames(data)=="poor"), ")"), "", paste0("CpG rich (", sum(rownames(data)=="rich"), ")"), ""), tick=FALSE)
+fig_label("D", cex=3)
+abline(h=sum(rownames(data)=="poor")/nrow(data), col="white")
+# gplots::heatmap.2(data, Rowv=NULL,  Colv=NULL,  dendrogram="none", trace="none", col=cols, main=paste0("CpG enrichment (feats +/-", ud_str/1000, "kb, ", nrow(data), " rnd feats)"), xaxt="n", mar=c(8,5))
+```
+
+
+ 
+**Clustering of features according to CpG density of genomique region surounding the transcription start site (TSS).**
+For each feature we compute the CpG density of the TSS +/-`r ud_str/1000`kb region by counting the number of CG motif in the DNA sequence divided by the length of the sequence. 
+**(A)** - The distribution of these values (black curve) shows 2 populations, when the distribution of CpG density of 1000 random genomic regions of `r 2*ud_str/1000`kb (blue curve) shows 1 population. The CpG density of random regions orverlaps the feature population with the lowest CpG density. We qualify this population as *CpG poor* features, by opposition to the second population qualify as *CpG rich* feature. In order to separate these two population we i) perform a PCA on the features and ii) apply an EM-clustering algorithm on the first principal component. 
+To perfom PCA on features we split genomic region of TSS +/- `r ud_str/1000`kb into `r stp/1000`kb bins. We compute the CpG density of each bin, then we obtain a CpG density matrix of `r nrow(mat)` features and `r ncol(mat)` bins. The heatmap of the panel D shows a 500 random feature sampling of this matrix. 
+**(B)** - We identify two clusters by using  an esperance maximisation clustering on first principal component of PCA which representing 36,9% of variance. The main graphics shows this clutering with first principal component on x axis and second principal component on y axis, red dots are CpG rich and black dots are CpG poor. The marginals graphics show respectively (same color code of main graphic) on top first principal component distribution clusters (dotted grey vertical line positions treshold between two clusters), on left second principal component distribution for same clusters. 
+**(C)** - The average CpG density profile of the `r length(idx_rich)` CpG rich features (resp. `r length(idx_poor)` CpG poor features) cluster is plot in red (resp. in black), x axis is the position on the sequence around TSS and y axis is the CpG density. 
+**(D)** The heatmap shows the methylation profile of the TSS+/-2.5kb of 500 random genes grouped by their CpG status.
+
+
+
+
+
+
+
+
+
+
+# Step 2: Methylation status in healthy tissues
+
+
+```{r label="clustering and heatmap", fig.height=9}
+data = meth_by_tissues_by_gene
+dim(data)
+sum(apply(is.na(data), 1, any))
+data = data[!apply(is.na(data), 1, any), ]
+data = data[!apply(is.infinite(data), 1, any), ]
+dim(data)
+
+# clustering base on correlation for tissues
+tmp_d = data
+tmp_d = t(tmp_d) - apply(tmp_d, 2, mean, na.rm=TRUE)
+tmp_d = t(tmp_d)
+tmp_d = cor(tmp_d, method="pe")
+dim(tmp_d)
+hc_col = hclust(dist(1 - tmp_d), method="complete")
+Colv = as.dendrogram(hc_col)
+dendrogram="col"      
+
+# clustering base on eucl. dist. for genes
+d = dist(data)
+hc_row = hclust(d, method="complete")
+Rowv = as.dendrogram(hc_row)
+dendrogram="both"      
+
+# col
+colors=c("cyan", "black", "red")
+cols = colorRampPalette(colors)(20)
+
+hm = gplots::heatmap.2(data, Rowv=Rowv, Colv=Colv, dendrogram=dendrogram, trace="none", col=cols, main=paste0(reducer_func2_name, " of mean (", nrow(data), " genes x ", ncol(data), " tissues)"), mar=c(10,5), useRaster=TRUE)
+idx1 = rownames(data)[unlist(hm$rowDendrogram[[1]])]
+idx2 = rownames(data)[unlist(hm$rowDendrogram[[2]])]
+
+feats$methplusplus  = NA
+if (mean(data[idx1,]) < mean(data[idx2,])) {
+  gs_methplusplus = rownames(data)[unlist(hm$rowDendrogram[[2]])]
+  # gs_methminusminus = rownames(data)[unlist(hm$rowDendrogram[[1]])]
+} else {
+  gs_methplusplus = rownames(data)[unlist(hm$rowDendrogram[[1]])]
+  # gs_methminusminus = rownames(data)[unlist(hm$rowDendrogram[[2]])]
+}
+length(gs_methplusplus)
+gs_name = "methplusplus"
+
+feats[[gs_name]] = rownames(feats) %in% gs_methplusplus
+
+```
+
+
+
+**CpG-rich genes methylation status in healthy tissues.**
+CpG-rich associated genes are clustered according to their methylation status in a publicly  available  dataset  of  normal  tissues  (GSE56515,  GSE48472,  GSE64096,  GSE50192,  GSE31848,GSE73375). From Illumina 450k studies, we obtain a methylation matrix of `r ncol(s_meth$data)` samples, 
+dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues.This matrix is successively reduced, first by tissues, then by genes with CpG rich promoter. The function used to reduce the data is the `mean`. A matrix of average methylation values is obtained for `r nrow(data)` genes and `r ncol(meth_by_tissues_by_gene)` tissues. Hierarchical clustering on this matrix is proceeding, the heatmap on figure ? show the results. The hypermethylated genes are in red and less methylated in blue, tissues are presented on the x axis with clustering hierarchique dendrogramm on tissues on top and the genes are presented on the y axis with the hierarchical dendrogramm on the genes at the opposite side. The fisrt branch of this last dendrogramm selected a subset of `r sum(feats[[gs_name]])` CpG-rich genes widely methylated in healthy tissues.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Step 3: Reactivation in demethylating context
+
+```{r, fig.width=12, fig.height=8}
+gses = c("GSE45332", "GSE5816")
+models = c(model = "DNMT DKO vs. WT (ref.)", "5-aza 1000 nM vs. DMSO (ref.)")
+gs_name = "methplusplus"
+utests = list()
+
+source("common.R")
+layout(matrix(1:(3*length(gses)), length(gses), byrow=TRUE), respect=TRUE)
+for (i in 1:length(gses)) {
+  gse = gses[i]
+  model = models[i]
+  plot_volcano(feats, gse, gs_name, main=paste0(gse, " - ", model))
+  if (i==1) {fig_label("A", cex=3)}
+
+  gene_set = rownames(feats)[feats[[gs_name]]]
+  expression_vector = feats[,paste0("l2fc_", gse)]
+  names(expression_vector) = rownames(feats)
+  expression_vector = expression_vector[!is.na(expression_vector)]
+
+  utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, gs_name, "others"), las=2)
+  utests[[i]] = utest
+  boxplot(rank(expression_vector)~ifelse(names(expression_vector)%in%gene_set, gs_name, "others"), main=paste0("Mann-Whitney U test (pval=", signif(utest$p.value, 3), ")"), ylab=paste0("rank(log2FoldChange)"), xlab="", col=adjustcolor(c("red", "grey"), alpha.f=.5))  
+  if (i==1) {fig_label("B", cex=3)}
+
+  et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)  
+  if (i==1) {fig_label("C", cex=3)}
+}
+```
+
+
+In a demethylating context, *`r gs_name`* genes are particularly upregulated.
+**(A)** The upper (resp. lower) volcano plot shows the results of the differential analysis of `r gses[1]` (resp. `r gses[2]`) data for the model `r models[1]` (resp. `r models[2]`). The x-axis the represents the `log2FoldChange` of the model and the y-axis the the $-log10(pval_{Fisher})$. Red dots are the *`r gs_name`* genes.
+**(B)** The upper (resp. lower) boxplots shows the distribution of genes ranks obtained from `log2FoldChange` for the *`r gs_name`* in `r gses[1]` (resp. `r gses[2]`) dataset. The *`r gs_name`* genes are in red and the other genes are in grey. We perform the Mann-Whitney U test and conclude for `r gses[1]` (resp. `r gses[2]`) that *`r gs_name`* genes are particularly over expressed in the model `r model` with a significant pvalue of $`r signif(utests[[1]]$p.value, 3)`$ (resp. $`r signif(utests[[2]]$p.value, 3)`$).
+**(C)** The enrichement plots are obtained using GSEA software. Both illustrate that over expressed genes in `r model[1]` and `r model[2]` are enriched in *`r gs_name`* genes.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Results
+
+
+
+```{r fig.height=9}
+gene_symbols = (union(idx2, idx3)) 
+gene_symbols = gene_symbols[order(feats[gene_symbols,]$momik_pvals)][1:min(6, length(gene_symbols))]
+
+layout_mat2 = cbind(
+  rbind(
+    matrix(1, nrow=4, ncol=4),
+    cbind(
+      matrix(6, nrow=2, ncol=1),
+      matrix(5, nrow=2, ncol=3)
+    )
+  ),
+  rbind(
+    matrix(2, nrow=2, ncol=2),
+    matrix(3, nrow=2, ncol=2),
+    matrix(4, nrow=2, ncol=2)
+  )
+)
+layout_mat2 
+layout(layout_mat2, respect=TRUE)
+plot(feats$momik_betas, feats$momik_lpvals, col="grey", xlim=c(-0.2,0.2), main="gene expression ~ TSS+/-2.5kb methylation", xlab="linear regression coefficient", ylab="-log10(Fisher p-value)")
+points(feats[idx,]$momik_betas, feats[idx,]$momik_lpvals  , col="red")
+points(feats[idx2,]$momik_betas, feats[idx2,]$momik_lpvals, col="blue", pch=16)
+points(feats[idx3,]$momik_betas, feats[idx3,]$momik_lpvals, col="purple", pch=16)
+text(feats[gene_symbols,]$momik_betas, feats[gene_symbols,]$momik_lpvals, gene_symbols, col=adjustcolor(1, alpha.f=1), pos=c(1,3))
+legend("topright", 
+  c("genes", paste0("methplusplus", " genes"), paste0("methplusplus", " genes upregulated GSE45332 DA"), paste0(gs_name, " genes upregulated GSE5816 DA")), 
+  pch=c(1, 1, 16, 16), 
+  col=c("grey", "red", "blue", "purple"),
+  lty=c(0,0,0,0)
+)
+fig_label("A", cex=3)
+
+gene_set = idx
+gs_name = "momik_betas"
+expression_vector = feats[,gs_name]
+names(expression_vector) = rownames(feats)
+expression_vector = expression_vector[!is.na(expression_vector)]
+et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3)
+fig_label("C", cex=3)
+
+# gs_name = "momik_lpvals"
+# expression_vector = feats[,gs_name]
+# names(expression_vector) = rownames(feats)
+# expression_vector = expression_vector[!is.na(expression_vector)]
+# et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+# fig_label("C", cex=3)
+
+gene_set = idx2
+gs_name = "momik_betas"
+expression_vector = feats[idx,gs_name]
+names(expression_vector) = idx
+expression_vector = expression_vector[!is.na(expression_vector)]
+et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_GSE45332"), nperm=3)
+fig_label("D", cex=3)
+
+# gs_name = "momik_lpvals"
+# expression_vector = feats[idx,gs_name]
+# names(expression_vector) = idx
+# expression_vector = expression_vector[!is.na(expression_vector)]
+# et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+# fig_label("E", cex=3)
+
+gene_set = idx3
+gs_name = "momik_betas"
+expression_vector = feats[idx,gs_name]
+names(expression_vector) = idx
+expression_vector = expression_vector[!is.na(expression_vector)]
+et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_GSE5816"), nperm=3)
+fig_label("E", cex=3)
+
+# gs_name = "momik_lpvals"
+# expression_vector = feats[idx,gs_name]
+# names(expression_vector) = idx
+# expression_vector = expression_vector[!is.na(expression_vector)]
+# et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
+# fig_label("G", cex=3)
+
+
+momic_pattern("TSPYL5", tcga_project, LAYOUT=FALSE)
+fig_label("B", cex=3)
+
+# stop("EFN")
+```
+
+**Figure** Correlation between gene expression and TSS+/-2.5kb methylation in TCGA-LUSC dataset. 
+**(A)** For each gene we perform a linar regression of its expression according to the average methylation of its TSS+/-2.5kb and draw the corresponding volcano plot. The x-axis represents the linear regression coeficient of the model and y-axis repressents -lop10 of the Fisher p-value. Genes are drawn as grey circles when `methplusplus` genes are drawn as red circles. The top `r ntop` upregulated genes of the model `r models[[1]]` (resp. `r models[[2]]`) in gse `r gses[[1]]` (resp. `r gses[[2]]`) dataset in drawn as blue (resp. purple) dot. The plot shows that most of gene expression increase when their TSS+/-2.5kb methylation decrease. 
+**(B)** It is particularly true for TSPYL5. The y-axis represents the TCGA-LUSC patients ordered according to their TSPYL5 level of expression (left sub-panel). The TSPYL5 TSS+/-2.5kb methylation heatmap (right sub-panel) shows that a low TSPYL5 expression is associated to a strong methylation (in red) of the region surrounding TSPYL5 TSS when high expression of TSPYL5 is associated to a demethylation of the same genomic region.  
+**(C)** The enrichement plot is obtained from the `r sum(!is.na(feats[,"momik_betas"]))` length vector of linear regression coefficients og all genes. It shows that *methplusplus* genes are depleted, meaning that *methplusplus* gene expressions are particularly anticorrelated with the methylation status of the region surrounding their TSS.
+**(D)** (resp. **(D)**) The enrichement plot is obtained from the `r sum(feats[,"methplusplus"])` length vector of linear regression coefficients of *methplusplus* genes. It shows that the top `r ntop` upregulated genes of the model `r models[[1]]` (resp. `r models[[2]]`) in gse `r gses[[1]]` (resp. `r gses[[2]]`) dataset are depleted, meaning that the expression of these genes is strongestly associated with a demethylation of the region surrounding their TSS than *methplusplus* genes themselves.
+
+# Aknowledgement
+
+MIC project
+GRICAD
+
+# References
+
+
+# Session Information
+
+```{r, results="verbatim"}
+sessionInfo()
+```
+
+
+
