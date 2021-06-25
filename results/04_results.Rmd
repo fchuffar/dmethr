@@ -192,7 +192,6 @@ foo = sapply(gene_symbols, function(gene_symbol) {
   v = s$data[gene_symbol, idx_sample]
   par(mar=c(2.5, 2.5, 4.1, 2.1))
   try(momic_pattern(gene_symbol, tcga_project))
-  ret
 })
 ```
 
