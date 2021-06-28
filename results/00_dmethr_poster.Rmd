@@ -1,5 +1,5 @@
 ---
-title: "DNA methylation repression of transcriptional activity and its reactivation in a demethylating context"
+title: "Demethr: a 3-step pipeline to explore DNA methylation controlled gene expression from omics data."
 author: "F. Pittion     , E. Bourova-Flin, S. Khochbin    , S. Rousseaux   , F. Chuffart"
 date: "`r Sys.Date()`"
 output: 
@@ -24,9 +24,8 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 # Objectives
 
 DNA methylation is one of several epigenetic mechanisms that cells use to control gene expression. Since many cancers have low levels of DNA methylation compared to most mammalian somatic tissues [Nordor 2017] [Zhang 2021], we want to investigate the implication of DNA methylation as a key regulator of gene expression contributing to cancer development [Jones 2012] [Shi 2020].
-The first objective of this study is to group genes according to the three following characteristics: i) CpG density of their promoter region, ii) level of methylation of the promoter region in normal tissues, iii) level of expression in a demethylating context. The aim is to define a set of genes whose promoter region is CpG-rich and widely methylated in most tissues and whose expression is up-regulated in a demethylating context. 
-**We wish to validate that the expression of these genes in cancer is particularly regulated by the methylation of their promoter region.**
-To investigate this question, we are developing \verb+dmethr+ {(\url{http://github.com/fchuffar/dmethr/})}, a three-step dedicated pipeline, and apply it on publicly available datasets.
+The first objective of this study is to group genes according to the three following characteristics: i) CpG density of their promoter region, ii) level of methylation of the promoter region in normal tissues, iii) level of expression in a demethylating context. The aim is to identify a set of genes whose promoter region is CpG-rich and widely methylated in most tissues and whose expression is up-regulated in a demethylating context. The relationship between the expression of these genes and the methylation of their promoter region is then explored in the context of cancer. For this purpose
+we are developing \verb+dmethr+ {(\url{http://github.com/fchuffar/dmethr/})}, a three-step dedicated pipeline, and apply it on publicly available datasets.
 
 
 ```{r}
@@ -135,13 +134,13 @@ abline(h=sum(rownames(data)=="poor")/nrow(data), col="white")
 
 
  
-**Clustering of features according to CpG density of genomique region surounding the transcription start site (TSS).**
+**Clustering of features according to CpG density of genomic region surrounding the transcription start site (TSS).**
 For each feature we compute the CpG density of the TSS +/-`r ud_str/1000`kb region by counting the number of CG motif in the DNA sequence divided by the length of the sequence. 
-**(A)** - The distribution of these values (black curve) shows 2 populations, when the distribution of CpG density of 1000 random genomic regions of `r 2*ud_str/1000`kb (blue curve) shows 1 population. The CpG density of random regions orverlaps the feature population with the lowest CpG density. We qualify this population as *CpG poor* features, by opposition to the second population qualify as *CpG rich* feature. In order to separate these two population we i) perform a PCA on the features and ii) apply an EM-clustering algorithm on the first principal component. 
-To perfom PCA on features we split genomic region of TSS +/- `r ud_str/1000`kb into `r stp/1000`kb bins. We compute the CpG density of each bin, then we obtain a CpG density matrix of `r nrow(mat)` features and `r ncol(mat)` bins. The heatmap of the panel D shows a 500 random feature sampling of this matrix. 
-**(B)** - We identify two clusters by using  an esperance maximisation clustering on first principal component of PCA which representing 36,9% of variance. The main graphics shows this clutering with first principal component on x axis and second principal component on y axis, red dots are CpG rich and black dots are CpG poor. The marginals graphics show respectively (same color code of main graphic) on top first principal component distribution clusters (dotted grey vertical line positions treshold between two clusters), on left second principal component distribution for same clusters. 
-**(C)** - The average CpG density profile of the `r length(idx_rich)` CpG rich features (resp. `r length(idx_poor)` CpG poor features) cluster is plot in red (resp. in black), x axis is the position on the sequence around TSS and y axis is the CpG density. 
-**(D)** The heatmap shows the methylation profile of the TSS+/-2.5kb of 500 random genes grouped by their CpG status.
+**(A)** - The distribution of these values for TSS centered features shows 2 populations (black curve), whereas the distribution of CpG density of 1000 random genomic regions of `r 2*ud_str/1000`kb (blue curve) shows 1 population. The feature population with the lowest CpG density are  *CpG poor* features, by opposition to the second population which are *CpG rich* feature. In order to separate these two population we i) perform a PCA on the features and ii) apply an EM-clustering algorithm on the first principal component. 
+To perfom PCA on features we split genomic region of TSS +/- `r ud_str/1000`kb into `r stp/1000`kb bins. We compute the CpG density of each bin, then we obtain a CpG density matrix of `r nrow(mat)` features and `r ncol(mat)` bins. The heatmap of panel D shows a 500 random feature sampling of this matrix. 
+**(B)** - We identify two clusters by using  an esperance maximisation clustering on first principal component of PCA which represent 36,9% of the variance. The main graphic shows this clustering with first principal component on x axis and second principal component on y axis, red dots are CpG rich and black dots are CpG poor. The marginal graphics respectively show (same color code of main graphic) on top first principal component distribution clusters (dotted grey vertical line positions threshold between two clusters), on left second principal component distribution for same clusters. 
+**(C)** - Average CpG density profile of the `r length(idx_rich)` CpG rich features (resp. `r length(idx_poor)` CpG poor features) cluster plotting in red (resp. in black), as function of the position on the sequence around TSS (x axis) and CpG density (y axis). 
+**(D)** Heatmap showing the methylation profile of the TSS+/-2.5kb of 500 random genes grouped by their CpG density status.
 
 
 
@@ -205,9 +204,9 @@ feats[[gs_name]] = rownames(feats) %in% gs_methplusplus
 
 
 **CpG-rich genes methylation status in healthy tissues.**
-CpG-rich associated genes are clustered according to their methylation status in a publicly  available  dataset  of  normal  tissues  (GSE56515,  GSE48472,  GSE64096,  GSE50192,  GSE31848,GSE73375). From Illumina 450k studies, we obtain a methylation matrix of `r ncol(s_meth$data)` samples, 
-dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues. This matrix is successively reduced, first by tissues, then by genes with CpG rich promoter. The function used to reduce the data is the `mean`. A matrix of average methylation values is obtained for `r nrow(data)` genes and `r ncol(meth_by_tissues_by_gene)` tissues. Hierarchical clustering on this matrix is proceeding, heatmap shows the results: hypermethylated genes are in red and less methylated in blue, tissues are presented on the x axis with clustering hierarchique dendrogram on tissues on top and the genes are presented on the y axis with the hierarchical dendrogram on the genes at the opposite side. Fisrt branch of this last dendrogram selected a subset of `r sum(feats[[gs_name]])` CpG-rich genes widely methylated in healthy tissues.
-
+CpG-rich associated genes are clustered according to their methylation status using publicly  available  datasets  of genome-wide DNA methylation data in  normal  tissues obtained whith the Illumina 450k array (GSE56515,  GSE48472,  GSE64096,  GSE50192,  GSE31848,GSE73375).These values are includes into a methylation matrix of `r ncol(s_meth$data)` samples, 
+dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues. This matrix is successively reduced, first by tissues, then by genes with CpG rich promoter. The function used to reduce the data is the `mean`. A matrix of average methylation values is obtained for `r nrow(data)` genes and `r ncol(meth_by_tissues_by_gene)` tissues. Th heatmap shows the results of hierarchical clustering on this matrix whith: hypermethylated genes in red and lower methylation values in blue. The tissues are presented on the x axis with a hierarchical clustering dendrogram on tissues on top and the genes are presented on the y axis with the hierarchical dendrogram on the genes. Th fisrt branch of this last dendrogram selected a subset of `r sum(feats[[gs_name]])` CpG-rich genes highly and widely methylated in most healthy tissues.
+Focusing on the 2324 CpG-rich genes with a highly methylated TSS region, which we named the methplusplus genes, we then explore the effect of a demethylation on their expression level. For this purpose, we use expression data from cancer cell lines, in which a genome-wide demethylation was induced either by inactivating the enzymes responsible for DNA methylation establishment and maintenance, the DNA Methyl Transferases (or DNMT), or by adding 5-Azacytidine (or 5-AZA), an inhibitor of DNA methylation.
 
 
 
@@ -253,12 +252,11 @@ for (i in 1:length(gses)) {
 ```
 
 
-
-A differential analysis of gene expression in control vs.demethylating context is performed. Two public expression datasets are selected for this  analysis: i)  RNA-seq  from  wild  type(control) versus DNMT double KO HCT116 cells (colon cancer cells, `r gses[1]`), ii) transcriptomic microarray from control and 5-azacytidine treated lung cancer cell lines (`r gses[2]`)
-In a demethylating context, *`r gs_name`* genes are particularly upregulated.
+**In a demethylationg context, a majority of $methplusplus$ genes are upregulated**
+A differential analysis of gene expression in control versus demethylating context is performed. Two public expression datasets are selected for this  analysis: i)  RNA-seq  from  wild  type(control) versus DNMT double KO HCT116 cells (colon cancer cells, `r gses[1]`), ii) transcriptomic microarray from control and 5-azacytidine treated lung cancer cell lines (`r gses[2]`)
 **(A)** The upper (resp. lower) volcano plot shows the results of the differential analysis of `r gses[1]` (resp. `r gses[2]`) data for the model `r models[1]` (resp. `r models[2]`). The x-axis the represents the `log2FoldChange` of the model and the y-axis the the $-log10(pval_{Fisher})$. Red dots are the *`r gs_name`* genes.
-**(B)** The upper (resp. lower) boxplots shows the distribution of genes ranks obtained from `log2FoldChange` for the *`r gs_name`* in `r gses[1]` (resp. `r gses[2]`) dataset. The *`r gs_name`* genes are in red and the other genes are in grey. We perform the Mann-Whitney U test and conclude for `r gses[1]` (resp. `r gses[2]`) that *`r gs_name`* genes are particularly over expressed in the model `r model` with a significant pvalue of $`r signif(utests[[1]]$p.value, 3)`$ (resp. $`r signif(utests[[2]]$p.value, 3)`$).
-**(C)** The enrichement plots are obtained using GSEA software. Both illustrate that over expressed genes in `r model[1]` and `r model[2]` are enriched in *`r gs_name`* genes.
+**(B)** The upper (resp. lower) boxplots show the distribution of geneexpression ranked values obtained from `log2FoldChange` for the *`r gs_name`* in `r gses[1]` (resp. `r gses[2]`) dataset. The *`r gs_name`* genes are in red and the other genes are in grey. We perform the Mann-Whitney U test and conclude for `r gses[1]` (resp. `r gses[2]`) that *`r gs_name`* genes are particularly over expressed in the model `r model` with a significant pvalue of $`r signif(utests[[1]]$p.value, 3)`$ (resp. $`r signif(utests[[2]]$p.value, 3)`$).
+**(C)** Enrichment plots obtained using the Geneset Enrichment Analysis (GSEA) software available from the Broad Institute: illustrate that over expressed genes in DNMTKO versus WT cells (upper panel) or in cells treated with 5-aza 1000nM (lower panel) significantly are enriched in *`r gs_name`* genes.
 
 
 
