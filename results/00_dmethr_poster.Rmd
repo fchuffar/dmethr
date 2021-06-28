@@ -444,7 +444,7 @@ fig_label("F", cex=3)
 
 MIC project
 
-Most of the computations presented in this paper were performed using the CIMENT/GRICAD infrastructure (https://gricad.univ-grenoble-alpes.fr).
+Most of the computations presented in this study were performed using the CIMENT/GRICAD infrastructure (https://gricad.univ-grenoble-alpes.fr).
 
 # References
 
