@@ -971,7 +971,7 @@ momic_pattern = function(gene_symbols, tcga_project, interaction_range=2500, LAY
   par(mar=c(5.7, 4.1, 4.1, 0))
   plot(data$d[,gene_symbols[1]], (seq(0,1,length=nrow(data$d)+1)[-1]) - .5/nrow(data$d), 
     main="", 
-    xlab="log2(expression)", 
+    xlab="expr.", 
     ylab=paste0(nrow(data$d), " samples"), 
     yaxt="n",
     ylim=c(0,1), 
@@ -980,6 +980,7 @@ momic_pattern = function(gene_symbols, tcga_project, interaction_range=2500, LAY
     yaxs = "i"
   ) 
   par(mar=c(5.1, 4.1, 4.1, 2.1))
+  return(data)
 }
 
 readstudyRDS = function(rds_file){

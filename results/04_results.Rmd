@@ -37,9 +37,9 @@ if (! exists("momik_pvalbetas")) {
       if ((!is.null(mdata$d)) & (gene_symbol %in% colnames(mdata$d))) {
         mdata$d 
         head(mdata$d)
-        Y=mdata$d[,gene_symbol]
-        X=apply(mdata$d[,mdata$probes],1,mean, na.rm=TRUE)
-        m = lm(X~Y)
+        Y = mdata$d[,gene_symbol]
+        X = apply(mdata$d[,mdata$probes],1,mean, na.rm=TRUE)
+        m = lm(Y~X)
         
         sm =summary(m)
         fstat=sm$fstatistic
