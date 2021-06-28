@@ -1,0 +1,171 @@
+---
+title: "Step 3: Expression of genes in GSE25427 (5-aza treated)"
+author: "Florence Pittion, Florent Chuffart"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r, echo=FALSE, eval=TRUE}
+knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
+```
+
+## GSE25427
+
+
+```{r}
+s = readRDS("~/projects/study_gpl570/study_GSE25427_trscr_gs.rds")
+
+s$exp_grp
+#separer les infos de la colonne sample_title
+s$exp_grp$cell_line = stringr::str_split_fixed(s$exp_grp$sample_title, "_", 2)[,1]
+library(stringr)
+s$exp_grp$treatment_5aza = sapply(stringr::str_split_fixed(s$exp_grp$sample_title, "_", 2)[,2],function(it){
+  if (str_detect(it, "Mock")){
+    return("ctl")
+  }  else if (str_detect(it, "Aza")){
+    return("ttt")
+  } else {
+    stop(paste0("Enable to parse value: ", it))
+  }
+  
+})
+
+#verification treatment bien attribué + info pertinente (deux lignées hors lung (breast and colon))
+compar = data.frame(sample_title=s$exp_grp$sample_title, ttt=s$exp_grp$treatment_5aza, cell=s$exp_grp$cell_line, topology=s$exp_grp$topology)
+(compar = compar[order(compar$cell),])
+
+#tableau de completude du design, selection des echantillons représenté dans les 3 traitements
+tmp_table=table(s$exp_grp$cell_line, s$exp_grp$treatment_5aza)
+tmp_table
+as.matrix(tmp_table)
+foo <-apply(tmp_table,1,function(l){
+  print(l)
+  all(l==c(1,1))
+})
+foo
+idx_cell_line=names(foo)[foo]
+s$exp_grp=s$exp_grp[s$exp_grp$cell_line%in%idx_cell_line,]
+table(s$exp_grp$cell_line, s$exp_grp$treatment_5aza)
+
+
+#2 groupes de traitements
+s$exp_grp = s$exp_grp[order(s$exp_grp$treatment_5aza, s$exp_grp$cell_line),]
+s$exp_grp[, c("treatment_5aza","cell_line")]
+idx_ctl=rownames(s$exp_grp)[s$exp_grp$treatment_5aza%in%"ctl"]
+idx_ttt=rownames(s$exp_grp)[s$exp_grp$treatment_5aza%in%"ttt"]
+
+
+# #t test apparié group control et group high
+# pval = c()
+# beta = c()
+# for (i in 1:nrow(s$data)){
+#   x <- s$data[i,idx_1ct]
+#   y <- s$data[i,idx_3hi]
+#   beta=c(beta,mean(y-x))
+#   pval=c(pval, t.test(x,y, paired = TRUE)$p.value)
+# }
+# pval
+# beta
+# plot(beta, -log10(pval))
+
+# #meme chose avec apply
+# stats = apply(s$data, 1, function(l){
+#   x <- l[idx_1ct]
+#   y <- l[idx_3hi]
+#   beta = mean(y-x)
+#   pval = t.test(x,y, paired = TRUE)$p.value
+#   ret = c(beta=beta, pval=pval)
+#   return(ret)
+# })
+
+
+# #comparaison graph pval/padj(avec BH)
+# stats=t(stats)
+# stats = data.frame(stats)
+# stats$padj = p.adjust(stats$pval, method = "BH")
+# layout(matrix(1:2,1), respect = TRUE)
+# plot(stats$beta,-log10(stats$pval), pch=".")
+# plot(stats$beta,-log10(stats$padj), pch=".")
+
+# # la même chose avec lm
+# stats4 = apply(s$data, 1, function(l){
+#   #l = s$data[1,]
+#   d$expr = l[c(idx_1ct, idx_3hi)]
+#   m = lm(expr~treatment_5aza+cell_line, d)
+#   beta = m$coefficients[[2]]
+#   pval = anova(m)[1,5]
+#   ret = c(beta=beta, pval=pval)
+#   return(ret)
+# })
+# stats4 = t(stats4)
+# stats4 = data.frame(stats4)
+# stats4$padj = p.adjust(stats4$pval, method = "BH")
+# layout(matrix(1:2,1), respect = TRUE)
+# plot(stats4$beta,-log10(stats4$pval), pch=".")
+# abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
+# plot(stats4$beta,-log10(stats4$padj), pch=".")
+# abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
+
+# plot(stats$beta, stats4$beta)
+# plot(-log10(stats$pval), -log10(stats4$pval))
+
+
+# memoisation
+
+compute_anadiff = function(s, idx_ctl, idx_ttt) {
+  d = data.frame(treatment_5aza=s$exp_grp[c(idx_ctl,idx_ttt), "treatment_5aza"], cell_line=s$exp_grp[c(idx_ctl,idx_ttt), "cell_line" ])
+  stats4 = epimedtools::monitored_apply(s$data, 1, function(l){
+    #l = s$data[1,]
+    d$expr = l[c(idx_ctl, idx_ttt)]
+    m = lm(expr~treatment_5aza+cell_line, d)
+    beta = m$coefficients[[2]]
+    pval = anova(m)[1,5]
+    ret = c(beta=beta, pval=pval)
+    return(ret)
+  })
+  return(stats4)  
+}
+
+# stats4 = compute_anadiff(s, idx_1ct, idx_3hi)
+
+if (!exists("mcompute_anadiff")) {mcompute_anadiff = memoise::memoise(compute_anadiff)}
+
+stats4 = mcompute_anadiff(s, idx_ctl, idx_ttt)
+
+
+stats4 = t(stats4)
+stats4 = data.frame(stats4)
+stats4$padj = p.adjust(stats4$pval, method = "BH")
+
+layout(matrix(1:2,1), respect = TRUE)
+plot(stats4$beta,-log10(stats4$pval), pch=".")
+abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
+plot(stats4$beta,-log10(stats4$padj), pch=".")
+abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
+
+#plot(stats$beta, stats4$beta)
+#plot(-log10(stats$pval), -log10(stats4$pval))
+```
+
+
+```{r, eval=FALSE}
+gse = "GSE25427"
+model = "5-aza  vs. DMSO(reference)"
+feats[,paste0("l2fc_", gse)] = NA
+feats[,paste0("pval_", gse)] = NA
+feats[,paste0("l2fc_", gse)] = stats4[rownames(feats),]$beta
+feats[,paste0("pval_", gse)] = stats4[rownames(feats),]$padj
+```
+
+
+```{r child="03_da_results.Rmd", eval=FALSE}
+```
+
+
+
+
