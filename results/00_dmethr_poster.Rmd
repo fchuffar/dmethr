@@ -375,7 +375,7 @@ plot(feats$momik_betas, feats$momik_lpvals, col="grey",
 points(feats[idx,]$momik_betas, feats[idx,]$momik_lpvals  , col="red")
 points(feats[idx2,]$momik_betas, feats[idx2,]$momik_lpvals, col="blue", pch=16)
 points(feats[idx3,]$momik_betas, feats[idx3,]$momik_lpvals, col="purple", pch=16)
-text(feats[gene_symbols,]$momik_betas, feats[gene_symbols,]$momik_lpvals, gene_symbols, col=adjustcolor(1, alpha.f=1), pos=c(1,3))
+text(feats[gene_symbols,]$momik_betas, feats[gene_symbols,]$momik_lpvals, gene_symbols, col=adjustcolor(1, alpha.f=1), pos=3)
 legend("topright", 
   c("genes", paste0("methplusplus", " genes"), paste0("methplusplus", " genes upregulated GSE45332 DA"), paste0(gs_name, " genes upregulated GSE5816 DA")), 
   pch=c(1, 1, 16, 16), 
@@ -442,9 +442,9 @@ fig_label("F", cex=3)
 
 # Acknowledgement
 
-MIC project
-
-Most of the computations presented in this study were performed using the CIMENT/GRICAD infrastructure (https://gricad.univ-grenoble-alpes.fr).
+With financial support from **ITMO Cancer of Aviesan** within the framework of the 2021-2030 Cancer Control
+Strategy, on funds administered by Inserm.
+Most of the computations presented in this study were performed using the **CIMENT/GRICAD** infrastructure (https://gricad.univ-grenoble-alpes.fr).
 
 # References
 
