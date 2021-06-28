@@ -443,7 +443,8 @@ fig_label("F", cex=3)
 # Aknowledgement
 
 MIC project
-GRICAD
+
+Most of the computations presented in this paper were performed using the CIMENT/GRICAD infrastructure (https://gricad.univ-grenoble-alpes.fr).
 
 # References
 
