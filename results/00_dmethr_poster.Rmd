@@ -287,9 +287,6 @@ In a demethylating context, *`r gs_name`* genes are particularly upregulated.
 
 
 ```{r fig.height=9}
-gene_symbols = (union(idx2, idx3)) 
-gene_symbols = gene_symbols[order(feats[gene_symbols,]$momik_pvals)][1:min(6, length(gene_symbols))]
-
 layout_mat2 = cbind(
   rbind(
     matrix(1, nrow=4, ncol=4),
@@ -366,13 +363,15 @@ m = lm(expr~meth)
 abline(m, col=2)
 fig_label("B", cex=3)
 
-legend("bottomleft", c(paste0("Fisher pval=", signif(anova(m)[1,5],3)), paste0("beta=", signif(m$coef[[2]],3))), border=0)
+legend("bottomleft", c(paste0("beta=", signif(m$coef[[2]],3)), paste0("Fisher pval=", signif(anova(m)[1,5],3))), bty = "n")
 
 
 
 
 
-plot(feats$momik_betas, feats$momik_lpvals, col="grey", xlim=c(-0.2,0.2), main="gene expression ~ TSS+/-2.5kb methylation", xlab="linear regression coefficient", ylab="-log10(Fisher p-value)")
+plot(feats$momik_betas, feats$momik_lpvals, col="grey", 
+  xlim=c(-40,40),
+  main="gene expression ~ TSS+/-2.5kb methylation", xlab="bete (linear regression coefficient)", ylab="-log10(Fisher p-value)")
 points(feats[idx,]$momik_betas, feats[idx,]$momik_lpvals  , col="red")
 points(feats[idx2,]$momik_betas, feats[idx2,]$momik_lpvals, col="blue", pch=16)
 points(feats[idx3,]$momik_betas, feats[idx3,]$momik_lpvals, col="purple", pch=16)
