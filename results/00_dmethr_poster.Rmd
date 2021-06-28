@@ -256,7 +256,7 @@ for (i in 1:length(gses)) {
 A differential analysis of gene expression in control versus demethylating context is performed. Two public expression datasets are selected for this  analysis: i)  RNA-seq  from  wild  type(control) versus DNMT double KO HCT116 cells (colon cancer cells, `r gses[1]`), ii) transcriptomic microarray from control and 5-azacytidine treated lung cancer cell lines (`r gses[2]`)
 **(A)** The upper (resp. lower) volcano plot shows the results of the differential analysis of `r gses[1]` (resp. `r gses[2]`) data for the model `r models[1]` (resp. `r models[2]`). The x-axis the represents the `log2FoldChange` of the model and the y-axis the the $-log10(pval_{Fisher})$. Red dots are the *`r gs_name`* genes.
 **(B)** The upper (resp. lower) boxplots show the distribution of geneexpression ranked values obtained from `log2FoldChange` for the *`r gs_name`* in `r gses[1]` (resp. `r gses[2]`) dataset. The *`r gs_name`* genes are in red and the other genes are in grey. We perform the Mann-Whitney U test and conclude for `r gses[1]` (resp. `r gses[2]`) that *`r gs_name`* genes are particularly over expressed in the model `r model` with a significant pvalue of $`r signif(utests[[1]]$p.value, 3)`$ (resp. $`r signif(utests[[2]]$p.value, 3)`$).
-**(C)** Enrichment plots obtained using the Geneset Enrichment Analysis (GSEA) software available from the Broad Institute: illustrate that over expressed genes in DNMTKO versus WT cells (upper panel) or in cells treated with 5-aza 1000nM (lower panel) significantly are enriched in *`r gs_name`* genes.
+**(C)** Enrichment plots obtained using the Geneset Enrichment Analysis (GSEA) software available from the Broad Institute (https://www.gsea-msigdb.org): illustrate that over expressed genes in DNMTKO versus WT cells (upper panel) or in cells treated with 5-aza 1000nM (lower panel) significantly are enriched in *`r gs_name`* genes.
 
 
 
@@ -275,7 +275,7 @@ A differential analysis of gene expression in control versus demethylating conte
 
 
 
-# Application to cancer
+# Application to cancers
 
 
 
