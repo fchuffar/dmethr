@@ -18,12 +18,12 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 
 
 ```{r}
-s = readRDS("~/projects/study_gpl570/study_GSE14315_trscr_gs.rds")
+gse_three = readRDS("~/projects/study_gpl570/study_GSE14315_trscr_gs.rds")
 
 #separer les infos de la colonne sample_title
-s$exp_grp$cell_line = stringr::str_split_fixed(s$exp_grp$sample_title, "-", 2)[,1]
+gse_three$exp_grp$cell_line = stringr::str_split_fixed(gse_three$exp_grp$sample_title, "-", 2)[,1]
 library(stringr)
-s$exp_grp$treatment_5aza = sapply(stringr::str_split_fixed(s$exp_grp$sample_title, "-", 2)[,2],function(it){
+gse_three$exp_grp$treatment_5aza = sapply(stringr::str_split_fixed(gse_three$exp_grp$sample_title, "-", 2)[,2],function(it){
   if (str_detect(it, "un")){
     return("ctl")
   }  else if (str_detect(it, "aza")){
@@ -35,11 +35,11 @@ s$exp_grp$treatment_5aza = sapply(stringr::str_split_fixed(s$exp_grp$sample_titl
 })
 
 #verification treatment bien attribué + info pertinente (deux lignées hors lung (breast and colon))
-compar = data.frame(sample_title=s$exp_grp$sample_title, ttt=s$exp_grp$treatment_5aza, cell=s$exp_grp$cell_line, topology=s$exp_grp$topology)
+compar = data.frame(sample_title=gse_three$exp_grp$sample_title, ttt=gse_three$exp_grp$treatment_5aza, cell=gse_three$exp_grp$cell_line, topology=gse_three$exp_grp$topology)
 (compar = compar[order(compar$cell),])
 
 #tableau de completude du design, selection des echantillons représenté dans les 3 traitements
-tmp_table=table(s$exp_grp$cell_line, s$exp_grp$treatment_5aza)
+tmp_table=table(gse_three$exp_grp$cell_line, gse_three$exp_grp$treatment_5aza)
 tmp_table
 as.matrix(tmp_table)
 foo <-apply(tmp_table,1,function(l){
@@ -48,15 +48,15 @@ foo <-apply(tmp_table,1,function(l){
 })
 foo
 idx_cell_line=names(foo)[foo]
-s$exp_grp=s$exp_grp[s$exp_grp$cell_line%in%idx_cell_line,]
-table(s$exp_grp$cell_line, s$exp_grp$treatment_5aza)
+gse_three$exp_grp=gse_three$exp_grp[gse_three$exp_grp$cell_line%in%idx_cell_line,]
+table(gse_three$exp_grp$cell_line, gse_three$exp_grp$treatment_5aza)
 
 
 #2 groupes de traitements
-s$exp_grp = s$exp_grp[order(s$exp_grp$treatment_5aza, s$exp_grp$cell_line),]
-s$exp_grp[, c("treatment_5aza","cell_line")]
-idx_ctl=rownames(s$exp_grp)[s$exp_grp$treatment_5aza%in%"ctl"]
-idx_ttt=rownames(s$exp_grp)[s$exp_grp$treatment_5aza%in%"ttt"]
+gse_three$exp_grp = gse_three$exp_grp[order(gse_three$exp_grp$treatment_5aza, gse_three$exp_grp$cell_line),]
+gse_three$exp_grp[, c("treatment_5aza","cell_line")]
+idx_ctl=rownames(gse_three$exp_grp)[gse_three$exp_grp$treatment_5aza%in%"ctl"]
+idx_ttt=rownames(gse_three$exp_grp)[gse_three$exp_grp$treatment_5aza%in%"ttt"]
 
 
 # #t test apparié group control et group high
@@ -134,25 +134,25 @@ compute_anadiff = function(s, idx_ctl, idx_ttt) {
 
 if (!exists("mcompute_anadiff")) {mcompute_anadiff = memoise::memoise(compute_anadiff)}
 
-stats3 = mcompute_anadiff(s, idx_ctl, idx_ttt)
+stats3 = mcompute_anadiff(gse_three, idx_ctl, idx_ttt)
 
 
 stats3 = t(stats3)
 stats3 = data.frame(stats3)
 stats3$padj = p.adjust(stats3$pval, method = "BH")
 
-layout(matrix(1:2,1), respect = TRUE)
-plot(stats3$beta,-log10(stats3$pval), pch=".")
-abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
-plot(stats3$beta,-log10(stats3$padj), pch=".")
-abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
+# layout(matrix(1:2,1), respect = TRUE)
+# plot(stats3$beta,-log10(stats3$pval), pch=".")
+# abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
+# plot(stats3$beta,-log10(stats3$padj), pch=".")
+# abline(h=-log10(0.05), v=c(-1,1), lty=2,col=2)
 
 #plot(stats$beta, stats3$beta)
 #plot(-log10(stats$pval), -log10(stats3$pval))
 ```
 
 
-```{r, eval=FALSE}
+```{r}
 gse = "GSE14315"
 model = "5-aza  vs. DMSO (reference)"
 feats[,paste0("l2fc_", gse)] = NA
@@ -162,7 +162,7 @@ feats[,paste0("pval_", gse)] = stats3[rownames(feats),]$padj
 ```
 
 
-```{r child="03_da_results.Rmd", eval=FALSE}
+```{r child="03_da_results.Rmd"}
 ```
 
 
