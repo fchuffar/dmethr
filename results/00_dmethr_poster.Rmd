@@ -440,7 +440,7 @@ fig_label("F", cex=3)
 **(C)** The enrichement plot is obtained from the `r sum(!is.na(feats[,"momik_betas"]))` length vector of linear regression coefficients og all genes. It shows that *methplusplus* genes are depleted, meaning that *methplusplus* gene expressions are particularly anticorrelated with the methylation status of the region surrounding their TSS.
 **(D)** (resp. **(D)**) The enrichement plot is obtained from the `r sum(feats[,"methplusplus"])` length vector of linear regression coefficients of *methplusplus* genes. It shows that the top `r ntop` upregulated genes of the model `r models[[1]]` (resp. `r models[[2]]`) in gse `r gses[[1]]` (resp. `r gses[[2]]`) dataset are depleted, meaning that the expression of these genes is strongestly associated with a demethylation of the region surrounding their TSS than *methplusplus* genes themselves.
 
-# Aknowledgement
+# Acknowledgement
 
 MIC project
 
