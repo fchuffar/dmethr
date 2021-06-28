@@ -157,7 +157,7 @@ stats2$padj = p.adjust(stats2$pval, method = "BH")
 
 ```{r}
 gse = "GSE5816"
-model = "5-aza 1000 nM vs. DMSO (ref.)"
+model = "5-aza 1000 nM vs. DMSO (reference)"
 feats[,paste0("l2fc_", gse)] = NA
 feats[,paste0("pval_", gse)] = NA
 feats[,paste0("l2fc_", gse)] = stats2[rownames(feats),]$beta

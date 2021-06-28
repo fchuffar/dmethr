@@ -105,7 +105,7 @@ stoda::gseaplot(v=stoda_input, gs=gs_methplusplus)
 
 ```{r}
 gse = "GSE45332"
-model = "DNMT DKO vs. WT (ref.)"
+model = "DNMT DKO vs. WT (reference)"
 feats[,paste0("l2fc_", gse)] = NA
 feats[,paste0("pval_", gse)] = NA
 feats[,paste0("l2fc_", gse)] = d[rownames(feats),]$log2FoldChange
