@@ -441,14 +441,9 @@ Figure **(A)** shows the correlation between expression and methylation for TSPY
 
 # Acknowledgements
 
-<<<<<<< HEAD
 With financial support from **ITMO Cancer of Aviesan** within the framework of the 2021-2030 Cancer Control
 Strategy, on funds administered by Inserm.
 Most of the computations presented in this study were performed using the **CIMENT/GRICAD** infrastructure (https://gricad.univ-grenoble-alpes.fr).
-=======
-MIC
-project GRICAD
->>>>>>> cf8507f... modifs legend
 
 # References
 
