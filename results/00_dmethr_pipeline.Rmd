@@ -51,7 +51,7 @@ prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reduc
 ```{r child="03_da_GSE25427.Rmd", eval=FALSE}
 ```
 
-```{r child="03_da_summary.Rmd", eval=FALSE}
+```{r child="03_da_summary.Rmd", eval=TRUE}
 ```
 
 
