@@ -78,7 +78,7 @@ axis(2, at=c(0, 10, 20, 30, 40), c(0, 10, 20, 30, 40), las=2)
 par(mar=c(0, 4.1, 4.1, 0))
 i = 1
 den=density(pca$x[,i])
-  plot(den, main="EM clustering", xlab="", ylab="", xaxt="n", yaxt="n", col="grey")
+plot(den, main="EM clustering", xlab="", ylab="", xaxt="n", yaxt="n", col="grey")
 abline (v=max(pca$x[idx_rich,i]), lty="dotted")
 den_rich = density(pca$x[idx_rich,i], na.rm=TRUE, bw=den$bw)  
 den_poor = density(pca$x[idx_poor,i], na.rm=TRUE, bw=den$bw)
