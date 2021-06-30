@@ -113,8 +113,6 @@ feats[,paste0("pval_", gse)] = d[rownames(feats),]$padj
 
 ```
 
-```{r child="03_da_results.Rmd"}
-```
 
 
 

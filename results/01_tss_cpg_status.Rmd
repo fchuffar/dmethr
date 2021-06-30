@@ -378,7 +378,7 @@ axis(2, at=c(0, 10, 20, 30, 40), c(0, 10, 20, 30, 40), las=2)
 par(mar=c(0, 4.1, 4.1, 0))
 i = 1
 den=density(pca$x[,i])
-  plot(den, main="EM clustering", xlab="", ylab="", xaxt="n", yaxt="n", col="grey")
+plot(den, main="EM clustering", xlab="", ylab="", xaxt="n", yaxt="n", col="grey")
 abline (v=max(pca$x[idx_rich,i]), lty="dotted")
 den_rich = density(pca$x[idx_rich,i], na.rm=TRUE, bw=den$bw)  
 den_poor = density(pca$x[idx_poor,i], na.rm=TRUE, bw=den$bw)
@@ -434,10 +434,12 @@ abline(h=sum(rownames(data)=="poor")/nrow(data), col="white")
 
 
  
-**Clustering of features according to CpG density of genomique region surounding the transcription start site (TSS).**
-For each feature we compute the CpG density of the TSS +/-`r ud_str/1000`kb region by counting the number of CG motif in the DNA sequence divided by the length of the sequence. 
-**(A)** - The distribution of these values (black curve) shows 2 populations, when the distribution of CpG density of 1000 random genomic regions of `r 2*ud_str/1000`kb (blue curve) shows 1 population. The CpG density of random regions orverlaps the feature population with the lowest CpG density. We qualify this population as *CpG poor* features, by opposition to the second population qualify as *CpG rich* feature. In order to separate these two population we i) perform a PCA on the features and ii) apply an EM-clustering algorithm on the first principal component. 
-To perfom PCA on features we split genomic region of TSS +/- `r ud_str/1000`kb into `r stp/1000`kb bins. We compute the CpG density of each bin, then we obtain a CpG density matrix of `r nrow(mat)` features and `r ncol(mat)` bins. The heatmap of the panel D shows a 500 random feature sampling of this matrix. 
-**(B)** - We identify two clusters by using  an esperance maximisation clustering on first principal component of PCA which representing 36,9% of variance. The main graphics shows this clutering with first principal component on x axis and second principal component on y axis, red dots are CpG rich and black dots are CpG poor. The marginals graphics show respectively (same color code of main graphic) on top first principal component distribution clusters (dotted grey vertical line positions treshold between two clusters), on left second principal component distribution for same clusters. 
-**(C)** - The average CpG density profile of the `r length(idx_rich)` CpG rich features (resp. `r length(idx_poor)` CpG poor features) cluster is plot in red (resp. in black), x axis is the position on the sequence around TSS and y axis is the CpG density. 
-**(D)** The heatmap shows the methylation profile of the TSS+/-2.5kb of 500 random genes grouped by their CpG status.
+**Clustering of features according to CpG density of genomic region surrounding the transcription start site (TSS).**
+For each feature we compute the CpG density of the TSS +/-`r ud_str/1000`kb region by counting the number of CG motifs in the DNA sequence divided by the length of the sequence. 
+**(A)** The distribution of CpG dentities for TSS centered features shows 2 populations (black curve), whereas the distribution of CpG density of 1000 random genomic regions of `r 2*ud_str/1000`kb (blue curve) shows 1 population. The feature population with the lowest CpG densities are  *CpG poor* features, by opposition to the second population which are *CpG rich* feature.This analysis confirms that a large subset of TSS centered features are CpG rich. In order to separate these two populations of TSS centered features we i) perform a PCA on the features and ii) apply an EM-clustering algorithm on the first principal component. 
+To perfom PCA on features we split genomic region of TSS +/- `r ud_str/1000`kb into `r stp/1000`kb bins. We compute the CpG density of each bin, then we obtain a CpG density matrix of `r nrow(mat)` features and `r ncol(mat)` bins. 
+**(B)** The two CpG dendity clusters were identified by using  an esperance maximisation clustering on first principal component of PCA which represent 36,9% of the variance. The main graphic shows this clustering with first principal component on x axis and second principal component on y axis, red dots are CpG rich and black dots are CpG poor. The marginal graphics respectively show (same color code of main graphic) i) on the top: first principal component distribution of the two clusters (dotted grey vertical line represent the threshold between two clusters), ii) on the right second principal component distribution for the same clusters. 
+**(C)** The average CpG density profile of the `r length(idx_rich)` CpG rich features (resp. `r length(idx_poor)` CpG poor features) cluster is plotted in red (resp. in black) as a function of the position on the sequence around the TSS (x axis) and CpG density (y axis). 
+**(D)** Heatmap showing the methylation profile of the TSS+/-2.5kb of 500 random genes grouped by their CpG density status.
+
+

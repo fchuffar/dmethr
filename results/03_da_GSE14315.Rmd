@@ -162,8 +162,6 @@ feats[,paste0("pval_", gse)] = stats3[rownames(feats),]$padj
 ```
 
 
-```{r child="03_da_results.Rmd"}
-```
 
 
 

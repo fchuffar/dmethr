@@ -138,8 +138,6 @@ key = "tissue_group_level1"
 meth_by_tissues_by_gene = mget_meth_by_tissues_by_gene(feats, feat_indexed_probes, s_meth, key, reducer_func1, reducer_func2)
 ```
 
-## Heatmap
-
 From Illumina 450k studies, we obtain a methylation matrix of `r ncol(s_meth$data)` samples, 
 dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues 
 including `r unique(s_meth$exp_grp$tissue_group_level1)`.
@@ -153,6 +151,10 @@ Then for each genes promoter group of probes, we compute the mean of mean methyl
 We obtain an `r nrow(meth_by_tissues_by_gene)` genes by `r ncol(meth_by_tissues_by_gene)` tissues mean of mean methylation value matrix.
 
 Heatmap on the methylation value matrix clearly shows a subset of genes with highly methylated promoter.
+
+
+
+## Figure
 
 
 ```{r label="clustering and heatmap", fig.height=9}
@@ -205,14 +207,15 @@ feats[[gs_name]] = rownames(feats) %in% gs_methplusplus
 
 
 **CpG-rich genes methylation status in healthy tissues.**
-CpG-rich associated genes are clustered according to their methylation status in a publicly  available  dataset  of  normal  tissues  (GSE56515,  GSE48472,  GSE64096,  GSE50192,  GSE31848,GSE73375). From Illumina 450k studies, we obtain a methylation matrix of `r ncol(s_meth$data)` samples, 
-dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues.This matrix is successively reduced, first by tissues, then by genes with CpG rich promoter. The function used to reduce the data is the `mean`. A matrix of average methylation values is obtained for `r nrow(data)` genes and `r ncol(meth_by_tissues_by_gene)` tissues. Hierarchical clustering on this matrix is proceeding, the heatmap on figure ? show the results. The hypermethylated genes are in red and less methylated in blue, tissues are presented on the x axis with clustering hierarchique dendrogramm on tissues on top and the genes are presented on the y axis with the hierarchical dendrogramm on the genes at the opposite side. The fisrt branch of this last dendrogramm selected a subset of `r sum(feats[[gs_name]])` CpG-rich genes widely methylated in healthy tissues.
+CpG-rich associated genes are clustered according to their methylation status using publicly  available  datasets  of genome-wide DNA methylation data in  normal  tissues obtained whith the Illumina 450k array (GSE56515,  GSE48472,  GSE64096,  GSE50192,  GSE31848, GSE73375). These values are included into a methylation matrix of `r ncol(s_meth$data)` samples, 
+dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues. This matrix is successively reduced, first by tissues, then by genes with CpG rich promoter. The function used to reduce the data is the `mean`. A matrix of average methylation values is obtained for `r nrow(data)` genes and `r ncol(meth_by_tissues_by_gene)` tissues. The heatmap shows the results of hierarchical clustering on this matrix with: high methylated values in red and low methylation values in blue. The tissues are presented on the x axis (with a hierarchical clustering dendrogram on tissues on the top of the panel) and the genes are presented on the y axis (with the hierarchical clustering dendrogram of the genes on the left of the panel). The first branch of this genes dendrogram selects a subset of `r sum(feats[[gs_name]])` CpG-rich genes highly and widely methylated in most healthy tissues.
+
 
 
 
 ```{r selecting_genes, echo=TRUE, results="verbatim", eval=TRUE}
 table(feats$cpg_status, feats[[gs_name]], useNA="ifany")
-# expression_in_gtex(rownames(feats)[feats[[gs_name]]])
+# expression_in_gtex(rownames(feats)[feats[["methplusplus"]]])
 ```
 
 

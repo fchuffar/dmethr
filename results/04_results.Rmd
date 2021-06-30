@@ -11,7 +11,7 @@ output:
     number_sections: true
 ---
 
-# Step 4 : Results
+# Step 4 : Application to cancers
 
 ```{r, echo=FALSE, eval=TRUE}
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
@@ -109,10 +109,8 @@ idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
 
 ## Figure
 
-```{r fig.height=9}
-gene_symbols = (union(idx2, idx3)) 
-gene_symbols = gene_symbols[order(feats[gene_symbols,]$momik_pvals)][1:min(6, length(gene_symbols))]
 
+```{r fig.height=9}
 layout_mat2 = cbind(
   rbind(
     matrix(1, nrow=4, ncol=4),
@@ -127,20 +125,88 @@ layout_mat2 = cbind(
     matrix(4, nrow=2, ncol=2)
   )
 )
+
+
+layout_mat2 =
+  cbind(
+    rbind (
+      cbind(
+        matrix(2, nrow=3, ncol=1),
+        matrix(1, nrow=3, ncol=4)
+      ),
+      matrix(4, nrow=5, ncol=5)
+    ),
+    rbind (
+      matrix(3, nrow=2, ncol=2),
+      matrix(5, nrow=2, ncol=2),
+      matrix(6, nrow=2, ncol=2),
+      matrix(7, nrow=2, ncol=2)
+    )
+  )
+
+
+
+layout_mat2 =
+  rbind (
+    cbind(
+      matrix(2, nrow=3, ncol=1),
+      matrix(1, nrow=3, ncol=4),
+      matrix(3, nrow=3, ncol=3)
+    ),
+    cbind (
+      matrix(4, nrow=6, ncol=6),
+      rbind (
+        matrix(5, nrow=2, ncol=2),
+        matrix(6, nrow=2, ncol=2),
+        matrix(7, nrow=2, ncol=2)
+      )
+    )
+  )
+
+
 layout_mat2 
+
+
+
+ntop=100
+idx = rownames(feats)[feats[["methplusplus"]]]
+idx2 = idx[order(feats[idx,]$l2fc_GSE45332, decreasing=TRUE)][1:ntop]
+idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
+gene_symbols = gene_symbols[order(feats[gene_symbols,]$momik_pvals)][1:min(6, length(gene_symbols))]
+
+
 layout(layout_mat2, respect=TRUE)
-plot(feats$momik_betas, feats$momik_lpvals, col="grey", xlim=c(-0.2,0.2), main="gene expression ~ TSS+/-2.5kb methylation", xlab="linear regression coefficient", ylab="-log10(Fisher p-value)")
+
+foo = momic_pattern("TSPYL5", tcga_project, LAYOUT=FALSE)
+fig_label("A", cex=3)
+
+meth = apply(foo$d[,foo$probes], 1, mean)
+expr = foo$d[,foo$gene_symbols]
+plot(meth, expr, main=paste0("TSPYL5 expr. ~ av. meth."), xlab="average methylation", ylab= "expression")
+m = lm(expr~meth)
+abline(m, col=2)
+fig_label("B", cex=3)
+
+legend("bottomleft", c(paste0("beta=", signif(m$coef[[2]],3)), paste0("Fisher pval=", signif(anova(m)[1,5],3))), bty = "n")
+
+
+
+
+
+plot(feats$momik_betas, feats$momik_lpvals, col="grey", 
+  xlim=c(-40,40),
+  main="gene expression ~ TSS+/-2.5kb methylation", xlab="beta (linear regression coefficient)", ylab="-log10(Fisher p-value)")
 points(feats[idx,]$momik_betas, feats[idx,]$momik_lpvals  , col="red")
 points(feats[idx2,]$momik_betas, feats[idx2,]$momik_lpvals, col="blue", pch=16)
 points(feats[idx3,]$momik_betas, feats[idx3,]$momik_lpvals, col="purple", pch=16)
-text(feats[gene_symbols,]$momik_betas, feats[gene_symbols,]$momik_lpvals, gene_symbols, col=adjustcolor(1, alpha.f=1), pos=c(1,3))
+text(feats[gene_symbols,]$momik_betas, feats[gene_symbols,]$momik_lpvals, gene_symbols, col=adjustcolor(1, alpha.f=1), pos=3)
 legend("topright", 
   c("genes", paste0("methplusplus", " genes"), paste0("methplusplus", " genes upregulated GSE45332 DA"), paste0(gs_name, " genes upregulated GSE5816 DA")), 
   pch=c(1, 1, 16, 16), 
   col=c("grey", "red", "blue", "purple"),
   lty=c(0,0,0,0)
 )
-fig_label("A", cex=3)
+fig_label("C", cex=3)
 
 gene_set = idx
 gs_name = "momik_betas"
@@ -148,7 +214,7 @@ expression_vector = feats[,gs_name]
 names(expression_vector) = rownames(feats)
 expression_vector = expression_vector[!is.na(expression_vector)]
 et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3)
-fig_label("C", cex=3)
+fig_label("D", cex=3)
 
 # gs_name = "momik_lpvals"
 # expression_vector = feats[,gs_name]
@@ -163,7 +229,7 @@ expression_vector = feats[idx,gs_name]
 names(expression_vector) = idx
 expression_vector = expression_vector[!is.na(expression_vector)]
 et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_GSE45332"), nperm=3)
-fig_label("D", cex=3)
+fig_label("E", cex=3)
 
 # gs_name = "momik_lpvals"
 # expression_vector = feats[idx,gs_name]
@@ -178,7 +244,7 @@ expression_vector = feats[idx,gs_name]
 names(expression_vector) = idx
 expression_vector = expression_vector[!is.na(expression_vector)]
 et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_GSE5816"), nperm=3)
-fig_label("E", cex=3)
+fig_label("F", cex=3)
 
 # gs_name = "momik_lpvals"
 # expression_vector = feats[idx,gs_name]
@@ -188,21 +254,23 @@ fig_label("E", cex=3)
 # fig_label("G", cex=3)
 
 
-momic_pattern("TSPYL5", tcga_project, LAYOUT=FALSE)
-fig_label("B", cex=3)
 
 # stop("EFN")
 ```
 
-**Figure** Correlation between gene expression and TSS+/-2.5kb methylation in TCGA-LUSC dataset. 
-**(A)** For each gene we perform a linar regression of its expression according to the average methylation of its TSS+/-2.5kb and draw the corresponding volcano plot. The x-axis represents the linear regression coeficient of the model and y-axis repressents -lop10 of the Fisher p-value. Genes are drawn as grey circles when `methplusplus` genes are drawn as red circles. The top `r ntop` upregulated genes of the model `r models[[1]]` (resp. `r models[[2]]`) in gse `r gses[[1]]` (resp. `r gses[[2]]`) dataset in drawn as blue (resp. purple) dot. The plot shows that most of gene expression increase when their TSS+/-2.5kb methylation decrease. 
-**(B)** It is particularly true for TSPYL5. The y-axis represents the TCGA-LUSC patients ordered according to their TSPYL5 level of expression (left sub-panel). The TSPYL5 TSS+/-2.5kb methylation heatmap (right sub-panel) shows that a low TSPYL5 expression is associated to a strong methylation (in red) of the region surrounding TSPYL5 TSS when high expression of TSPYL5 is associated to a demethylation of the same genomic region.  
-**(C)** The enrichement plot is obtained from the `r sum(!is.na(feats[,"momik_betas"]))` length vector of linear regression coefficients og all genes. It shows that *methplusplus* genes are depleted, meaning that *methplusplus* gene expressions are particularly anticorrelated with the methylation status of the region surrounding their TSS.
-**(D)** (resp. **(D)**) The enrichement plot is obtained from the `r sum(feats[,"methplusplus"])` length vector of linear regression coefficients of *methplusplus* genes. It shows that the top `r ntop` upregulated genes of the model `r models[[1]]` (resp. `r models[[2]]`) in gse `r gses[[1]]` (resp. `r gses[[2]]`) dataset are depleted, meaning that the expression of these genes is strongestly associated with a demethylation of the region surrounding their TSS than *methplusplus* genes themselves.
+**Correlation between gene expression and TSS+/-2.5kb methylation in the TCGA-LUSC dataset (Lung Squamous Cell Carcinoma samples).** 
+For each genes a linear regression of the expression as a function of the average methylation of its TSS+/-2.5kb was performed. 
+**(A)** As an example,  a heatmap shows the methylation levels (scale ranging between blue corresponding to lowest and red to highest methylation levels) of the of CpGs of the TSPYL5 gene promoter (x-axis) for the TCGA-LUSC samples (y-axis) ranked according to the expression of the same gene (ranked from high (top) to low (bottom) expression , y-axis). This TSPYL5 TSS+/-2.5kb methylation heatmap shows that a low TSPYL5 expression is associated to a strong methylation (in red) of the region surrounding TSPYL5 TSS whereas high expression of TSPYL5 is associated to a demethylation of the same genomic region (in blue). 
+**(B)** The average methylation value of TSPYL5 promoter region was calculated for each patient and linear regression *expression ~ average methylation* was performed. The TSPYL5 expression (y-axis) is plotted as a function of the TSPYL5 average methylation (x=axis) and each point represent a sample. The red line is the regression line. The coefficient of the linear model (beta=$`r signif(m$coef[[2]],3)`$) and the associated Fisher p-value $`r signif(anova(m)[1,5],3)`$ are reported on the graph.
+**(C)** In the same way, beta and p-values were collected for all genes and plotted on the corresponding volcano plot (one dot/gene, the x-axis represents the linear regression coefficient of the model and y-axis represents -log10 of the Fisher p-value). Genes are represented as grey circles except *methplusplus* genes represented as red circles. The top `r ntop` upregulated genes of the model `r models[[1]]` (resp. `r models[[2]]`) in gse `r gses[[1]]` (resp. `r gses[[2]]`) dataset are represented as blue (resp. purple) dots. The plot shows that for most of the genes an increased expression correlates with a decrease of their TSS+/-2.5kb methylation.
+**(D)** The GSEA enrichment plots show the **depletion** of ***methplusplus* genes** in the `r sum(!is.na(feats[,"momik_betas"]))`-length **all genes** vector of linear regression coefficients. It means that the epression of *methplusplus* genes anticorrelated with the methylation status of the region surrounding their TSS.
+**(E)** (resp. **(F)**) The enrichment plot shows the depletion of the  **top `r ntop` upregulated genes** of the model `r models[[1]]` (resp. `r models[[2]]`) in the `r sum(!is.na(feats[,"momik_betas"]))`-length  ***methplusplus* genes** vector of linear regression coefficients.
+It means that the expression of *methplusplus* genes that are reactivated in a demethylating context is more significantly associated with a demethylation of the region surrounding their TSS than *methplusplus* genes themselves.
 
 
 
-```{r}
+
+```{r eval=FALSE}
 tcga_project = "TCGA-LUSC"
 s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
 s = truncate_survival(s, 60)

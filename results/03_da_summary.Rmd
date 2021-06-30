@@ -1,13 +1,10 @@
 ## Figure
-
-```{r, fig.width=12, fig.height=8}
-gses = c("GSE45332", "GSE5816")
-models = c(model = "DNMT DKO vs. WT (ref.)", "5-aza 1000 nM vs. DMSO (ref.)")
+```{r, fig.width=12, fig.height=4}
 gs_name = "methplusplus"
 utests = list()
 
 source("common.R")
-layout(matrix(1:(3*length(gses)), length(gses), byrow=TRUE), respect=TRUE)
+layout(matrix(1:3, 1, byrow=TRUE), respect=TRUE)
 for (i in 1:length(gses)) {
   gse = gses[i]
   model = models[i]
@@ -30,7 +27,10 @@ for (i in 1:length(gses)) {
 ```
 
 
-In a demethylating context, *`r gs_name`* genes are particularly upregulated.
-**(A)** The upper (resp. lower) volcano plot shows the results of the differential analysis of `r gses[1]` (resp. `r gses[2]`) data for the model `r models[1]` (resp. `r models[2]`). The x-axis the represents the `log2FoldChange` of the model and the y-axis the the $-log10(pval_{Fisher})$. Red dots are the *`r gs_name`* genes.
-**(B)** The upper (resp. lower) boxplots shows the distribution of genes ranks obtained from `log2FoldChange` for the *`r gs_name`* in `r gses[1]` (resp. `r gses[2]`) dataset. The *`r gs_name`* genes are in red and the other genes are in grey. We perform the Mann-Whitney U test and conclude for `r gses[1]` (resp. `r gses[2]`) that *`r gs_name`* genes are particularly over expressed in the model `r model` with a significant pvalue of $`r signif(utests[[1]]$p.value, 3)`$ (resp. $`r signif(utests[[2]]$p.value, 3)`$).
-**(C)** The enrichement plots are obtained using GSEA software. Both illustrate that over expressed genes in `r model[1]` and `r model[2]` are enriched in *`r gs_name`* genes.
+Focusing on these `r sum(feats[[gs_name]])` CpG-rich genes with a highly methylated TSS region, which we named the *methplusplus* genes, we then explore the effect of a demethylation on their expression level. For this purpose, we use expression data from cancer cell lines, in which a genome-wide demethylation was induced either by inactivating the enzymes responsible for DNA methylation establishment and maintenance, the DNA Methyl Transferases (or DNMT), or by adding 5-Azacytidine (or 5-AZA), an inhibitor of DNA methylation.
+
+**Upon genome-wide demethylation, a majority of genes is upregulated**
+This figure shows a differential analysis of gene expression in control versus demethylating context. Two public expression datasets are selected for this  analysis: i)  RNA-seq  from  wild  type (control) versus DNMT double KO HCT116 cells (colon cancer cells, `r gses[1]`), ii) transcriptomic microarray from control and 5-azacytidine treated lung cancer cell lines (`r gses[2]`)
+**(A)** The upper (resp. lower) volcano plot shows the results of the differential analysis of `r gses[1]` (resp. `r gses[2]`) data for the model `r models[1]` (resp. `r models[2]`). The x-axis the represents the `log2FoldChange` of the model and the y-axis the the $-log10(pval_{Fisher})$. Red dots are the *methplusplus* genes.
+**(B)** The upper (resp. lower) boxplots show the distribution of gene expression ranked values obtained from `log2FoldChange` for the *methplusplus* in `r gses[1]` (resp. `r gses[2]`) dataset. The *methplusplus* genes are in red and the other genes are in grey. We perform the Mann-Whitney U test and conclude for `r gses[1]` (resp. `r gses[2]`) that *methplusplus* genes are particularly over expressed in the demethylated cells vs. control cells(ref.) with a significant pvalue of $`r signif(utests[[1]]$p.value, 3)`$ (resp. $`r signif(utests[[2]]$p.value, 3)`$).
+**(C)** Enrichment plots obtained using the Geneset Enrichment Analysis (GSEA) software available from the Broad Institute (https://www.gsea-msigdb.org): illustrating that the geneset corresponding to *methplusplus* genes is significantly enriched (= genes are over expressed) in DNMTKO versus WT cells (upper panel) or in cells treated with 5-aza 1000nM (lower panel)
