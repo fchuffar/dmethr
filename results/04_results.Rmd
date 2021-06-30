@@ -121,6 +121,7 @@ layout_mat2 =
 idx = rownames(feats)[feats[["methplusplus"]]]
 idx2 = idx[order(feats[idx,]$l2fc_GSE45332, decreasing=TRUE)][1:ntop]
 idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
+gene_symbols = (union(idx2, idx3)) 
 gene_symbols = gene_symbols[order(feats[gene_symbols,]$momik_pvals)][1:min(6, length(gene_symbols))]
 
 
