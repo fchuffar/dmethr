@@ -1011,3 +1011,21 @@ readstudyRDS = function(rds_file){
 
 if (!exists("mreadstudyRDS")) {mreadstudyRDS = memoise::memoise(readstudyRDS)}
 
+
+
+
+compute_anadiff = function(s, idx_ctl, idx_ttt) {
+  d = data.frame(treatment_5aza=s$exp_grp[c(idx_ctl,idx_ttt), "treatment_5aza"], cell_line=s$exp_grp[c(idx_ctl,idx_ttt), "cell_line" ])
+  result = epimedtools::monitored_apply(s$data, 1, function(l){
+    #l = s$data[1,]
+    d$expr = l[c(idx_ctl, idx_ttt)]
+    m = lm(expr~treatment_5aza+cell_line, d)
+    beta = m$coefficients[[2]]
+    pval = anova(m)[1,5]
+    ret = c(beta=beta, pval=pval)
+    return(ret)
+  })
+  return(result)
+}
+if (!exists("mcompute_anadiff")) {mcompute_anadiff = memoise::memoise(compute_anadiff)}
+
