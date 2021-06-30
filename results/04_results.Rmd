@@ -110,65 +110,14 @@ idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
 ## Figure
 
 
-```{r fig.height=9}
-layout_mat2 = cbind(
-  rbind(
-    matrix(1, nrow=4, ncol=4),
-    cbind(
-      matrix(6, nrow=2, ncol=1),
-      matrix(5, nrow=2, ncol=3)
-    )
-  ),
-  rbind(
-    matrix(2, nrow=2, ncol=2),
-    matrix(3, nrow=2, ncol=2),
-    matrix(4, nrow=2, ncol=2)
-  )
-)
-
-
+```{r fig.height=6}
 layout_mat2 =
-  cbind(
-    rbind (
-      cbind(
-        matrix(2, nrow=3, ncol=1),
-        matrix(1, nrow=3, ncol=4)
-      ),
-      matrix(4, nrow=5, ncol=5)
-    ),
-    rbind (
-      matrix(3, nrow=2, ncol=2),
-      matrix(5, nrow=2, ncol=2),
-      matrix(6, nrow=2, ncol=2),
-      matrix(7, nrow=2, ncol=2)
-    )
-  )
-
-
-
-layout_mat2 =
-  rbind (
     cbind(
       matrix(2, nrow=3, ncol=1),
       matrix(1, nrow=3, ncol=4),
       matrix(3, nrow=3, ncol=3)
-    ),
-    cbind (
-      matrix(4, nrow=6, ncol=6),
-      rbind (
-        matrix(5, nrow=2, ncol=2),
-        matrix(6, nrow=2, ncol=2),
-        matrix(7, nrow=2, ncol=2)
-      )
     )
-  )
-
-
-layout_mat2 
-
-
-
-ntop=100
+    ntop=100
 idx = rownames(feats)[feats[["methplusplus"]]]
 idx2 = idx[order(feats[idx,]$l2fc_GSE45332, decreasing=TRUE)][1:ntop]
 idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
@@ -188,11 +137,13 @@ abline(m, col=2)
 fig_label("B", cex=3)
 
 legend("bottomleft", c(paste0("beta=", signif(m$coef[[2]],3)), paste0("Fisher pval=", signif(anova(m)[1,5],3))), bty = "n")
+```
 
 
 
 
-
+```{r fig.height=9}
+layout(matrix(1), respect=TRUE)
 plot(feats$momik_betas, feats$momik_lpvals, col="grey", 
   xlim=c(-40,40),
   main="gene expression ~ TSS+/-2.5kb methylation", xlab="beta (linear regression coefficient)", ylab="-log10(Fisher p-value)")
@@ -208,54 +159,28 @@ legend("topright",
 )
 fig_label("C", cex=3)
 
-gene_set = idx
-gs_name = "momik_betas"
-expression_vector = feats[,gs_name]
+```
+
+
+
+```{r}
+layout(matrix(1:3, 1), respect=TRUE)
+
+gene_set = rownames(feats)[feats[["methplusplus"]]]
+expression_vector = feats[,"momik_betas"]
 names(expression_vector) = rownames(feats)
 expression_vector = expression_vector[!is.na(expression_vector)]
-et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3)
-fig_label("D", cex=3)
+et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3)  
 
-# gs_name = "momik_lpvals"
-# expression_vector = feats[,gs_name]
-# names(expression_vector) = rownames(feats)
-# expression_vector = expression_vector[!is.na(expression_vector)]
-# et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
-# fig_label("C", cex=3)
-
-gene_set = idx2
-gs_name = "momik_betas"
-expression_vector = feats[idx,gs_name]
-names(expression_vector) = idx
-expression_vector = expression_vector[!is.na(expression_vector)]
-et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_GSE45332"), nperm=3)
-fig_label("E", cex=3)
-
-# gs_name = "momik_lpvals"
-# expression_vector = feats[idx,gs_name]
-# names(expression_vector) = idx
-# expression_vector = expression_vector[!is.na(expression_vector)]
-# et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
-# fig_label("E", cex=3)
-
-gene_set = idx3
-gs_name = "momik_betas"
-expression_vector = feats[idx,gs_name]
-names(expression_vector) = idx
-expression_vector = expression_vector[!is.na(expression_vector)]
-et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_GSE5816"), nperm=3)
-fig_label("F", cex=3)
-
-# gs_name = "momik_lpvals"
-# expression_vector = feats[idx,gs_name]
-# names(expression_vector) = idx
-# expression_vector = expression_vector[!is.na(expression_vector)]
-# et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)
-# fig_label("G", cex=3)
-
-
-
-# stop("EFN")
+for (gse in gses) {
+  idx = rownames(feats)[feats[["methplusplus"]]]
+  idx2 = idx[order(feats[idx,paste0("l2fc_", gse)], decreasing=TRUE)][1:ntop]
+  gene_set = idx2
+  expression_vector = feats[idx,"momik_betas"]
+  names(expression_vector) = idx
+  expression_vector = expression_vector[!is.na(expression_vector)]
+  et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_", gse), nperm=3)
+}
 ```
 
 **Correlation between gene expression and TSS+/-2.5kb methylation in the TCGA-LUSC dataset (Lung Squamous Cell Carcinoma samples).** 

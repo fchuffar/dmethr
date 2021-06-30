@@ -32,9 +32,9 @@ prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reduc
 gses = c("GSE45332", "GSE5816", "GSE14315", "GSE25427", "GSE22250")
 models = c(
   "DNMT DKO vs. WT (ref.)", 
-  "5-aza 1000 nM vs. DMSO (ref.)"
-  "5-aza vs. Ctrl (ref.)"
-  "5-aza vs. Mock (ref.)"
+  "5-aza 1000 nM vs. DMSO (ref.)",
+  "5-aza vs. Ctrl (ref.)",
+  "5-aza vs. Mock (ref.)",
   "5-aza vs. WT (ref.)"
 )
 ```
