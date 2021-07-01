@@ -93,26 +93,26 @@ idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
 
 ```{r fig.height=6}
 for (tcga_project in tcga_projects) {
-layout_mat2 =
+  layout_mat2 =
     cbind(
       matrix(2, nrow=3, ncol=1),
       matrix(1, nrow=3, ncol=4),
       matrix(3, nrow=3, ncol=3)
     )
 
-layout(layout_mat2, respect=TRUE)
+  layout(layout_mat2, respect=TRUE)
 
-foo = momic_pattern("TSPYL5", tcga_project, LAYOUT=FALSE)
-fig_label("A", cex=3)
+  foo = momic_pattern("TSPYL5", tcga_project, LAYOUT=FALSE)
+  fig_label("A", cex=3)
 
-meth = apply(foo$d[,foo$probes], 1, mean)
-expr = foo$d[,foo$gene_symbols]
-plot(meth, expr, main=paste0("TSPYL5 expr. ~ av. meth."), xlab="average methylation", ylab= "expression")
-m = lm(expr~meth)
-abline(m, col=2)
-fig_label("B", cex=3)
+  meth = apply(foo$d[,foo$probes], 1, mean)
+  expr = foo$d[,foo$gene_symbols]
+  plot(meth, expr, main=paste0("TSPYL5 expr. ~ av. meth."), xlab="average methylation", ylab= "expression")
+  m = lm(expr~meth)
+  abline(m, col=2)
+  fig_label("B", cex=3)
 
-legend("bottomleft", c(paste0("beta=", signif(m$coef[[2]],3)), paste0("Fisher pval=", signif(anova(m)[1,5],3))), bty = "n")
+  legend("bottomleft", c(paste0("beta=", signif(m$coef[[2]],3)), paste0("Fisher pval=", signif(anova(m)[1,5],3))), bty = "n")
 }
 ```
 
@@ -151,21 +151,21 @@ fig_label("C", cex=3)
 layout(matrix(1:12 , 2), respect=TRUE)
 
 for (tcga_project in tcga_projects) {
-gene_set = rownames(feats)[feats[["methplusplus"]]]
-expression_vector = feats[,paste0("momik_betas_", tcga_project)]
-names(expression_vector) = rownames(feats)
-expression_vector = expression_vector[!is.na(expression_vector)]
-et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3)  
-
-for (gse in gses) {
-  idx = rownames(feats)[feats[["methplusplus"]]]
-  idx2 = idx[order(feats[idx,paste0("l2fc_", gse)], decreasing=TRUE)][1:ntop]
-  gene_set = idx2
-  expression_vector = feats[idx,paste0("momik_pvals_", tcga_project)]
-  names(expression_vector) = idx
+  gene_set = rownames(feats)[feats[["methplusplus"]]]
+  expression_vector = feats[,paste0("momik_betas_", tcga_project)]
+  names(expression_vector) = rownames(feats)
   expression_vector = expression_vector[!is.na(expression_vector)]
-  et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_", gse), nperm=3)
-}
+  et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3)  
+
+  for (gse in gses) {
+    idx = rownames(feats)[feats[["methplusplus"]]]
+    idx2 = idx[order(feats[idx,paste0("l2fc_", gse)], decreasing=TRUE)][1:ntop]
+    gene_set = idx2
+    expression_vector = feats[idx,paste0("momik_pvals_", tcga_project)]
+    names(expression_vector) = idx
+    expression_vector = expression_vector[!is.na(expression_vector)]
+    et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_", gse), nperm=3)
+  }
 }
 ```
 
@@ -181,24 +181,10 @@ It means that the expression of *methplusplus* genes that are reactivated in a d
 
 
 
-```{r eval=FALSE}
-tcga_project = "TCGA-LUSC"
-s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
-s = truncate_survival(s, 60)
-idx_sample = rownames(s$exp_grp)[!is.na(s$exp_grp$os)]
-
-
-foo = sapply(gene_symbols, function(gene_symbol) {
-  try(momic_pattern(gene_symbol, tcga_project))
-})
-```
-
 
 
 ```{r survival, eval=FALSE}
 ## Survival
-
-
 
 if (! exists("survival_pvalhrs")) {
   s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))

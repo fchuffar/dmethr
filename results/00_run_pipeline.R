@@ -1,5 +1,5 @@
 # run models
-tcga_project = c("TCGA-LUSC", "TCGA-LUAD")
+tcga_projects = c("TCGA-LUSC", "TCGA-LUAD")
 
 nb_rnd_feat = 0
 ud_strs = c(2500, 1000, 500, 250)
