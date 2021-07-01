@@ -70,7 +70,7 @@ for (tcga_project in tcga_projects) {
   feats[tmp_idx,paste0("momik_betas_", tcga_project)] = momik_pvalbetas[[tcga_project]][tmp_idx,1]
   feats[,paste0("momik_pvals_", tcga_project)] = NA
   feats[tmp_idx,paste0("momik_pvals_", tcga_project)] = momik_pvalbetas[[tcga_project]][tmp_idx,2]
-  feats[,paste0("momik_lpvals_", tcga_project)] = -log10(feats[,paste0("momik_lpvals_", tcga_project)])
+  feats[,paste0("momik_lpvals_", tcga_project)] = -log10(feats[,paste0("momik_pvals_", tcga_project)])
 }
 #feats$momik_pvals = NA
 #feats[rownames(momik_pvalbetas),]$momik_pvals = momik_pvalbetas[,2]
