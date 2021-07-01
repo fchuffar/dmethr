@@ -1,6 +1,5 @@
 ## Figure
 ```{r, fig.width=12, fig.height=4}
-gs_name = "methplusplus"
 utests = list()
 
 source("common.R")
@@ -8,26 +7,26 @@ layout(matrix(1:3, 1, byrow=TRUE), respect=TRUE)
 for (i in 1:length(gses)) {
   gse = gses[i]
   model = models[i]
-  plot_volcano(feats, gse, gs_name, main=paste0(gse, " - ", model))
+  plot_volcano(feats, gse, "methplusplus", main=paste0(gse, " - ", model))
   if (i==1) {fig_label("A", cex=3)}
 
-  gene_set = rownames(feats)[feats[[gs_name]]]
+  gene_set = rownames(feats)[feats[["methplusplus"]]]
   expression_vector = feats[,paste0("l2fc_", gse)]
   names(expression_vector) = rownames(feats)
   expression_vector = expression_vector[!is.na(expression_vector)]
 
-  utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, gs_name, "others"), las=2)
+  utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
   utests[[i]] = utest
-  boxplot(rank(expression_vector)~ifelse(names(expression_vector)%in%gene_set, gs_name, "others"), main=paste0("Mann-Whitney U test (pval=", signif(utest$p.value, 3), ")"), ylab=paste0("rank(log2FoldChange)"), xlab="", col=adjustcolor(c("red", "grey"), alpha.f=.5))  
+  boxplot(rank(expression_vector)~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), main=paste0("Mann-Whitney U test (pval=", signif(utest$p.value, 3), ")"), ylab=paste0("rank(log2FoldChange)"), xlab="", col=adjustcolor(c("red", "grey"), alpha.f=.5))  
   if (i==1) {fig_label("B", cex=3)}
 
-  et_gsea_plot(expression_vector, gene_set, prefix=gs_name, nperm=3)  
+  et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3)  
   if (i==1) {fig_label("C", cex=3)}
 }
 ```
 
 
-Focusing on these `r sum(feats[[gs_name]])` CpG-rich genes with a highly methylated TSS region, which we named the *methplusplus* genes, we then explore the effect of a demethylation on their expression level. For this purpose, we use expression data from cancer cell lines, in which a genome-wide demethylation was induced either by inactivating the enzymes responsible for DNA methylation establishment and maintenance, the DNA Methyl Transferases (or DNMT), or by adding 5-Azacytidine (or 5-AZA), an inhibitor of DNA methylation.
+Focusing on these `r sum(feats[["methplusplus"]])` CpG-rich genes with a highly methylated TSS region, which we named the *methplusplus* genes, we then explore the effect of a demethylation on their expression level. For this purpose, we use expression data from cancer cell lines, in which a genome-wide demethylation was induced either by inactivating the enzymes responsible for DNA methylation establishment and maintenance, the DNA Methyl Transferases (or DNMT), or by adding 5-Azacytidine (or 5-AZA), an inhibitor of DNA methylation.
 
 **Upon genome-wide demethylation, a majority of genes is upregulated**
 This figure shows a differential analysis of gene expression in control versus demethylating context. Two public expression datasets are selected for this  analysis: i)  RNA-seq  from  wild  type (control) versus DNMT double KO HCT116 cells (colon cancer cells, `r gses[1]`), ii) transcriptomic microarray from control and 5-azacytidine treated lung cancer cell lines (`r gses[2]`)
