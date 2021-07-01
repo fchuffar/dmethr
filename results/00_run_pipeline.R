@@ -2,17 +2,22 @@
 tcga_projects = c("TCGA-LUSC", "TCGA-LUAD")
 
 nb_rnd_feat = 0
-ud_strs = c(2500, 1000, 500, 250)[-1]
-# feature_pretreatments = c("cen", "raw")
+ud_strs = c(2500, 1000, 500, 250)
+# feature_pretreatments = c("raw", "cen")
 feature_pretreatments = c("raw")
 reducer_func2_names = c("mean", "max")
-gses = c("GSE45332", "GSE5816", "GSE14315", "GSE25427", "GSE22250")
+gses = c(
+  "GSE45332", 
+  "GSE5816", 
+  "GSE14315", 
+  "GSE25427", 
+  "GSE22250")
 models = c(
-  "DNMT DKO vs. WT (ref.)", 
-  "5-aza 1000 nM vs. DMSO (ref.)",
-  "5-aza vs. Ctrl (ref.)",
-  "5-aza vs. Mock (ref.)",
-  "5-aza vs. WT (ref.)"
+  GSE45332 = "DNMT DKO vs. WT (ref.)", 
+  GSE5816  = "5-aza 1000 nM vs. DMSO (ref.)",
+  GSE14315 = "5-aza vs. Ctrl (ref.)",
+  GSE25427 = "5-aza vs. Mock (ref.)",
+  GSE22250 = "5-aza vs. WT (ref.)"
 )
 
 
@@ -24,7 +29,7 @@ for (feature_pretreatment in feature_pretreatments) {
     for (reducer_func2_name in reducer_func2_names) {
       prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
      
-     # rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
+      rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
     }
   }
 }
@@ -42,25 +47,21 @@ for (feature_pretreatment in feature_pretreatments) {
       print(reducer_func2_name)
       
       prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-      print(prefix3)
-      featsout = mread.xlsx (paste0("feats_", prefix3, ".xlsx"))
-      
-      
+      feats_filename = paste0("feats_", prefix3, ".xlsx")
+      print(feats_filename)
+      feats = mread.xlsx (feats_filename)
+        
       tmp_list = list(
         feature_pretreatment = feature_pretreatment, 
         ud_str = ud_str, 
         reducer_func2_name = reducer_func2_name,
         nb_rnd_feat = nb_rnd_feat, 
-        nb_cpg_rich = sum(featsout$cpg_status %in% "rich"),
-        nb_methpp =   sum(featsout$methplusplus)
+        nb_cpg_rich = sum(feats$cpg_status %in% "rich"),
+        nb_methpp =   sum(feats$methplusplus)
       )
 
       for (gse in gses) {
-        prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-        feats_filename = paste0("feats_", prefix3, ".xlsx")
-        print(feats_filename)
-        feats = mread.xlsx (feats_filename)
-  
+        print(gse)
         gene_set = rownames(feats)[feats[["methplusplus"]]]
         expression_vector = feats[,paste0("l2fc_", gse)]
         names(expression_vector) = rownames(feats)
@@ -69,9 +70,6 @@ for (feature_pretreatment in feature_pretreatments) {
         pv = utest$p.value
         print(pv)
         tmp_list[[paste0("utest_pval_", gse)]] = pv
-        
-        
-        
       }
 
       
@@ -118,15 +116,15 @@ for (reducer_func2_name in reducer_func2_names) {
 #     reducer_func2_name = "mean"
 #     feature_pretreatment = "raw"
 #     prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-#     featsout_raw = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
+#     feats_raw = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
 #     feature_pretreatment = "cen"
 #     prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-#     featsout_cen = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
-#     #plot(jitter(featsout_raw$nb_probes), jitter(featsout_cen$nb_probes), main=ud_str)
+#     feats_cen = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
+#     #plot(jitter(feats_raw$nb_probes), jitter(feats_cen$nb_probes), main=ud_str)
 #     #abline(a=0, b=1)
 #     
-#     X = featsout_cen$nb_probes
-#     Y = featsout_raw$nb_probes
+#     X = feats_cen$nb_probes
+#     Y = feats_raw$nb_probes
 #     reg = lm(X~Y)
 #     plot(X, Y, main=ud_str, xlab="raw", ylab="center")
 #     abline(reg, col = 2)
