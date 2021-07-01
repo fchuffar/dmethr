@@ -1,40 +1,13 @@
-# stp = 100
-# ud_str = 2500
-# feattrmt = "raw"
-# reducer = "mean"
-# prefix3 = paste0(reducer, "_", feattrmt, "_", ud_str, "_", step)
-# rmarkdown::render("01_tss_cpg_status.Rmd", output_file=paste0("01_tss_cpg_status_", prefix3, ".html"))
-# rmarkdown::render("02_mapreduce_mean.Rmd", output_file=paste0("02_mapreduce_mean_", prefix3, ".html"))
-# rmarkdown::render("03_da_GSE45332.Rmd"   , output_file=paste0("03_da_GSE45332_"   , prefix3, ".html"))
-# rmarkdown::render("03_da_GSE5816.Rmd"    , output_file=paste0("03_da_GSE5816_"    , prefix3, ".html"))
-# rmarkdown::render("04_results.Rmd"       , output_file=paste0("04_results_"       , prefix3, ".html"))
-
-
-# nb_rnd_feat = 500
-# feature_pretreatment = "cen"
-# prefix3 = paste0(feature_pretreatment, "_", nb_rnd_feat)
-# rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
-
-
-
-# 
-# nb_rnd_feat = 2000
-# feature_pretreatment = "raw"
-# prefix3 = "centered"
-# prefix3 = paste0(feature_pretreatment, "_", nb_rnd_feat)
-# rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
-# 
-
-
-
 # run models
-tcga_project = "TCGA-LUSC"
+tcga_project = c("TCGA-LUSC", "TCGA-LUAD")
 
 nb_rnd_feat = 0
 ud_strs = c(2500, 1000, 500, 250)
-feature_pretreatments = c("cen", "raw")
+# feature_pretreatments = c("cen", "raw")
+feature_pretreatments = c("raw")
 reducer_func2_names = c("mean", "max")
 
+# Compute 00_dmethr_pipeline_XXX.html and feats_XXX.xlsx files
 for (feature_pretreatment in feature_pretreatments) {
   print(feature_pretreatment)
   for (ud_str in ud_strs) {
@@ -47,11 +20,9 @@ for (feature_pretreatment in feature_pretreatments) {
 }
 
 
-# meta analisis start here
-
+# Meta analysis start here
 if (!exists("mread.xlsx")) {mread.xlsx = memoise::memoise(openxlsx::read.xlsx)}
     
-
 stats = NULL
 for (feature_pretreatment in feature_pretreatments) {
   print(feature_pretreatment)
@@ -63,7 +34,8 @@ for (feature_pretreatment in feature_pretreatments) {
       prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
       print(prefix3)
       featsout = mread.xlsx (paste0("feats_", prefix3, ".xlsx"))
-
+      
+      
       tmp_list = list(
         feature_pretreatment = feature_pretreatment, 
         ud_str = ud_str, 
@@ -73,6 +45,21 @@ for (feature_pretreatment in feature_pretreatments) {
         nb_methpp =   sum(featsout$methplusplus),
         NULL
       )
+
+      for (gse in gses) {
+        prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
+        print(prefix3)
+        feats = mread.xlsx (paste0("feats_", prefix3, ".xlsx"))
+  
+        gene_set = rownames(feats)[feats[["methplusplus"]]]
+        expression_vector = feats[,paste0("l2fc_", gse)]
+        names(expression_vector) = rownames(feats)
+        expression_vector = expression_vector[!is.na(expression_vector)]
+        utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
+        tmp_list[[paste0("utest_pval_", gse)]] = utestutest$p.value
+      }
+
+      
       if (is.null(stats)) {
         stats = tmp_list
       } else{
@@ -85,276 +72,7 @@ stats
 
 
 
-gses = c("GSE5816", "GSE45332")
-
-layout(matrix(1:2,1), respect=TRUE)
-for (gse in gses) {
-  plot(0,0, col=0, xlim=c(0,100), ylim=c(0,.1), main=gse)
-  for (feature_pretreatment in feature_pretreatments) {
-    print(feature_pretreatment)
-    for (ud_str in ud_strs) {
-      print(ud_str)
-      for(reducer_func2_name in reducer_func2_names) {
-        prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-        featsout = mread.xlsx (paste0("feats_", prefix3, ".xlsx"))
-        rownames(featsout) = featsout[,4]
-        gene_symbols = rownames(featsout[featsout$methplusplus,])[order(featsout[featsout$methplusplus,][[paste0("l2fc_", gse)]], decreasing=TRUE)][1:100]
-        pvals = sapply(gene_symbols, function(gene_symbol) {
-          #print(gene_symbol)
-          mdata = try(mget_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)) 
-          if (class(mdata) != "try-error"){
-            if ((!is.null(mdata$d)) & (gene_symbol %in% colnames(mdata$d))) {
-              mdata$d 
-              head(mdata$d)
-              Y=mdata$d[,gene_symbol]
-              X=apply(mdata$d[,mdata$probes],1,mean)
-              m= lm(X~Y)
-              sm=summary(m)
-              fstat=sm$fstatistic
-              pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
-              return(pval)
-            } else {
-              warning(paste0("probleme with ", gene_symbol))
-              return(NULL)
-            }
-          } else {
-            warning(paste0("probleme with ", gene_symbol))
-            return(NULL)
-          }
-        })  
-        #plot(density(-log10(unlist(pvals)), na.rm=TRUE))
-        lines(density(-log10(unlist(pvals)), na.rm=TRUE, bw=3), col=which(ud_str==ud_strs))
-      }
-    }
-  }
-}
-
-
-
-
-if (! exists("momik_pvals")) {
-  genes_singleton = mget_genes(tcga_project)
-  genes = genes_singleton$genes
-
-  s_meth = mreadRDS("~/projects/all_human_tissues/results/meth/study_meth_all_human_tissues_grch38.rds")
-  feat_indexed_probes = mget_feat_indexed_probes(feats_bed6=genes, s_meth$platform[,c("Chromosome", "Start")], up_str=max(ud_strs), dwn_str=max(ud_strs))
-  tmp_gs = intersect(names(feat_indexed_probes), rownames(genes))
-  momik_pvals = epimedtools::monitored_apply(mod=10, t(t(tmp_gs)), 1, function(gene_symbol) {
-    #print(gene_symbol)
-    feat = genes[gene_symbol,]
-    tss = ifelse(feat[[6]]=="+", feat[[2]], feat[[3]])
-    interaction_range=2500
-    region_id = paste0(feat[[1]], ":", tss-interaction_range, "-", tss+interaction_range)      
-    feat_indexed_probes[[region_id]] = feat_indexed_probes[[gene_symbol]]
-    mdata = try(mget_multiomic_data(region_id=region_id, gene_symbols=gene_symbol, tcga_project=tcga_project, feat_indexed_probes=feat_indexed_probes))   
-    if (class(mdata) != "try-error"){
-      if ((!is.null(mdata$d)) & (gene_symbol %in% colnames(mdata$d))) {
-        mdata$d 
-        head(mdata$d)
-        Y=mdata$d[,gene_symbol]
-        X=apply(mdata$d[,mdata$probes],1,mean, na.rm=TRUE)
-        m= lm(X~Y)
-        sm=summary(m)
-        fstat=sm$fstatistic
-        pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
-        return(pval)
-      } else {
-        warning(paste0("probleme with ", gene_symbol))
-        return(NULL)
-      }
-    } else {
-      warning(paste0("probleme with ", gene_symbol))
-      return(NULL)
-    }
-  })  
-  names(momik_pvals) = tmp_gs  
-  momik_pvals = unlist(momik_pvals)
-}
-
-
-
-
-
-
-gses = c("GSE5816", "GSE45332")
-
-ntop = 300
-layout(matrix(1:6,2), respect=TRUE)
-for (gse in gses) {
-<<<<<<< HEAD
-  plot(density(-log10(momik_pvals), na.rm=TRUE, bw=3), col="grey", xlim=c(0,100), ylim=c(0,.1), main=gse)
-  for (feature_pretreatment in feature_pretreatments) {
-    for (ud_str in ud_strs) {
-      for(reducer_func2_name in reducer_func2_names) {
-        prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-        featsout = mread.xlsx(paste0("feats_", prefix3, ".xlsx"))
-        rownames(featsout) = featsout[,4]
-        gene_symbols = rownames(featsout[featsout$methplusplus,])[order(featsout[featsout$methplusplus,][[paste0("l2fc_", gse)]], decreasing=TRUE)][1:ntop]
-        pvals = na.omit(momik_pvals[gene_symbols])
-        # print(length(pvals))
-        lines(density(-log10(pvals), na.rm=TRUE, bw=3), col=which(feature_pretreatment==feature_pretreatments))
-      }
-    }
-  }
-}
-
-for (gse in gses) {
-  plot(density(-log10(momik_pvals), na.rm=TRUE, bw=3), col="grey", xlim=c(0,100), ylim=c(0,.1), main=gse)
-=======
-  plot(0,0, col=0, xlim=c(0,100), ylim=c(0,.1), main=gse)
->>>>>>> 76db75d2d60999b33083315a585ec8ddc61069fc
-  for (feature_pretreatment in feature_pretreatments) {
-    print(feature_pretreatment)
-    for (ud_str in ud_strs) {
-      print(ud_str)
-      for(reducer_func2_name in reducer_func2_names) {
-        prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-        featsout = mread.xlsx(paste0("feats_", prefix3, ".xlsx"))
-        rownames(featsout) = featsout[,4]
-<<<<<<< HEAD
-        gene_symbols = rownames(featsout[featsout$methplusplus,])[order(featsout[featsout$methplusplus,][[paste0("l2fc_", gse)]], decreasing=TRUE)][1:ntop]
-        pvals = na.omit(momik_pvals[gene_symbols])
-        lines(density(-log10(pvals), na.rm=TRUE, bw=3), col=which(ud_str==ud_strs))
-=======
-        gene_symbols = rownames(featsout[featsout$methplusplus,])[order(featsout[featsout$methplusplus,][[paste0("l2fc_", gse)]], decreasing=TRUE)][1:100]
-        pvals = sapply(gene_symbols, function(gene_symbol) {
-          #print(gene_symbol)
-          mdata = try(mget_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)) 
-          if (class(mdata) != "try-error"){
-            if ((!is.null(mdata$d)) & (gene_symbol %in% colnames(mdata$d))) {
-              mdata$d 
-              head(mdata$d)
-              Y=mdata$d[,gene_symbol]
-              X=apply(mdata$d[,mdata$probes],1,mean)
-              m= lm(X~Y)
-              sm=summary(m)
-              fstat=sm$fstatistic
-              pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
-              return(pval)
-            } else {
-              warning(paste0("probleme with ", gene_symbol))
-              return(NULL)
-            }
-          } else {
-            warning(paste0("probleme with ", gene_symbol))
-            return(NULL)
-          }
-        })  
-        #plot(density(-log10(unlist(pvals)), na.rm=TRUE))
-        lines(density(-log10(unlist(pvals)), na.rm=TRUE, bw=3), col=which(feature_pretreatment==feature_pretreatments))
->>>>>>> 76db75d2d60999b33083315a585ec8ddc61069fc
-      }
-    }
-  }
-}
-
-gses = c("GSE5816", "GSE45332")
-
-<<<<<<< HEAD
-for (gse in gses) {
-  plot(density(-log10(momik_pvals), na.rm=TRUE, bw=3), col="grey", xlim=c(0,100), ylim=c(0,.1), main=gse)
-=======
-layout(matrix(1:2,1), respect=TRUE)
-for (gse in gses) {
-  plot(0,0, col=0, xlim=c(0,100), ylim=c(0,.1), main=gse)
->>>>>>> 76db75d2d60999b33083315a585ec8ddc61069fc
-  for (feature_pretreatment in feature_pretreatments) {
-    print(feature_pretreatment)
-    for (ud_str in ud_strs) {
-      print(ud_str)
-      for(reducer_func2_name in reducer_func2_names) {
-        prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-<<<<<<< HEAD
-        featsout = mread.xlsx(paste0("feats_", prefix3, ".xlsx"))
-        rownames(featsout) = featsout[,4]
-        gene_symbols = rownames(featsout[featsout$methplusplus,])[order(featsout[featsout$methplusplus,][[paste0("l2fc_", gse)]], decreasing=TRUE)][1:ntop]
-        pvals = na.omit(momik_pvals[gene_symbols])
-        lines(density(-log10(pvals), na.rm=TRUE, bw=3), col=which(reducer_func2_name==reducer_func2_names))
-=======
-        featsout = mread.xlsx (paste0("feats_", prefix3, ".xlsx"))
-        rownames(featsout) = featsout[,4]
-        gene_symbols = rownames(featsout[featsout$methplusplus,])[order(featsout[featsout$methplusplus,][[paste0("l2fc_", gse)]], decreasing=TRUE)][1:100]
-        pvals = sapply(gene_symbols, function(gene_symbol) {
-          #print(gene_symbol)
-          mdata = try(mget_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project)) 
-          if (class(mdata) != "try-error"){
-            if ((!is.null(mdata$d)) & (gene_symbol %in% colnames(mdata$d))) {
-              mdata$d 
-              head(mdata$d)
-              Y=mdata$d[,gene_symbol]
-              X=apply(mdata$d[,mdata$probes],1,mean)
-              m= lm(X~Y)
-              sm=summary(m)
-              fstat=sm$fstatistic
-              pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
-              return(pval)
-            } else {
-              warning(paste0("probleme with ", gene_symbol))
-              return(NULL)
-            }
-          } else {
-            warning(paste0("probleme with ", gene_symbol))
-            return(NULL)
-          }
-        })  
-        #plot(density(-log10(unlist(pvals)), na.rm=TRUE))
-        lines(density(-log10(unlist(pvals)), na.rm=TRUE, bw=3), col=which(reducer_func2_name==reducer_func2_names))
->>>>>>> 76db75d2d60999b33083315a585ec8ddc61069fc
-      }
-    }
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-stop("EFN")
-
-
-# pvals =c()
-# 
-# for (gene_symbol in gene_symbols[1:length(gene_symbols)]) {
-#   print(gene_symbol)
-#   mdata = try(mget_multiomic_data(gene_symbols=gene_symbol, tcga_project=tcga_project))
-#   if (class(mdata)!= "try-error"){
-#     if (!is.null(mdata$d)) {
-#       mdata$d
-#       head(mdata$d)
-#       Y=mdata$d[,gene_symbol]
-#       X=apply(mdata$d[,mdata$probes],1,mean)
-#       m= lm(X~Y)
-#       sm=summary(m)
-#       fstat=sm$fstatistic
-#       pval = pf(fstat[[1]], fstat[[2]], fstat[[3]], lower.tail = FALSE)
-#       pvals = c(pvals, pval)
-#     } else {
-#       warning(paste0("probleme with ", gene_symbol))
-#     }
-#   }
-#   #try(momic_pattern(gene_symbol, tcga_project))
-# }
-# layout(1, respect=TRUE)
-# plot(density(-log10(pvals)))
-
-
-
-
-
-
-
-
-
-
-
-
-
+plot(stats$ud_str, -log10(stats$upval), col=as.numeric(as.factor(stats$gse)), pch=ifelse(stats$reducer_func2_name=="mean", 1, 2))
 
 
 
@@ -386,37 +104,4 @@ for(ud_str in ud_strs){
 beta_reg
 
 
-
-
-#plot(0,0, col=0, xlim=???; xlim=???)
-i=1
-for (feature_pretreatment in feature_pretreatments) {
-  print(feature_pretreatment)
-  for (ud_str in ud_strs) {
-    print(ud_str)
-    for(reducer_func2_name in reducer_func2_names) {
-      prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-      featsout = mread.xlsx (paste0("feats_", prefix3, ".xlsx"))
-      #lines(density(-log10(featsout$pval_omic), na.rm=TRUE), col=i)
-      lines(density(-log10(featsout$pval_omic), na.rm=TRUE), col=which(ud_str==ud_strs))
-      i = i+1
-    }
-  }
-}
-
-#plot(0,0, col=0, xlim=???; xlim=???)
-i=1
-for (feature_pretreatment in feature_pretreatments) {
-  print(feature_pretreatment)
-  for (ud_str in ud_strs) {
-    print(ud_str)
-    for(reducer_func2_name in reducer_func2_names) {
-      prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-      featsout = mread.xlsx (paste0("feats_", prefix3, ".xlsx"))
-      #lines(density(-log10(featsout$pval_omic), na.rm=TRUE), col=i)
-      lines(density(-log10(featsout$pval_omic), na.rm=TRUE), col=which(feature_pretreatment==feature_pretreatments))
-      i = i+1
-    }
-  }
-}
 
