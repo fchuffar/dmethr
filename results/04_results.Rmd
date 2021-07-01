@@ -142,7 +142,6 @@ for (tcga_project in tcga_projects) {
 
 
 ```{r}
-
 for (tcga_project in tcga_projects) {
   layout(matrix(1:6 , 2), respect=TRUE)
   gene_set = rownames(feats)[feats[["methplusplus"]]]
@@ -155,7 +154,7 @@ for (tcga_project in tcga_projects) {
     idx = rownames(feats)[feats[["methplusplus"]]]
     idx2 = idx[order(feats[idx,paste0("l2fc_", gse)], decreasing=TRUE)][1:ntop]
     gene_set = idx2
-    expression_vector = feats[idx,paste0("momik_pvals_", tcga_project)]
+    expression_vector = feats[idx,paste0("momik_betas_", tcga_project)]
     names(expression_vector) = idx
     expression_vector = expression_vector[!is.na(expression_vector)]
     et_gsea_plot(expression_vector, gene_set, prefix=paste0("top", ntop, "_l2fc_", gse), nperm=3)
@@ -171,6 +170,83 @@ For each genes a linear regression of the expression as a function of the averag
 **(D)** The GSEA enrichment plots show the **depletion** of ***methplusplus* genes** in the `r sum(!is.na(feats[,"momik_betas"]))`-length **all genes** vector of linear regression coefficients. It means that the epression of *methplusplus* genes anticorrelated with the methylation status of the region surrounding their TSS.
 **(E)** (resp. **(F)**) The enrichment plot shows the depletion of the  **top `r ntop` upregulated genes** of the model `r models[[1]]` (resp. `r models[[2]]`) in the `r sum(!is.na(feats[,"momik_betas"]))`-length  ***methplusplus* genes** vector of linear regression coefficients.
 It means that the expression of *methplusplus* genes that are reactivated in a demethylating context is more significantly associated with a demethylation of the region surrounding their TSS than *methplusplus* genes themselves.
+
+
+
+
+## Discussion
+
+Nicotine promotes the development of non-small cell lung cancer through activating LINC00460 and PI3K/Akt signaling.
+Zhao H, Wang Y, Ren X.
+Biosci Rep. 2019 Jun 7;39(6):BSR20182443. doi: 10.1042/BSR20182443. Print 2019 Jun 28.
+PMID: 31123168 Free PMC article.
+
+LINC00460 promotes proliferation and inhibits apoptosis of non-small cell lung cancer cells through targeted regulation of miR-539.
+Wang HX, Kang LJ, Qin X, Xu J, Fei JW.
+Eur Rev Med Pharmacol Sci. 2020 Jun;24(12):6752-6758. doi: 10.26355/eurrev_202006_21663.
+PMID: 32633366 Free article.
+
+Long non-coding RNA linc00460 promotes epithelial-mesenchymal transition and cell migration in lung cancer cells.
+Li K, Sun D, Gou Q, Ke X, Gong Y, Zuo Y, Zhou JK, Guo C, Xia Z, Liu L, Li Q, Dai L, Peng Y.
+Cancer Lett. 2018 Apr 28;420:80-90. doi: 10.1016/j.canlet.2018.01.060. Epub 2018 Jan 31.
+PMID: 29409808
+
+
+Linc00221 modulates cisplatin resistance in non-small-cell lung cancer via sponging miR-519a.
+Tang H, et al. Biochimie, 2019 Jul. PMID 31029744
+
+Mitochondria localization and dimerization are required for CIDE-B to induce apoptosis.
+Chen Z, Guo K, Toh SY, Zhou Z, Li P.
+J Biol Chem. 2000 Jul 28;275(30):22619-22. doi: 10.1074/jbc.C000207200.
+PMID: 10837461
+
+Dual promoters control the cell-specific expression of the human cell death-inducing DFF45-like effector B gene.
+Da L, Li D, Yokoyama KK, Li T, Zhao M.
+Biochem J. 2006 Feb 1;393(Pt 3):779-88. doi: 10.1042/BJ20051027.
+PMID: 16248853 Free PMC article.
+
+Targeting therapy-resistant lung cancer stem cells via disruption of the AKT/TSPYL5/PTEN positive-feedback loop
+In-Gyu Kim, Jei-Ha Lee, Seo-Yeon Kim, Chang-Kyu Heo, Rae-Kwon Kim & Eun-Wie Cho 
+Communications Biology volume 4, Article number: 778 (2021) Cite this article
+
+TSPYL5 is involved in cell growth and the resistance to radiation in A549 cells via the regulation of p21(WAF1/Cip1) and PTEN/AKT pathway
+Eun Jin Kim  1 , So Yong Lee, Tae Rim Kim, Soo Im Choi, Eun Wie Cho, Kug Chan Kim, In Gyu Kim
+
+
+
+
+## Export features
+
+
+```{r}
+feat_export_filename = paste0("feats_", prefix3, ".xlsx")
+```
+
+Annotated features are exported as [`r feat_export_filename`](`r feat_export_filename`) file. 
+
+```{r results="verbatim"}
+head(feats)
+```
+
+```{r export_genes}
+WriteXLS::WriteXLS(feats, feat_export_filename)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -280,63 +356,16 @@ foo = sapply(gene_symbols, function(gene_symbol) {
 
 ```
 
-## Discussion
-
-Nicotine promotes the development of non-small cell lung cancer through activating LINC00460 and PI3K/Akt signaling.
-Zhao H, Wang Y, Ren X.
-Biosci Rep. 2019 Jun 7;39(6):BSR20182443. doi: 10.1042/BSR20182443. Print 2019 Jun 28.
-PMID: 31123168 Free PMC article.
-
-LINC00460 promotes proliferation and inhibits apoptosis of non-small cell lung cancer cells through targeted regulation of miR-539.
-Wang HX, Kang LJ, Qin X, Xu J, Fei JW.
-Eur Rev Med Pharmacol Sci. 2020 Jun;24(12):6752-6758. doi: 10.26355/eurrev_202006_21663.
-PMID: 32633366 Free article.
-
-Long non-coding RNA linc00460 promotes epithelial-mesenchymal transition and cell migration in lung cancer cells.
-Li K, Sun D, Gou Q, Ke X, Gong Y, Zuo Y, Zhou JK, Guo C, Xia Z, Liu L, Li Q, Dai L, Peng Y.
-Cancer Lett. 2018 Apr 28;420:80-90. doi: 10.1016/j.canlet.2018.01.060. Epub 2018 Jan 31.
-PMID: 29409808
-
-
-Linc00221 modulates cisplatin resistance in non-small-cell lung cancer via sponging miR-519a.
-Tang H, et al. Biochimie, 2019 Jul. PMID 31029744
-
-Mitochondria localization and dimerization are required for CIDE-B to induce apoptosis.
-Chen Z, Guo K, Toh SY, Zhou Z, Li P.
-J Biol Chem. 2000 Jul 28;275(30):22619-22. doi: 10.1074/jbc.C000207200.
-PMID: 10837461
-
-Dual promoters control the cell-specific expression of the human cell death-inducing DFF45-like effector B gene.
-Da L, Li D, Yokoyama KK, Li T, Zhao M.
-Biochem J. 2006 Feb 1;393(Pt 3):779-88. doi: 10.1042/BJ20051027.
-PMID: 16248853 Free PMC article.
-
-Targeting therapy-resistant lung cancer stem cells via disruption of the AKT/TSPYL5/PTEN positive-feedback loop
-In-Gyu Kim, Jei-Ha Lee, Seo-Yeon Kim, Chang-Kyu Heo, Rae-Kwon Kim & Eun-Wie Cho 
-Communications Biology volume 4, Article number: 778 (2021) Cite this article
-
-TSPYL5 is involved in cell growth and the resistance to radiation in A549 cells via the regulation of p21(WAF1/Cip1) and PTEN/AKT pathway
-Eun Jin Kim  1 , So Yong Lee, Tae Rim Kim, Soo Im Choi, Eun Wie Cho, Kug Chan Kim, In Gyu Kim
 
 
 
 
-## Export features
 
 
-```{r}
-feat_export_filename = paste0("feats_", prefix3, ".xlsx")
-```
 
-Annotated features are exported as [`r feat_export_filename`](`r feat_export_filename`) file. 
 
-```{r results="verbatim"}
-head(feats)
-```
 
-```{r export_genes}
-WriteXLS::WriteXLS(feats, feat_export_filename)
-```
+
 
 
 
