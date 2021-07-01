@@ -66,26 +66,17 @@ for (tcga_project in tcga_projects) {
     momik_pvalbetas[[tcga_project]] = momik_pvalbetas_tmp
   }
   tmp_idx = intersect(rownames(feats),rownames(momik_pvalbetas[[tcga_project]]))
-  feats[,paste0("momik_pvals_", tcga_project)] = NA
-  feats[tmp_idx,paste0("momik_pvals_", tcga_project)] = momik_pvalbetas[[tcga_project]][tmp_idx,2]
   feats[,paste0("momik_betas_", tcga_project)] = NA
   feats[tmp_idx,paste0("momik_betas_", tcga_project)] = momik_pvalbetas[[tcga_project]][tmp_idx,1]
+  feats[,paste0("momik_pvals_", tcga_project)] = NA
+  feats[tmp_idx,paste0("momik_pvals_", tcga_project)] = momik_pvalbetas[[tcga_project]][tmp_idx,2]
+  feats[,paste0("momik_lpvals_", tcga_project)] = -log10(feats[,paste0("momik_lpvals_", tcga_project)])
 }
 #feats$momik_pvals = NA
 #feats[rownames(momik_pvalbetas),]$momik_pvals = momik_pvalbetas[,2]
 #feats$momik_betas = NA
 #feats[rownames(momik_pvalbetas),]$momik_betas = momik_pvalbetas[,1]
 #feats$momik_lpvals = -log10(feats$momik_pvals)
-  
-
-
-
-ntop=100
-idx = rownames(feats)[feats[["methplusplus"]]]
-idx2 = idx[order(feats[idx,]$l2fc_GSE45332, decreasing=TRUE)][1:ntop]
-idx3 = idx[order(feats[idx,]$l2fc_GSE5816, decreasing=TRUE)][1:ntop]
-
-
 ```
 
 ## Figure
@@ -127,30 +118,33 @@ idx3 = idx[order(feats[idx, ]$l2fc_GSE5816, decreasing = TRUE)][1:ntop]
 gene_symbols = (union(idx2, idx3))
 gene_symbols = gene_symbols[order(feats[gene_symbols, paste0("momik_pvals_", tcga_project)])][1:min(6, length(gene_symbols))]
 
-layout(matrix(1), respect=TRUE)
-plot(feats$momik_betas, feats$momik_lpvals, col="grey", 
-  xlim=c(-40,40),
-  main="gene expression ~ TSS+/-2.5kb methylation", xlab="beta (linear regression coefficient)", ylab="-log10(Fisher p-value)")
-points(feats[idx,]$momik_betas, feats[idx,]$momik_lpvals  , col="red")
-points(feats[idx2,]$momik_betas, feats[idx2,]$momik_lpvals, col="blue", pch=16)
-points(feats[idx3,]$momik_betas, feats[idx3,]$momik_lpvals, col="purple", pch=16)
-text(feats[gene_symbols,]$momik_betas, feats[gene_symbols,]$momik_lpvals, gene_symbols, col=adjustcolor(1, alpha.f=1), pos=3)
-legend("topright", 
-  c("genes", paste0("methplusplus", " genes"), paste0("methplusplus", " genes upregulated GSE45332 DA"), paste0(gs_name, " genes upregulated GSE5816 DA")), 
-  pch=c(1, 1, 16, 16), 
-  col=c("grey", "red", "blue", "purple"),
-  lty=c(0,0,0,0)
-)
-fig_label("C", cex=3)
+for (tcga_project in tcga_projects) {
+  layout(matrix(1), respect=TRUE)
+  feats[,paste0("momik_lpvals_", tcga_project)] = -log10(feats[,paste0("momik_pvals_", tcga_project)])
+  plot(feats[,paste0("momik_betas_", tcga_project)], feats[,paste0("momik_lpvals_", tcga_project)], col="grey", 
+    xlim=c(-40,40),
+    main=paste0(tcga_project, " gene expression ~ TSS+/-2.5kb methylation"), xlab="beta (linear regression coefficient)", ylab="-log10(Fisher p-value)"
+  )
+  points(feats[idx, paste0("momik_betas_", tcga_project)], feats[idx, paste0("momik_lpvals_", tcga_project)], col="red")
+  points(feats[idx2,paste0("momik_betas_", tcga_project)], feats[idx2,paste0("momik_lpvals_", tcga_project)], col="blue", pch=16)
+  points(feats[idx3,paste0("momik_betas_", tcga_project)], feats[idx3,paste0("momik_lpvals_", tcga_project)], col="purple", pch=16)
+  text(feats[gene_symbols,paste0("momik_betas_", tcga_project)], feats[gene_symbols,paste0("momik_lpvals_", tcga_project)], gene_symbols, col=adjustcolor(1, alpha.f=1), pos=3)
+  legend("topright", 
+    c("genes", paste0("methplusplus", " genes"), paste0("methplusplus", " genes upregulated GSE45332 DA"), paste0(gs_name, " genes upregulated GSE5816 DA")), 
+    pch=c(1, 1, 16, 16), 
+    col=c("grey", "red", "blue", "purple"),
+    lty=c(0,0,0,0)
+  )
+}
 
 ```
 
 
 
 ```{r}
-layout(matrix(1:12 , 2), respect=TRUE)
 
 for (tcga_project in tcga_projects) {
+  layout(matrix(1:6 , 2), respect=TRUE)
   gene_set = rownames(feats)[feats[["methplusplus"]]]
   expression_vector = feats[,paste0("momik_betas_", tcga_project)]
   names(expression_vector) = rownames(feats)
