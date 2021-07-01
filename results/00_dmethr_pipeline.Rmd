@@ -29,6 +29,7 @@ if (!exists("feature_pretreatments")){ feature_pretreatment = "raw" ;}
 if (!exists("reducer_func2_names"))  { reducer_func2_name = "mean" ;}
 prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)  
 
+tcga_projects = c("TCGA-LUSC", "TCGA-LUAD")
 gses = c("GSE45332", "GSE5816", "GSE14315", "GSE25427", "GSE22250")
 models = c(
   "DNMT DKO vs. WT (ref.)", 
