@@ -99,6 +99,10 @@ layout_mat2 =
       matrix(1, nrow=3, ncol=4),
       matrix(3, nrow=3, ncol=3)
     )
+<<<<<<< HEAD
+=======
+   
+>>>>>>> modifs new tcga
 
 layout(layout_mat2, respect=TRUE)
 
@@ -127,7 +131,7 @@ idx2 = idx[order(feats[idx, ]$l2fc_GSE45332, decreasing = TRUE)][1:ntop]
 idx3 = idx[order(feats[idx, ]$l2fc_GSE5816, decreasing = TRUE)][1:ntop]
 gene_symbols = (union(idx2, idx3))
 gene_symbols = gene_symbols[order(feats[gene_symbols, paste0("momik_pvals_", tcga_project)])][1:min(6, length(gene_symbols))]
-  
+
 layout(matrix(1), respect=TRUE)
 plot(feats$momik_betas, feats$momik_lpvals, col="grey", 
   xlim=c(-40,40),
