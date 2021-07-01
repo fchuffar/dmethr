@@ -52,8 +52,7 @@ for (feature_pretreatment in feature_pretreatments) {
         reducer_func2_name = reducer_func2_name,
         nb_rnd_feat = nb_rnd_feat, 
         nb_cpg_rich = sum(featsout$cpg_status %in% "rich"),
-        nb_methpp =   sum(featsout$methplusplus),
-        NULL
+        nb_methpp =   sum(featsout$methplusplus)
       )
 
       for (gse in gses) {
@@ -85,10 +84,28 @@ for (feature_pretreatment in feature_pretreatments) {
   }
 }
 stats
+stats[,1]
+stats = data.frame(lapply(data.frame(stats, stringsAsFactors=FALSE), unlist), stringsAsFactors=FALSE)
+stats[,1]
 
 
 
-#plot(stats$ud_str, -log10(stats$upval), col=as.numeric(as.factor(stats$gse)), pch=ifelse(stats$reducer_func2_name=="mean", 1, 2))
+
+layout(matrix(1:2,1), respect = TRUE)
+plot(0,0,col=0, xlim=range(stats$ud_str), ylim=c(0,50))
+for (i in 1:length(gses)) {
+  gse = gses[i]
+  points(stats$ud_str, -log10(stats[[paste0("utest_pval_",gse)]]), 
+       col=i, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+  for (reducer_func2_name in reducer_func2_names) {
+    lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, -log10(stats[stats$reducer_func2_name==reducer_func2_name, paste0("utest_pval_",gse)]), 
+           col=i, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+  }
+} 
+plot(stats$ud_str, stats$nb_methpp, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+for (reducer_func2_name in reducer_func2_names) {
+    lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, stats[stats$reducer_func2_name==reducer_func2_name,]$nb_methpp)
+}
 
 
 
