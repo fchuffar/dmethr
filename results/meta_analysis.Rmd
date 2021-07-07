@@ -1,0 +1,255 @@
+---
+title: "`demethr` Meta analysis"
+author: "Florence Pittion, Florent Chuffart"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true    
+  pdf_document:
+    keep_tex: true
+---
+
+
+
+```{r, echo=FALSE, eval=TRUE}
+knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
+```
+
+
+
+```{r, eval=FALSE}
+
+layout(matrix(1:4, 2), respect=TRUE)
+beta_reg = c()
+for(ud_str in ud_strs){
+    reducer_func2_name = "mean"
+    feature_pretreatment = "raw"
+    prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
+    feats_raw = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
+    feature_pretreatment = "cen"
+    prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
+    feats_cen = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
+    #plot(jitter(feats_raw$nb_probes), jitter(feats_cen$nb_probes), main=ud_str)
+    #abline(a=0, b=1)
+
+    X = feats_cen$nb_probes
+    Y = feats_raw$nb_probes
+    reg = lm(X~Y)
+    plot(X, Y, main=ud_str, xlab="raw", ylab="center")
+    abline(reg, col = 2)
+    abline(a=0, b=1, lty=2, col="grey")
+    beta_reg = c(beta_reg, reg$coefficients[[2]])
+}
+beta_reg
+
+
+```
+
+
+# Effect of seq lenght and max/mean reducer function
+
+
+```{r}
+if (!exists("mread.xlsx")) {mread.xlsx = memoise::memoise(openxlsx::read.xlsx)}
+ feature_pretreatments = c("raw")
+  
+stats = NULL
+for (feature_pretreatment in feature_pretreatments) {
+  print(feature_pretreatment)
+  for (ud_str in ud_strs) {
+    print(ud_str)
+    for (reducer_func2_name in reducer_func2_names) {
+      print(reducer_func2_name)
+      
+      prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
+      feats_filename = paste0("feats_", prefix3, ".xlsx")
+      print(feats_filename)
+      feats = mread.xlsx (feats_filename)
+        
+      tmp_list = list(
+        feature_pretreatment = feature_pretreatment, 
+        ud_str = ud_str, 
+        reducer_func2_name = reducer_func2_name,
+        nb_rnd_feat = nb_rnd_feat, 
+        nb_cpg_rich = sum(feats$cpg_status %in% "rich"),
+        nb_methpp =   sum(feats$methplusplus)
+      )
+
+      for (gse in gses) {
+        print(gse)
+        gene_set = rownames(feats)[feats[["methplusplus"]]]
+        expression_vector = feats[,paste0("l2fc_", gse)]
+        names(expression_vector) = rownames(feats)
+        expression_vector = expression_vector[!is.na(expression_vector)]
+        utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
+        pv = utest$p.value
+        print(pv)
+        tmp_list[[paste0("utest_pval_", gse)]] = pv
+      }
+
+      
+      if (is.null(stats)) {
+        stats = tmp_list
+      } else{
+        stats = rbind(stats, tmp_list)
+      }
+    }
+  }
+}
+stats
+stats[,1]
+stats = data.frame(lapply(data.frame(stats, stringsAsFactors=FALSE), unlist), stringsAsFactors=FALSE)
+stats[,1]
+
+
+
+layout(matrix(1:2,1), respect = TRUE)
+plot(0,0,col=0, xlim=range(stats$ud_str), ylim=c(0,70), xlab="ud_str", ylab="-log10(pval_utest)")
+for (i in 1:length(gses)) {
+  gse = gses[i]
+  points(stats$ud_str, -log10(stats[[paste0("utest_pval_",gse)]]), 
+       col=i, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+  for (reducer_func2_name in reducer_func2_names) {
+    lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, -log10(stats[stats$reducer_func2_name==reducer_func2_name, paste0("utest_pval_",gse)]), 
+           col=i, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+  }
+} 
+plot(stats$ud_str, stats$nb_methpp, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2), xlab = "ud_str", ylab = "nbgenes methplusplus")
+for (reducer_func2_name in reducer_func2_names) {
+    lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, stats[stats$reducer_func2_name==reducer_func2_name,]$nb_methpp)
+}
+
+```
+
+
+
+
+
+```{r, eval = FALSE}
+ feature_pretreatments = c("cen")
+  
+stats = NULL
+for (feature_pretreatment in feature_pretreatments) {
+  print(feature_pretreatment)
+  for (ud_str in ud_strs) {
+    print(ud_str)
+    for (reducer_func2_name in reducer_func2_names) {
+      print(reducer_func2_name)
+      
+      prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
+      feats_filename = paste0("feats_", prefix3, ".xlsx")
+      print(feats_filename)
+      feats = mread.xlsx (feats_filename)
+        
+      tmp_list = list(
+        feature_pretreatment = feature_pretreatment, 
+        ud_str = ud_str, 
+        reducer_func2_name = reducer_func2_name,
+        nb_rnd_feat = nb_rnd_feat, 
+        nb_cpg_rich = sum(feats$cpg_status %in% "rich"),
+        nb_methpp =   sum(feats$methplusplus)
+      )
+
+      for (gse in gses) {
+        print(gse)
+        gene_set = rownames(feats)[feats[["methplusplus"]]]
+        expression_vector = feats[,paste0("l2fc_", gse)]
+        names(expression_vector) = rownames(feats)
+        expression_vector = expression_vector[!is.na(expression_vector)]
+        utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
+        pv = utest$p.value
+        print(pv)
+        tmp_list[[paste0("utest_pval_", gse)]] = pv
+      }
+
+      
+      if (is.null(stats)) {
+        stats = tmp_list
+      } else{
+        stats = rbind(stats, tmp_list)
+      }
+    }
+  }
+}
+stats
+stats = data.frame(lapply(data.frame(stats, stringsAsFactors=FALSE), unlist), stringsAsFactors=FALSE)
+stats[,1]
+
+
+
+layout(matrix(1:2,1), respect = TRUE)
+plot(0,0,col=0, xlim=range(stats$ud_str), ylim=c(0,70), xlab="ud_str", ylab="-log10(pval_utest)")
+for (i in 1:length(gses)) {
+  gse = gses[i]
+  points(stats$ud_str, -log10(stats[[paste0("utest_pval_",gse)]]), 
+       col=i, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+  for (reducer_func2_name in reducer_func2_names) {
+    lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, -log10(stats[stats$reducer_func2_name==reducer_func2_name, paste0("utest_pval_",gse)]), 
+           col=i, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+  }
+} 
+plot(stats$ud_str, stats$nb_methpp, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2), xlab = "ud_str", ylab = "nbgenes methplusplus")
+for (reducer_func2_name in reducer_func2_names) {
+    lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, stats[stats$reducer_func2_name==reducer_func2_name,]$nb_methpp)
+}
+
+
+
+
+
+
+```
+
+# gene intersection
+
+```{r}
+gses = c(
+  "GSE45332", 
+  "GSE5816", 
+  "GSE14315")
+feature_pretreatments = c("raw")
+ud_strs = c(2500, 1000, 500, 250)
+
+
+inter=data.frame()
+for (gse in gses) {
+  
+  for (ud_str in ud_strs) {
+    print(ud_str)
+    print(reducer_func2_name)
+    
+    prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_mean")
+    feats_filename = paste0("feats_", prefix3, ".xlsx")
+    print(feats_filename)
+    feats_mean = mread.xlsx (feats_filename)
+    
+    prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_max")
+    feats_filename = paste0("feats_", prefix3, ".xlsx")
+    print(feats_filename)
+    feats_max = mread.xlsx (feats_filename)
+    
+    tmp= list(
+      ud_str=ud_str,
+      gse=gse,
+      nb_genes_mean = sum(feats_mean$methplusplus),
+      nb_genes_max = sum(feats_max$methplusplus),
+      common_genes = length(intersect(rownames(feats_mean)[feats_mean[["methplusplus"]]],rownames(feats_max)[feats_max[["methplusplus"]]]))
+    )
+    
+    inter = rbind(inter, tmp)
+  }
+}
+
+```
+
+```{r, echo=FALSE, results="verbatim", eval=TRUE}
+
+knitr::kable(inter)
+
+
+
+```
+

@@ -4,7 +4,7 @@ tcga_projects = c("TCGA-LUSC", "TCGA-LUAD")
 nb_rnd_feat = 0
 ud_strs = c(2500, 1000, 500, 250)
 # feature_pretreatments = c("raw", "cen")
-feature_pretreatments = c("raw")
+feature_pretreatments = c("cen")
 reducer_func2_names = c("mean", "max")
 gses = c(
   "GSE45332", 
@@ -90,7 +90,7 @@ stats[,1]
 
 
 layout(matrix(1:2,1), respect = TRUE)
-plot(0,0,col=0, xlim=range(stats$ud_str), ylim=c(0,50))
+plot(0,0,col=0, xlim=range(stats$ud_str), ylim=c(0,50), xlab="ud_str", ylab="-log10(pval_utest)")
 for (i in 1:length(gses)) {
   gse = gses[i]
   points(stats$ud_str, -log10(stats[[paste0("utest_pval_",gse)]]), 
@@ -100,7 +100,7 @@ for (i in 1:length(gses)) {
            col=i, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
   }
 } 
-plot(stats$ud_str, stats$nb_methpp, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+plot(stats$ud_str, stats$nb_methpp, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2), xlab = "ud_str", ylab = "nbgenes methplusplus")
 for (reducer_func2_name in reducer_func2_names) {
     lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, stats[stats$reducer_func2_name==reducer_func2_name,]$nb_methpp)
 }
@@ -108,11 +108,11 @@ for (reducer_func2_name in reducer_func2_names) {
 
 
 
+
+
+# layout(matrix(1:4, 4), respect=TRUE, byrow=TRUE)
 # beta_reg = c()
-# 
-# layout(matrix(1:3, 1), respect=TRUE)
 # for(ud_str in ud_strs){
-#   
 #     reducer_func2_name = "mean"
 #     feature_pretreatment = "raw"
 #     prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
@@ -122,7 +122,7 @@ for (reducer_func2_name in reducer_func2_names) {
 #     feats_cen = openxlsx::read.xlsx (paste0("feats_", prefix3, ".xlsx"))
 #     #plot(jitter(feats_raw$nb_probes), jitter(feats_cen$nb_probes), main=ud_str)
 #     #abline(a=0, b=1)
-#     
+# 
 #     X = feats_cen$nb_probes
 #     Y = feats_raw$nb_probes
 #     reg = lm(X~Y)
@@ -130,9 +130,7 @@ for (reducer_func2_name in reducer_func2_names) {
 #     abline(reg, col = 2)
 #     abline(a=0, b=1, lty=2, col="grey")
 #     beta_reg = c(beta_reg, reg$coefficients[[2]])
-#   
 # }
 # beta_reg
-# 
 
 
