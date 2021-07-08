@@ -20,6 +20,144 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 
 
 
+```{r}
+
+tcga_projects = c("TCGA-LUSC")
+#, "TCGA-LUAD")
+
+nb_rnd_feat = 0
+ud_strs = c(2500, 1000, 500, 250)
+# feature_pretreatments = c("raw", "cen")
+feature_pretreatments = c("cen")
+feature_pretreatments = c("raw")
+
+reducer_func2_names = c("mean", "max")
+
+gses = c(
+  "GSE45332", 
+  "GSE5816", 
+  "GSE14315"#, 
+  # "GSE25427", 
+  # "GSE22250"
+  )
+
+feats_filename = "feats_raw_2500_0_max.xlsx"
+feats = mread.xlsx(feats_filename)
+rownames(feats) = feats$gene_symbol
+idx_cpg_rich_2500 = rownames(feats)[feats$cpg_status %in% "rich"]
+feats_filename = "feats_raw_1000_0_max.xlsx"
+feats = mread.xlsx(feats_filename)
+rownames(feats) = feats$gene_symbol
+idx_cpg_rich_1000 = rownames(feats)[feats$cpg_status %in% "rich"]
+feats_filename = "feats_raw_500_0_max.xlsx"
+feats = mread.xlsx(feats_filename)
+rownames(feats) = feats$gene_symbol
+idx_cpg_rich_500 = rownames(feats)[feats$cpg_status %in% "rich"]
+feats_filename = "feats_raw_250_0_max.xlsx"
+feats = mread.xlsx(feats_filename)
+rownames(feats) = feats$gene_symbol
+idx_cpg_rich_250 = rownames(feats)[feats$cpg_status %in% "rich"]
+
+idx_cpg_rich_common = intersect(
+  intersect(
+    intersect(idx_cpg_rich_2500, idx_cpg_rich_1000),
+    idx_cpg_rich_500),
+  idx_cpg_rich_250)
+
+stat1 = data.frame( 
+  grp = c(
+    "2500",
+    "1000",
+    "500",
+    "250",
+    "common"
+  ),
+  nb_cpg_rich = c(
+    length(idx_cpg_rich_2500),
+    length(idx_cpg_rich_1000),
+    length(idx_cpg_rich_500),
+    length(idx_cpg_rich_250),
+    length(idx_cpg_rich_common)
+  )
+)
+stat1$grp = factor(stat1$grp, levels=c("250","500","1000","2500", "common"))
+layout(1, respect=TRUE)
+
+boxplot(nb_cpg_rich~grp, stat1, ylim=c(0,20000), xlab="ud_str")
+plot()
+
+
+if (!exists("mread.xlsx")) {mread.xlsx = memoise::memoise(openxlsx::read.xlsx)}
+
+stats = NULL
+for (feature_pretreatment in feature_pretreatments) {
+  print(feature_pretreatment)
+  for (ud_str in ud_strs) {
+    print(ud_str)
+    for (reducer_func2_name in reducer_func2_names) {
+      print(reducer_func2_name)
+      
+      prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
+      feats_filename = paste0("feats_", prefix3, ".xlsx")
+      print(feats_filename)
+      feats = mread.xlsx(feats_filename)
+        
+      tmp_list = list(
+        feature_pretreatment = feature_pretreatment, 
+        ud_str = ud_str, 
+        reducer_func2_name = reducer_func2_name,
+        nb_rnd_feat = nb_rnd_feat, 
+        nb_cpg_rich = sum(feats$cpg_status %in% "rich"),
+        nb_methpp =   sum(feats$methplusplus)
+      )
+
+      for (gse in gses) {
+        print(gse)
+        gene_set = rownames(feats)[feats[["methplusplus"]]]
+        expression_vector = feats[,paste0("l2fc_", gse)]
+        names(expression_vector) = rownames(feats)
+        expression_vector = expression_vector[!is.na(expression_vector)]
+        utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
+        pv = utest$p.value
+        print(pv)
+        tmp_list[[paste0("utest_pval_", gse)]] = pv
+      }
+
+      
+      if (is.null(stats)) {
+        stats = tmp_list
+      } else{
+        stats = rbind(stats, tmp_list)
+      }
+    }
+  }
+}
+stats
+stats[,1]
+stats = data.frame(lapply(data.frame(stats, stringsAsFactors=FALSE), unlist), stringsAsFactors=FALSE)
+stats[,1]
+
+
+
+layout(matrix(1:2,1), respect = TRUE)
+plot(0,0,col=0, xlim=range(stats$ud_str), ylim=c(0,70), xlab="ud_str", ylab="-log10(pval_utest)")
+for (i in 1:length(gses)) {
+  gse = gses[i]
+  points(stats$ud_str, -log10(stats[[paste0("utest_pval_",gse)]]), 
+       col=i, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+  for (reducer_func2_name in reducer_func2_names) {
+    lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, -log10(stats[stats$reducer_func2_name==reducer_func2_name, paste0("utest_pval_",gse)]), 
+           col=i, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+  }
+} 
+plot(stats$ud_str, stats$nb_methpp, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2), xlab = "ud_str", ylab = "nbgenes methplusplus")
+for (reducer_func2_name in reducer_func2_names) {
+    lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, stats[stats$reducer_func2_name==reducer_func2_name,]$nb_methpp)
+}
+
+```
+
+
 ```{r, eval=FALSE}
 
 layout(matrix(1:4, 2), respect=TRUE)
@@ -44,7 +182,6 @@ for(ud_str in ud_strs){
     beta_reg = c(beta_reg, reg$coefficients[[2]])
 }
 beta_reg
-
 
 ```
 
@@ -196,26 +333,21 @@ for (reducer_func2_name in reducer_func2_names) {
     lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, stats[stats$reducer_func2_name==reducer_func2_name,]$nb_methpp)
 }
 
-
-
-
-
-
 ```
 
 # gene intersection
 
 ```{r}
-gses = c(
-  "GSE45332", 
-  "GSE5816", 
-  "GSE14315")
+# gses = c(
+#   "GSE45332", 
+#   "GSE5816", 
+#   "GSE14315")
 feature_pretreatments = c("raw")
 ud_strs = c(2500, 1000, 500, 250)
 
 
 inter=data.frame()
-for (gse in gses) {
+#for (gse in gses) {
   
   for (ud_str in ud_strs) {
     print(ud_str)
@@ -233,7 +365,7 @@ for (gse in gses) {
     
     tmp= list(
       ud_str=ud_str,
-      gse=gse,
+      #gse=gse,
       nb_genes_mean = sum(feats_mean$methplusplus),
       nb_genes_max = sum(feats_max$methplusplus),
       common_genes = length(intersect(rownames(feats_mean)[feats_mean[["methplusplus"]]],rownames(feats_max)[feats_max[["methplusplus"]]]))
@@ -241,15 +373,12 @@ for (gse in gses) {
     
     inter = rbind(inter, tmp)
   }
-}
+  
+#}
 
 ```
 
 ```{r, echo=FALSE, results="verbatim", eval=TRUE}
-
 knitr::kable(inter)
-
-
-
 ```
 

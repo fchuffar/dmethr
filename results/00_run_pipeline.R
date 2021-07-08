@@ -1,23 +1,27 @@
 # run models
-tcga_projects = c("TCGA-LUSC", "TCGA-LUAD")
+tcga_projects = c("TCGA-LUSC")
+#, "TCGA-LUAD")
 
 nb_rnd_feat = 0
 ud_strs = c(2500, 1000, 500, 250)
 # feature_pretreatments = c("raw", "cen")
 feature_pretreatments = c("cen")
+feature_pretreatments = c("raw")
+
 reducer_func2_names = c("mean", "max")
 gses = c(
   "GSE45332", 
   "GSE5816", 
-  "GSE14315", 
-  "GSE25427", 
-  "GSE22250")
+  "GSE14315"#, 
+  # "GSE25427", 
+  # "GSE22250"
+  )
 models = c(
   GSE45332 = "DNMT DKO vs. WT (ref.)", 
   GSE5816  = "5-aza 1000 nM vs. DMSO (ref.)",
-  GSE14315 = "5-aza vs. Ctrl (ref.)",
-  GSE25427 = "5-aza vs. Mock (ref.)",
-  GSE22250 = "5-aza vs. WT (ref.)"
+  GSE14315 = "5-aza vs. Ctrl (ref.)"#,
+  #GSE25427 = "5-aza vs. Mock (ref.)",
+  #GSE22250 = "5-aza vs. WT (ref.)"
 )
 
 

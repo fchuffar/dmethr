@@ -136,6 +136,14 @@ reducer_func1 = mean
 reducer_func2 = get(reducer_func2_name)
 key = "tissue_group_level1"
 meth_by_tissues_by_gene = mget_meth_by_tissues_by_gene(feats, feat_indexed_probes, s_meth, key, reducer_func1, reducer_func2)
+
+tmp = meth_by_tissues_by_gene
+tmp[is.infinite(tmp)] = NA
+meanmeth_by_gene = apply(tmp, 1, mean, na.rm=TRUE)
+
+feats$meanmeth = NA
+feats[names(meanmeth_by_gene),]$meanmeth = meanmeth_by_gene
+head(feats)
 ```
 
 From Illumina 450k studies, we obtain a methylation matrix of `r ncol(s_meth$data)` samples, 
