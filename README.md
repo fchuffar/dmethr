@@ -52,6 +52,9 @@ BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")
 cd ~/projects
 ln -s ~/../chuffarf/projects/tcga_studies
 ln -s ~/../chuffarf/projects/genes
+ln -s ~/../chuffarf/projects/study_gpl570
+ln -s ~/../chuffarf/projects/all_human_tissues
+
 
 ```
 
