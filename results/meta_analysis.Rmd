@@ -84,7 +84,45 @@ stat1$grp = factor(stat1$grp, levels=c("250","500","1000","2500", "common"))
 layout(1, respect=TRUE)
 
 boxplot(nb_cpg_rich~grp, stat1, ylim=c(0,20000), xlab="ud_str")
-plot()
+
+
+
+feats_filename = "feats_raw_2500_0_max.xlsx"
+feats = mread.xlsx(feats_filename)
+rownames(feats) = feats$gene_symbol
+idx_cpg_rich_2500_common = intersect (idx_cpg_rich_2500, idx_cpg_rich_common)
+meanmeth_2500 = feats[idx_cpg_rich_2500_common,]$meanmeth
+feats_filename = "feats_raw_1000_0_max.xlsx"
+feats = mread.xlsx(feats_filename)
+rownames(feats) = feats$gene_symbol
+idx_cpg_rich_1000_common = intersect (idx_cpg_rich_1000, idx_cpg_rich_common)
+meanmeth_1000 = feats[idx_cpg_rich_1000_common,]$meanmeth
+feats_filename = "feats_raw_500_0_max.xlsx"
+feats = mread.xlsx(feats_filename)
+rownames(feats) = feats$gene_symbol
+idx_cpg_rich_500_common = intersect (idx_cpg_rich_500, idx_cpg_rich_common)
+meanmeth_500 = feats[idx_cpg_rich_500_common,]$meanmeth
+feats_filename = "feats_raw_250_0_max.xlsx"
+feats = mread.xlsx(feats_filename)
+rownames(feats) = feats$gene_symbol
+idx_cpg_rich_250_common = intersect (idx_cpg_rich_250, idx_cpg_rich_common)
+meanmeth_250 = feats[idx_cpg_rich_250_common,]$meanmeth
+
+
+data_meanmeth = data.frame(meanmeth_2500,meanmeth_1000,meanmeth_500,meanmeth_250)
+pairs(data_meanmeth)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if (!exists("mread.xlsx")) {mread.xlsx = memoise::memoise(openxlsx::read.xlsx)}
