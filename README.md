@@ -20,8 +20,8 @@ cd ~/projects/dmethr/results
 git pull
 
 R
-source("00_run_pipeline.R")
-rmarkdown::render("meta_analysis.Rmd")
+# source("00_run_pipeline.R")
+# rmarkdown::render("meta_analysis.Rmd")
 ```
 
 
