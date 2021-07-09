@@ -7,7 +7,7 @@ ud_strs = c(250, 500, 1000, 2500)
 # feature_pretreatments = c("raw", "cen")
 # feature_pretreatments = c("cen")
 feature_pretreatments = c("raw")
-reducer_func2_names = c("max", "mean")
+reducer_func2_names = c("max", "mean", "min")
 
 gses = c(
   "GSE45332", 
