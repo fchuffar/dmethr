@@ -27,7 +27,12 @@ R
 
 
 
+# knit meta_analysis on laptop
+cd ~/projeccd ~/projects/dmethr/results/
 rsync -auvP dahu:~/projects/dmethr/results/*.xlsx ~/projects/dmethr/results/.
+R
+# rmarkdown::render("meta_analysis.Rmd")
+
 
 ```
 
