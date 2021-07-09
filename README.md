@@ -19,6 +19,7 @@ cd ~/projects/dmethr/results
 
 R
 source("00_run_pipeline.R")
+rmarkdown::render("meta_analysis.Rmd")
 ```
 
 
@@ -28,5 +29,7 @@ source("00_run_pipeline.R")
 
 ```
 BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")
+
+tcga_studies
 ```
 
