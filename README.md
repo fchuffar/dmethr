@@ -32,6 +32,7 @@ R
 ```
 BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")
 
+cd ~/projects
 ln -s ~/../chuffarf/projects/tcga_studies
 ln -s ~/../chuffarf/projects/genes
 
