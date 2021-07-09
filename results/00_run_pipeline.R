@@ -45,7 +45,6 @@ for (feature_pretreatment in feature_pretreatments) {
 
 
 # Meta analysis start here
-if (!exists("mread.xlsx")) {mread.xlsx = memoise::memoise(openxlsx::read.xlsx)}
     
 stats = NULL
 for (feature_pretreatment in feature_pretreatments) {
