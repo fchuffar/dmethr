@@ -45,25 +45,33 @@ feats_filename = "feats_raw_2500_0_max.xlsx"
 feats = mread.xlsx(feats_filename)
 rownames(feats) = feats$gene_symbol
 idx_cpg_rich_2500 = rownames(feats)[feats$cpg_status %in% "rich"]
+idx_cpg_rich_2500_notna = rownames(feats)[feats$cpg_status %in% "rich"& !is.na(feats$meanmeth)]
 feats_filename = "feats_raw_1000_0_max.xlsx"
 feats = mread.xlsx(feats_filename)
 rownames(feats) = feats$gene_symbol
 idx_cpg_rich_1000 = rownames(feats)[feats$cpg_status %in% "rich"]
+idx_cpg_rich_1000_notna = rownames(feats)[feats$cpg_status %in% "rich"& !is.na(feats$meanmeth)]
 feats_filename = "feats_raw_500_0_max.xlsx"
 feats = mread.xlsx(feats_filename)
 rownames(feats) = feats$gene_symbol
 idx_cpg_rich_500 = rownames(feats)[feats$cpg_status %in% "rich"]
+idx_cpg_rich_500_notna = rownames(feats)[feats$cpg_status %in% "rich"& !is.na(feats$meanmeth)]
 feats_filename = "feats_raw_250_0_max.xlsx"
 feats = mread.xlsx(feats_filename)
 rownames(feats) = feats$gene_symbol
 idx_cpg_rich_250 = rownames(feats)[feats$cpg_status %in% "rich"]
+idx_cpg_rich_250_notna = rownames(feats)[feats$cpg_status %in% "rich"& !is.na(feats$meanmeth)]
+
+
 
 idx_cpg_rich_common = intersect(
   intersect(
-    intersect(idx_cpg_rich_2500, idx_cpg_rich_1000),
-    idx_cpg_rich_500),
-  idx_cpg_rich_250)
-
+    intersect(
+      idx_cpg_rich_2500, 
+      idx_cpg_rich_1000),
+      idx_cpg_rich_500),
+      idx_cpg_rich_250
+)
 stat1 = data.frame( 
   grp = c(
     "2500",
@@ -82,15 +90,44 @@ stat1 = data.frame(
 )
 stat1$grp = factor(stat1$grp, levels=c("250","500","1000","2500", "common"))
 layout(1, respect=TRUE)
+boxplot(nb_cpg_rich~grp, stat1, ylim=c(0,20000), xlab="ud_str", main="CpG rich genes")
 
-boxplot(nb_cpg_rich~grp, stat1, ylim=c(0,20000), xlab="ud_str")
+idx_cpg_rich_common_notna = intersect(
+  intersect(
+    intersect(
+      idx_cpg_rich_2500_notna, 
+      idx_cpg_rich_1000_notna),
+      idx_cpg_rich_500_notna),
+      idx_cpg_rich_250_notna
+)
+stat1 = data.frame( 
+  grp = c(
+    "2500",
+    "1000",
+    "500",
+    "250",
+    "common"
+  ),
+  nb_cpg_rich = c(
+    length(idx_cpg_rich_2500_notna),
+    length(idx_cpg_rich_1000_notna),
+    length(idx_cpg_rich_500_notna),
+    length(idx_cpg_rich_250_notna),
+    length(idx_cpg_rich_common_notna)
+  )
+)
+stat1$grp = factor(stat1$grp, levels=c("250","500","1000","2500", "common"))
+layout(1, respect=TRUE)
+
+boxplot(nb_cpg_rich~grp, stat1, ylim=c(0,20000), xlab="ud_str", main="CpG rich genes, meanmeth not NA")
 
 
 ```
 
 # Step 2
 
-```{r}
+```{r, fig.height=9}
+layout(1, respect=TRUE)
 foo = sapply(c(
   "feats_raw_250_0_mean.xlsx", 
   "feats_raw_500_0_mean.xlsx", 
@@ -113,7 +150,7 @@ idx_genes = rownames(foo)[!apply(is.na(foo), 1, any)]
 foo = foo[idx_genes,]
 head(foo)
 
-pairs(foo)
+pairs(foo, pch=".")
 ```
 
 
