@@ -17,6 +17,7 @@ mkdir -p ~/projects/
 cd ~/projects/
 git clone https://github.com/fchuffar/dmethr.git
 cd ~/projects/dmethr/results
+git pull
 
 R
 source("00_run_pipeline.R")
