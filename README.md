@@ -3,7 +3,7 @@ Hunting DNA methylation repression of transcriptional activity and its reactivat
 
 
 
-# Run pipeline on the cluster
+# run pipeline on the cluster
 
 https://github.com/fchuffar/practicle_sessions/blob/master/ciment_infrastructure/config_cluster.sh
 
@@ -29,10 +29,9 @@ R
 
 ```
 
-# Run pipeline on the cluster
+# knit meta_analysis on laptop
 
 ```
-# knit meta_analysis on laptop
 cd ~/projeccd ~/projects/dmethr/results/
 rsync -auvP dahu:~/projects/dmethr/results/*.xlsx ~/projects/dmethr/results/.
 # rsync -auvP dahu:~/../chuffarf/projects/dmethr/results/*.xlsx ~/projects/dmethr/results/.
