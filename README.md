@@ -5,6 +5,8 @@ Hunting DNA methylation repression of transcriptional activity and its reactivat
 
 # Launch on the cluster
 
+https://github.com/fchuffar/practicle_sessions/blob/master/ciment_infrastructure/config_cluster.sh
+
 ```
 ssh dahu
 oarsub --project epimed  -l /nodes=1,core=32,walltime=00:30:00 -I -t devel
