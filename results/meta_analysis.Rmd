@@ -95,11 +95,11 @@ foo = sapply(c(
   "feats_raw_250_0_mean.xlsx", 
   "feats_raw_500_0_mean.xlsx", 
   "feats_raw_1000_0_mean.xlsx", 
-  "feats_raw_2500_0_mean.xlsx"
+  "feats_raw_2500_0_mean.xlsx",
   "feats_raw_250_0_max.xlsx", 
   "feats_raw_500_0_max.xlsx", 
   "feats_raw_1000_0_max.xlsx", 
-  "feats_raw_2500_0_max.xlsx", 
+  "feats_raw_2500_0_max.xlsx"
   ), function(feats_filename){
   feats = mread.xlsx(feats_filename)
   rownames(feats) = feats$gene_symbol
@@ -109,11 +109,10 @@ foo = sapply(c(
   names(ret) = idx_cpg_rich_common
   return(ret)
 }) 
-foo
-head(foo)
 idx_genes = rownames(foo)[!apply(is.na(foo), 1, any)]
-idx_genes
 foo = foo[idx_genes,]
+head(foo)
+
 pairs(foo)
 ```
 
