@@ -3,12 +3,12 @@ tcga_projects = c("TCGA-LUSC")
 #, "TCGA-LUAD")
 
 nb_rnd_feat = 0
-ud_strs = c(2500, 1000, 500, 250)
+ud_strs = c(250, 500, 1000, 2500)
 # feature_pretreatments = c("raw", "cen")
-feature_pretreatments = c("cen")
+# feature_pretreatments = c("cen")
 feature_pretreatments = c("raw")
+reducer_func2_names = c("max", "mean")
 
-reducer_func2_names = c("mean", "max")
 gses = c(
   "GSE45332", 
   "GSE5816", 
@@ -27,16 +27,21 @@ models = c(
 
 # Compute 00_dmethr_pipeline_XXX.html and feats_XXX.xlsx files
 for (feature_pretreatment in feature_pretreatments) {
-  print(feature_pretreatment)
   for (ud_str in ud_strs) {
-    print(ud_str)
     for (reducer_func2_name in reducer_func2_names) {
       prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
-     
-      rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=paste0("00_dmethr_pipeline_", prefix3, ".html"))
+      feats_filename = paste0("feats_", prefix3, ".xlsx")
+      feats_filename = paste0("feats_", prefix3, ".xlsx")
+      html_filename = paste0("00_dmethr_pipeline_", prefix3, ".html")
+      if (!file.exists(feats_filename)) {
+        print(paste0(feats_filename))
+        rmarkdown::render("00_dmethr_pipeline.Rmd", output_file=html_filename)
+      }
     }
   }
 }
+
+# stop("EFN")
 
 
 # Meta analysis start here
