@@ -207,76 +207,86 @@ truncate_survival = function(s, censoring_time) {
   return(s)
 }
 
-et_gsea_plot = function(expression_vector, gene_set, prefix, nperm=1000) {
+et_gsea_plot = function(expression_vector, gene_set, prefix, nperm=1000, PLOT_GSEA=FALSE) {
   
   
   utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
   boxplot(rank(expression_vector)~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), main=paste0("Mann-Whitney U test (pval=", signif(utest$p.value, 3), ")"), ylab=paste0("rank(log2FoldChange)"), xlab="", col=adjustcolor(c("red", "grey"), alpha.f=.5))  
   if (i==1) {fig_label("B", cex=3)}
+
+
+  if (PLOT_GSEA) {
+    # den_vec_name = "DEN14TuvsDEN14NT"
+    # n_top = 500
+    # enrichement = "ENRICHED"
+    # i = idx_kc[1]
+
+    top = gene_set
+    gs_filename = paste0(prefix, ".grp")
+    write.table(top, gs_filename, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
+
+    gsea_input = data.frame(names(expression_vector), expression_vector)
+    gsea_input = gsea_input[order(gsea_input[,2]),]
+    gsea_input_filename = paste0("gsea_input.rnk")
+    print(paste("gsea_input were exported in", gsea_input_filename, "file."))
+    write.table(gsea_input, gsea_input_filename, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
+
+    gsea_input = read.table(gsea_input_filename, row.names=1)
+    stoda_input = gsea_input[,1]
+    names(stoda_input) = rownames(gsea_input)
+    # stoda::gseaplot(v=stoda_input, gs=top)
+
+    dir.create("gsea_out", showWarnings=FALSE)
+    outdir = paste0("gsea_out/", prefix, "_", i, "")
+    unlink(outdir, recursive=TRUE)
+
+    cmd = "/Applications/GSEA_4.1.0/gsea-cli.sh"
+    args = paste0(" GSEAPreranked -gmx ", gs_filename, " -collapse No_Collapse -mode Max_probe -norm meandiv -nperm ", nperm, " -rnk ", gsea_input_filename, " -scoring_scheme weighted -rpt_label my_analysis -create_svgs false -include_only_symbols true -make_sets true -plot_top_x 20 -rnd_seed timestamp -set_max 100000 -set_min 1 -zip_report false -out ", outdir, "")
+    print(paste(cmd, args))
+    system2(cmd, args)
+
+    endplot_filename = paste0(outdir, "/", list.files(outdir)[1], "/enplot_", gs_filename, "_1.png")
+    endplot_filename
+
+    # grid::grid.raster(png::readPNG("gsea_out/DEN14TuvsDEN14NT_500_DEPLETED_TCGA-3K-AAZ8-01A/my_analysis.GseaPreranked.1623067518202/enplot_gs_DEN14TuvsDEN14NT_500_DEPLETED.grp_1.png"), x=1, y=1, width=1)
+
+    addImg <- function(
+      obj, # an image file imported as an array (e.g. png::readPNG, jpeg::readJPEG)
+      x = NULL, # mid x coordinate for image
+      y = NULL, # mid y coordinate for image
+      width = NULL, # width of image (in x coordinate units)
+      interpolate = TRUE # (passed to graphics::rasterImage) A logical vector (or scalar) indicating whether to apply linear interpolation to the image when drawing. 
+    ){
+      if(is.null(x) | is.null(y) | is.null(width)){stop("Must provide args 'x', 'y', and 'width'")}
+      USR <- par()$usr # A vector of the form c(x1, x2, y1, y2) giving the extremes of the user coordinates of the plotting region
+      PIN <- par()$pin # The current plot dimensions, (width, height), in inches
+      DIM <- dim(obj) # number of x-y pixels for the image
+      ARp <- DIM[1]/DIM[2] # pixel aspect ratio (y/x)
+      WIDi <- width/(USR[2]-USR[1])*PIN[1] # convert width units to inches
+      HEIi <- WIDi * ARp # height in inches
+      HEIu <- HEIi/PIN[2]*(USR[4]-USR[3]) # height in units
+      rasterImage(image = obj, 
+        xleft = x-(width/2), xright = x+(width/2),
+        ybottom = y-(HEIu/2), ytop = y+(HEIu/2), 
+        interpolate = interpolate)
+    }
+    par(mar=c(0, 0, 0, 0))
+    plot.new()  
+    par(mar=c(0, 0, 0, 0))
+    # endplot_filename = "enplot_gs_DEN14TuvsDEN14NT_500_DEPLETED.grp_1.png"
+    addImg(png::readPNG(endplot_filename), x=0.5,y=0.5,width=1)
+    par(mar=c(5.1, 4.1, 4.1, 2.1))    
+  }
+
+
+
+
+
+
+
   return(utest)
   
   
-  # den_vec_name = "DEN14TuvsDEN14NT"
-  # n_top = 500
-  # enrichement = "ENRICHED"
-  # i = idx_kc[1]
-
-  top = gene_set
-  gs_filename = paste0(prefix, ".grp")
-  write.table(top, gs_filename, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
-
-  gsea_input = data.frame(names(expression_vector), expression_vector)
-  gsea_input = gsea_input[order(gsea_input[,2]),]
-  gsea_input_filename = paste0("gsea_input.rnk")
-  print(paste("gsea_input were exported in", gsea_input_filename, "file."))
-  write.table(gsea_input, gsea_input_filename, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
-
-  gsea_input = read.table(gsea_input_filename, row.names=1)
-  stoda_input = gsea_input[,1]
-  names(stoda_input) = rownames(gsea_input)
-  # stoda::gseaplot(v=stoda_input, gs=top)
-
-  dir.create("gsea_out", showWarnings=FALSE)
-  outdir = paste0("gsea_out/", prefix, "_", i, "")
-  unlink(outdir, recursive=TRUE)
-
-  cmd = "/Applications/GSEA_4.1.0/gsea-cli.sh"
-  args = paste0(" GSEAPreranked -gmx ", gs_filename, " -collapse No_Collapse -mode Max_probe -norm meandiv -nperm ", nperm, " -rnk ", gsea_input_filename, " -scoring_scheme weighted -rpt_label my_analysis -create_svgs false -include_only_symbols true -make_sets true -plot_top_x 20 -rnd_seed timestamp -set_max 100000 -set_min 1 -zip_report false -out ", outdir, "")
-  print(paste(cmd, args))
-  system2(cmd, args)
-
-  endplot_filename = paste0(outdir, "/", list.files(outdir)[1], "/enplot_", gs_filename, "_1.png")
-  endplot_filename
-
-  # grid::grid.raster(png::readPNG("gsea_out/DEN14TuvsDEN14NT_500_DEPLETED_TCGA-3K-AAZ8-01A/my_analysis.GseaPreranked.1623067518202/enplot_gs_DEN14TuvsDEN14NT_500_DEPLETED.grp_1.png"), x=1, y=1, width=1)
-
-  addImg <- function(
-    obj, # an image file imported as an array (e.g. png::readPNG, jpeg::readJPEG)
-    x = NULL, # mid x coordinate for image
-    y = NULL, # mid y coordinate for image
-    width = NULL, # width of image (in x coordinate units)
-    interpolate = TRUE # (passed to graphics::rasterImage) A logical vector (or scalar) indicating whether to apply linear interpolation to the image when drawing. 
-  ){
-    if(is.null(x) | is.null(y) | is.null(width)){stop("Must provide args 'x', 'y', and 'width'")}
-    USR <- par()$usr # A vector of the form c(x1, x2, y1, y2) giving the extremes of the user coordinates of the plotting region
-    PIN <- par()$pin # The current plot dimensions, (width, height), in inches
-    DIM <- dim(obj) # number of x-y pixels for the image
-    ARp <- DIM[1]/DIM[2] # pixel aspect ratio (y/x)
-    WIDi <- width/(USR[2]-USR[1])*PIN[1] # convert width units to inches
-    HEIi <- WIDi * ARp # height in inches
-    HEIu <- HEIi/PIN[2]*(USR[4]-USR[3]) # height in units
-    rasterImage(image = obj, 
-      xleft = x-(width/2), xright = x+(width/2),
-      ybottom = y-(HEIu/2), ytop = y+(HEIu/2), 
-      interpolate = interpolate)
-  }
-  par(mar=c(0, 0, 0, 0))
-  plot.new()  
-  par(mar=c(0, 0, 0, 0))
-  # endplot_filename = "enplot_gs_DEN14TuvsDEN14NT_500_DEPLETED.grp_1.png"
-  addImg(png::readPNG(endplot_filename), x=0.5,y=0.5,width=1)
-  par(mar=c(5.1, 4.1, 4.1, 2.1))
-  return(NULL)
 }
 
 
