@@ -12,6 +12,7 @@ ssh dahu
 chandler
 oarsub --project epimed  -l /nodes=1,core=32,walltime=00:30:00 -I -t devel
 oarsub --project epimed  -l /nodes=1,core=4,walltime=6:00:00 -I 
+oarsub --project epimed -p "network_address='luke41'" -l /core=2,walltime=168:00:00 -I
 
 mkdir -p ~/projects/
 cd ~/projects/
