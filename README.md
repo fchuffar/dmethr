@@ -23,6 +23,12 @@ git pull
 R
 # source("00_run_pipeline.R")
 # rmarkdown::render("meta_analysis.Rmd")
+
+
+
+
+rsync -auvP dahu:~/projects/dmethr/results/*.xlsx ~/projects/dmethr/results/.
+
 ```
 
 
