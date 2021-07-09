@@ -91,7 +91,16 @@ boxplot(nb_cpg_rich~grp, stat1, ylim=c(0,20000), xlab="ud_str")
 # Step 2
 
 ```{r}
-foo = sapply(c("feats_raw_250_0_max.xlsx", "feats_raw_250_0_mean.xlsx", "feats_raw_500_0_max.xlsx", "feats_raw_500_0_mean.xlsx", "feats_raw_1000_0_max.xlsx", "feats_raw_1000_0_mean.xlsx", "feats_raw_2500_0_max.xlsx", "feats_raw_2500_0_mean.xlsx"), function(feats_filename){
+foo = sapply(c(
+  "feats_raw_250_0_mean.xlsx", 
+  "feats_raw_500_0_mean.xlsx", 
+  "feats_raw_1000_0_mean.xlsx", 
+  "feats_raw_2500_0_mean.xlsx"
+  "feats_raw_250_0_max.xlsx", 
+  "feats_raw_500_0_max.xlsx", 
+  "feats_raw_1000_0_max.xlsx", 
+  "feats_raw_2500_0_max.xlsx", 
+  ), function(feats_filename){
   feats = mread.xlsx(feats_filename)
   rownames(feats) = feats$gene_symbol
   head(feats)
