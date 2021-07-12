@@ -57,10 +57,10 @@ models = c(
 ```{r child="03_da_GSE14315.Rmd", eval=TRUE}
 ```
 
-```{r child="03_da_GSE25427.Rmd", eval=TRUE}
+```{r child="03_da_GSE25427.Rmd", eval=FALSE}
 ```
 
-```{r child="03_da_GSE22250.Rmd", eval=TRUE}
+```{r child="03_da_GSE22250.Rmd", eval=FALSE}
 ```
 
 ```{r child="03_da_summary.Rmd", eval=TRUE}
