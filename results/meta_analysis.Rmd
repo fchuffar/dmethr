@@ -335,7 +335,7 @@ beta_reg
 # Effect of seq lenght and max/mean reducer function
 
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 if (!exists("mread.xlsx")) {mread.xlsx = memoise::memoise(openxlsx::read.xlsx)}
  feature_pretreatments = c("raw")
   
