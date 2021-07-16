@@ -24,7 +24,7 @@ models = c(
   #GSE22250 = "5-aza vs. WT (ref.)"
 )
 
-
+source("common.R")
 # Compute 00_dmethr_pipeline_XXX.html and feats_XXX.xlsx files
 for (feature_pretreatment in feature_pretreatments) {
   for (ud_str in ud_strs) {

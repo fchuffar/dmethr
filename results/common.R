@@ -212,8 +212,7 @@ et_gsea_plot = function(expression_vector, gene_set, prefix, nperm=1000, PLOT_GS
   
   utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
   boxplot(rank(expression_vector)~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), main=paste0("Mann-Whitney U test (pval=", signif(utest$p.value, 3), ")"), ylab=paste0("rank(log2FoldChange)"), xlab="", col=adjustcolor(c("red", "grey"), alpha.f=.5))  
-  if (i==1) {fig_label("B", cex=3)}
-
+  
 
   if (PLOT_GSEA) {
     # den_vec_name = "DEN14TuvsDEN14NT"
