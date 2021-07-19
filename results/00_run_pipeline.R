@@ -1,4 +1,4 @@
-source("common.Rmd")
+source("common.R")
 
 # run models
 tcga_projects = c("TCGA-LUSC")
