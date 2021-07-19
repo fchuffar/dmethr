@@ -257,7 +257,7 @@ WriteXLS::WriteXLS(feats, feat_export_filename)
 ## Survival
 
 if (! exists("survival_pvalhrs")) {
-  s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
+  s = mreadRDS(paste0("~/projects/tcga_studies/study_", tcga_project, "_trscr.rds"))
   s = truncate_survival(s, 60)  
 
   genes_singleton = mget_genes(tcga_project)
@@ -331,7 +331,7 @@ legend("topright",
 
 
 tcga_project = "TCGA-LUSC"
-s = mreadRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
+s = mreadRDS(paste0("~/projects/tcga_studies/study_", tcga_project, "_trscr.rds"))
 s = truncate_survival(s, 60)
 idx_sample = rownames(s$exp_grp)[!is.na(s$exp_grp$os)]
 
