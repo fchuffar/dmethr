@@ -574,8 +574,8 @@ if (!exists("mreadRDS")) mreadRDS = memoise::memoise(readRDS)
 get_genes = function(tcga_project, gene_filename="~/projects/genes/bed_grch38_epimeddb.rds") {
   genes = mreadRDS(gene_filename)
   if (!missing(tcga_project)) {
-    s_cnv   = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_cnv.rds"))
-    s_trscr = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))    
+    s_cnv   = mreadstudyRDS(paste0("~/projects/tcga_studies/study_", tcga_project, "_cnv.rds"))
+    s_trscr = mreadstudyRDS(paste0("~/projects/tcga_studies/study_", tcga_project, "_trscr.rds"))    
     genes = genes[rownames(genes) %in% intersect(rownames(s_trscr$data), rownames(s_cnv$data)),]      
   }
   ## index meth probes by chr
@@ -826,9 +826,9 @@ if (!exists("mget_feat_indexed_probes")) mget_feat_indexed_probes = memoise::mem
 
 get_multiomic_data = function(gene_symbols, tcga_project, feat_indexed_probes, region_id, interaction_range=2500) {
   # # warning: feat_indexed_probes is a global variable
-  s_cnv   = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_cnv.rds"))
-  s_meth  = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_meth.rds"))
-  s_trscr = mreadstudyRDS(paste0("tcga_studies/study_", tcga_project, "_trscr.rds"))
+  s_cnv   = mreadstudyRDS(paste0("~/projects/tcga_studies/study_", tcga_project, "_cnv.rds"))
+  s_meth  = mreadstudyRDS(paste0("~/projects/tcga_studies/study_", tcga_project, "_meth.rds"))
+  s_trscr = mreadstudyRDS(paste0("~/projects/tcga_studies/study_", tcga_project, "_trscr.rds"))
   genes_singleton = mget_genes(tcga_project)
   genes = genes_singleton$genes
   if (missing(feat_indexed_probes)) {
