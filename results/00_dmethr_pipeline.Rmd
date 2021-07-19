@@ -27,9 +27,9 @@ if (!exists("nb_rnd_feat"))          { nb_rnd_feat = 0                          
 if (!exists("ud_str"))               { ud_str = 2500                               ;}
 if (!exists("feature_pretreatments")){ feature_pretreatment = "raw"                ;}
 if (!exists("reducer_func2_names"))  { reducer_func2_name = "mean"                 ;}
+if (!exists("gses"))                 {gses = c("GSE45332", "GSE5816", "GSE14315", "GSE25427", "GSE22250");}
 prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)  
 
-gses = c("GSE45332", "GSE5816", "GSE14315", "GSE25427", "GSE22250")
 models = c(
   "DNMT DKO vs. WT (ref.)", 
   "5-aza 1000 nM vs. DMSO (ref.)",
@@ -57,10 +57,10 @@ models = c(
 ```{r child="03_da_GSE14315.Rmd", eval=TRUE}
 ```
 
-```{r child="03_da_GSE25427.Rmd", eval=TRUE}
+```{r child="03_da_GSE25427.Rmd", eval=FALSE}
 ```
 
-```{r child="03_da_GSE22250.Rmd", eval=TRUE}
+```{r child="03_da_GSE22250.Rmd", eval=FALSE}
 ```
 
 ```{r child="03_da_summary.Rmd", eval=TRUE}

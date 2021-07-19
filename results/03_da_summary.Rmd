@@ -16,7 +16,7 @@ for (i in 1:length(gses)) {
   expression_vector = expression_vector[!is.na(expression_vector)]
 
 
-  utests[[i]] = et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3)  
+  utests[[i]] = et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3, PLOT_GSEA=FALSE)  
   if (i==1) {fig_label("C", cex=3)}
 }
 ```

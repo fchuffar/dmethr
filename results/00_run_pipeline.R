@@ -9,7 +9,7 @@ ud_strs = c(250, 500, 1000, 2500)
 # feature_pretreatments = c("raw", "cen")
 # feature_pretreatments = c("cen")
 feature_pretreatments = c("raw")
-reducer_func2_names = c("max", "mean")
+reducer_func2_names = c("max", "mean", "min")
 
 gses = c(
   "GSE45332", 
@@ -26,7 +26,7 @@ models = c(
   #GSE22250 = "5-aza vs. WT (ref.)"
 )
 
-
+source("common.R")
 # Compute 00_dmethr_pipeline_XXX.html and feats_XXX.xlsx files
 for (feature_pretreatment in feature_pretreatments) {
   for (ud_str in ud_strs) {
