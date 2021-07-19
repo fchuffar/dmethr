@@ -25,6 +25,11 @@ source("00_run_pipeline.R")
 ##Requirements
 
 ```
+# BSgenome.Hsapiens.UCSC.hg38
 BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")
+
+# TCGA Studies
+cd ~/projects/dmethr/results
+ln -s ~/projects/tcga_studies 
 ```
 
