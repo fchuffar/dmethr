@@ -169,8 +169,7 @@ plot_feat_den(foo[,3], foo[,7], )
 plot_feat_den(foo[,4], foo[,8], )
 
 ```
-
-# Step 3 
+# Step 2
 
 ```{r eval=TRUE}
 stats = NULL
@@ -222,8 +221,30 @@ stats = data.frame(lapply(data.frame(stats, stringsAsFactors=FALSE), unlist), st
 stats[,1]
 
 stats = stats[stats$feature_pretreatment=="raw",]
+```
+
+```{r}
+layout(1, respect=TRUE)
+plot(stats$ud_str, stats$nb_methpp, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2), xlab="up/down-strean TSS window size", ylab = "nbgenes methplusplus", xaxt="n")
+for (reducer_func2_name in reducer_func2_names) {
+    lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, stats[stats$reducer_func2_name==reducer_func2_name,]$nb_methpp)
+}
+axis(1,at=ud_strs, label=ud_strs)
+
+legend("topleft", 
+  c("method mean", "method max"), 
+  col=c(1, 1), 
+  lty=c(0,0), 
+  pch=c(1,2)
+)
+
+
 
 ```
+
+
+# Step 3 
+
 
 
 
@@ -232,10 +253,7 @@ stats = stats[stats$feature_pretreatment=="raw",]
 
 
 ```{r fig.height=18}
-my_et_gsea_plot = function(expression_vector, gene_set, prefix, col=c("red", "grey"), nperm=1000, PLOT_GSEA=FALSE, ...) {
-  utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
-  boxplot(rank(expression_vector)~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), main=paste0("u test (pval=", signif(utest$p.value, 3), ")"), ylab=paste0("rank(l2fc)"), xlab="", col=adjustcolor(col, alpha.f=.5), ...)  
-}
+# ```{r fig.width=20, fig.height=12}
 
 layout_mat = rbind(
 rbind(
@@ -246,12 +264,21 @@ rbind(
        matrix(18:25,2)  
      )
 )
+
+# layout_mat = cbind(
+#   matrix(1, nrow=6, ncol=6),
+#   rbind(
+#     matrix(2:9,2),
+#     matrix(10:17,2),
+#     matrix(18:25,2)
+#   )
+# )
+
 layout_mat
 
 
-# pdf("utest_pval.pdf", width=25, height = 18)
+# pdf("utest_pval.pdf", width=9, height = 18)
 layout(layout_mat, respect=TRUE)
-
 
 plot(0,0,col=0, xlim=range(stats$ud_str), ylim=c(0,60), xlab="up/down-strean TSS window size", ylab="methplusplus enrichment Mann-Whitney", xaxt="n")
 axis(1,at=ud_strs, label=ud_strs)
@@ -270,43 +297,56 @@ for (i in 1:length(gses)) {
     }
   }
 } 
+# legend("topleft",
+#   c(gses, "method raw", "method centered", "method mean", "method max"),
+#   col=c((1:length(gses))+1, 1, 1, 1, 1),
+#   lty=c(rep(1, length(gses)), 1:2, 0,0),
+#   pch=c(rep(NA, length(gses)), NA,NA, 1,2)
+# )
+
 legend("topleft", 
-  c(gses, "method raw", "method centered", "method mean", "method max"), 
-  col=c((1:length(gses))+1, 1, 1, 1, 1), 
-  lty=c(rep(1, length(gses)), 1:2, 0,0), 
-  pch=c(rep(NA, length(gses)), NA,NA, 1,2)
+  c(gses, "method mean", "method max"), 
+  col=c((1:length(gses))+1, 1, 1), 
+  lty=c(rep(1, length(gses)), 0,0), 
+  pch=c(rep(NA, length(gses)), 1,2)
 )
 
-for (gse in gses) {
-
-  par(mar=c(2.1, 4.1, 0, 0))    
-
-  #layout(matrix(1:8,2), respect=TRUE)
-  foo = sapply(c(
-    "feats_raw_250_0_mean.xlsx", 
-    "feats_raw_250_0_max.xlsx",
-    "feats_raw_500_0_mean.xlsx", 
-    "feats_raw_500_0_max.xlsx",
-    "feats_raw_1000_0_mean.xlsx", 
-    "feats_raw_1000_0_max.xlsx", 
-    "feats_raw_2500_0_mean.xlsx",
-    "feats_raw_2500_0_max.xlsx"
-  ), function(feats_filename){
-    feats = mread.xlsx(feats_filename)
-    rownames(feats) = feats$gene_symbol
-    #head(feats)
+my_et_gsea_plot = function(expression_vector, gene_set, prefix, nperm=1000, PLOT_GSEA=FALSE, main="", XAXIS=TRUE, YAXIS=TRUE, ...) {
+  utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
+  main = paste0(main, " mw_pv:", signif(utest$p.value, 3))
+  boxplot(rank(expression_vector)~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), main=main,
+    ylab="", #paste0("rank(l2fc)"), 
+    xlab="", yaxt="n", xaxt=ifelse(XAXIS, "s","n"), ...)
+    if (YAXIS) {
+      axis(2, at=c(0,length(expression_vector)), labels=c(0,length(expression_vector)))  
+      axis(2, at=length(expression_vector)/2, labels="rank", tick=FALSE)        
+    }
   
+}
+
+for (i in 1:length(gses)) {
+  par(mar=c(2, 2, 1.3, 0))    
+  for (ud_str in ud_strs) {
+    for (reducer_func2_name in reducer_func2_names) {
+      gse = gses[i]
+      feats_filename = paste0("feats_raw_", ud_str, "_0_", reducer_func2_name, ".xlsx")
+      feats = mread.xlsx(feats_filename)
+      rownames(feats) = feats$gene_symbol
+      #head(feats)
       #gse = gses[i]
-      #model = models[i]
-    
+      #model = models[i]    
       gene_set = rownames(feats)[feats[["methplusplus"]]]
       expression_vector = feats[,paste0("l2fc_", gse)]
       names(expression_vector) = rownames(feats)
       expression_vector = expression_vector[!is.na(expression_vector)]
-    
-      my_et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3, PLOT_GSEA=FALSE, col=c("red", "grey"))  
-  
-  }) 
+      my_et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3, PLOT_GSEA=FALSE, 
+        col=adjustcolor(c(i+1, 1), alpha.f=.5),
+        main=paste0(ud_str, " " , reducer_func2_name),
+        YAXIS=ud_str==min(ud_strs),
+        XAXIS=i==length(gses)&reducer_func2_name==rev(reducer_func2_names)[1]
+      )
+    }
+  } 
 }
 # dev.off()
 
