@@ -47,7 +47,7 @@ R
 # rmarkdown::render("00_meta_analysis.Rmd")
 ```
 
-## knit meta_analysis on laptop
+## Knit meta_analysis on laptop
 
 ```
 cd ~/projects/dmethr/vignettes/
