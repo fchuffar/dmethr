@@ -9,9 +9,11 @@ devtools::install_github("fchuffar/dmethr")
 
 # Run pipeline on the cluster
 
-Prerequisites: https://github.com/fchuffar/practicle_sessions/blob/master/ciment_infrastructure/config_cluster.sh
+## Cluster prerequisites
 
-## Requirements
+https://github.com/fchuffar/practicle_sessions/blob/master/ciment_infrastructure/config_cluster.sh
+
+## Package requirements
 
 ```
 # BSgenome.Hsapiens.UCSC.hg38
@@ -25,7 +27,7 @@ ln -s ~/../chuffarf/projects/all_human_tissues
 ln -s ~/../chuffarf/projects/hadaca
 ```
 
-## Launch
+## Launch pipeline
 
 ```
 ssh dahu
@@ -45,7 +47,7 @@ R
 # rmarkdown::render("00_meta_analysis.Rmd")
 ```
 
-# knit meta_analysis on laptop
+## knit meta_analysis on laptop
 
 ```
 cd ~/projects/dmethr/vignettes/
@@ -60,8 +62,6 @@ R
 
 # Development
 
-  
-  
 ```
 devtools::document(); devtools::install(); devtools::check(build_args="--no-build-vignettes")
 ```
