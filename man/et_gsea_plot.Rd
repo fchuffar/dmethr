@@ -4,8 +4,13 @@
 \alias{et_gsea_plot}
 \title{Draw enrichment plot}
 \usage{
-et_gsea_plot(expression_vector, gene_set, prefix, nperm = 1000,
-  PLOT_GSEA = FALSE)
+et_gsea_plot(
+  expression_vector,
+  gene_set,
+  prefix,
+  nperm = 1000,
+  PLOT_GSEA = FALSE
+)
 }
 \arguments{
 \item{expression_vector}{named numric vector}

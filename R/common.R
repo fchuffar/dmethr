@@ -68,6 +68,8 @@ fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
 }
 
 
+
+
 expression_in_gtex = function(gene_symbols) {
   
   study_gtex_filename = "~/projects/gtex/results/study_gtex.rds"
@@ -205,6 +207,17 @@ expression_in_gtex = function(gene_symbols) {
   }
 }
 
+
+#' Adding survival information
+#'
+#' This function 
+#' @param censoring_time interger, lenght of survival time
+#' @param s list , transcriptom data
+#' @importFrom survival::Surv 
+#' @export
+
+
+
 truncate_survival = function(s, censoring_time) {
   ## ending survival study at XX months
   censoring_time = 60
@@ -309,6 +322,14 @@ et_gsea_plot = function(expression_vector, gene_set, prefix, nperm=1000, PLOT_GS
 }
 
 
+#' Normalize data
+#'
+#' This function normalize data
+#' @param data 
+#' @param normalization  string of normalization parameters
+#' @importFrom stats qqnorm
+#' @export
+
 normalization = function(data, normalization) {
   # normalization
   # colnames(data) = s$exp_grp[colnames(data),]$tissue_group_level1
@@ -327,10 +348,34 @@ normalization = function(data, normalization) {
       qqnorm(c, plot.it=FALSE)$x
     })
   } else {
-    # "do noting"
+    # "do nothing"
   }
   data
 }
+
+#'  realise heatmap
+#' @param data 
+#' @param rsc    row side colors                      
+#' @param csc    column side colors   
+#' @param Colv   col hclust dendrogramm values                    
+#' @param Rowv   row hclust dendrogramm values
+#' @param dendrogram                  
+#' @param nb_grp_row  
+#' @param nb_grp_col 
+#' @param main 
+#' @param hcmeth_cols 
+#' @param hcmeth_rows
+#' @param normalization normalization function
+#' @param ordering_func 
+#' @param colors 
+#' @param PCA 
+#' @param PLOT_MAIN_HM
+#' @param RowSideColors
+#' @param ...  
+#' @importFrom stats hclust  
+#' @importFrom stats prcomp
+#' @importFrom gplots::heatmap.2
+#' @export
 
 
 plot_expr_hm = function(data, 
