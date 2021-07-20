@@ -106,7 +106,7 @@ idx_cpg_rich_common_notna = intersect(
       idx_cpg_rich_500_notna),
       idx_cpg_rich_250_notna
 )
-stat1 = data.frame( 
+stat2 = data.frame( 
   grp = c(
     "2500",
     "1000",
@@ -122,10 +122,10 @@ stat1 = data.frame(
     length(idx_cpg_rich_common_notna)
   )
 )
-stat1$grp = factor(stat1$grp, levels=c("250","500","1000","2500", "common"))
+stat2$grp = factor(stat2$grp, levels=c("250","500","1000","2500", "common"))
 #layout(1, respect=TRUE)
 
-boxplot(nb_cpg_rich~grp, stat1, ylim=c(0,20000), xlab="ud_str", add = TRUE, border=2)
+boxplot(nb_cpg_rich~grp, stat2, ylim=c(0,20000), xlab="ud_str", add = TRUE, border=2)
 legend("bottomright", col=1:2, lty=1, legend=c("nb. CpG rich", "nb. CpG rich with probes"))
 
 
@@ -632,7 +632,7 @@ layout_mat = rbind(
 rbind(
        c(1,1,1,1),
        c(1,1,1,1),
-       matrix(2:9,2),
+       matrix(2:9,2, dimnames = list(c("max","mean"),c("0.25kb","0.5kb", "1kb", "2.5kb"))),
        matrix(10:17,2),
        matrix(18:25,2)
         
@@ -641,7 +641,7 @@ rbind(
 layout_mat
 
 
-pdf("test.pdf", width=18, height = 12)
+pdf("utest_pval.pdf", width=25, height = 18)
 layout(layout_mat, respect=TRUE)
 
 #layout(matrix(1:4,1), respect = TRUE)
@@ -649,10 +649,10 @@ plot(0,0,col=0, xlim=range(stats$ud_str), ylim=c(0,70), xlab="ud_str", ylab="-lo
 for (i in 1:length(gses)) {
   gse = gses[i]
   points(stats$ud_str, -log10(stats[[paste0("utest_pval_",gse)]]), 
-       col=i, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+       col=i+1, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
   for (reducer_func2_name in reducer_func2_names) {
     lines(stats[stats$reducer_func2_name==reducer_func2_name,]$ud_str, -log10(stats[stats$reducer_func2_name==reducer_func2_name, paste0("utest_pval_",gse)]), 
-           col=i, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
+           col=i+1, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2))
   }
 } 
 # plot(stats$ud_str, stats$nb_methpp, pch=ifelse(stats[["reducer_func2_name"]]=="mean", 1, 2), xlab = "ud_str", ylab = "nbgenes methplusplus")
@@ -684,7 +684,7 @@ foo = sapply(c(
     names(expression_vector) = rownames(feats)
     expression_vector = expression_vector[!is.na(expression_vector)]
     
-    my_et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3, PLOT_GSEA=FALSE, col=c("blue", "grey"))  
+    my_et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3, PLOT_GSEA=FALSE, col=c("red", "grey"))  
   
 }) 
 
@@ -742,7 +742,7 @@ foo = sapply(c(
     names(expression_vector) = rownames(feats)
     expression_vector = expression_vector[!is.na(expression_vector)]
     
-    my_et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3, PLOT_GSEA=FALSE, col=c("red", "grey"))  
+    my_et_gsea_plot(expression_vector, gene_set, prefix="methplusplus", nperm=3, PLOT_GSEA=FALSE, col=c("blue", "grey"))  
   
 }) 
 dev.off()
