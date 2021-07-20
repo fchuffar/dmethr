@@ -1,7 +1,11 @@
 # dmethr
 Hunting DNA methylation repression of transcriptional activity and its reactivation in a demethylating context
 
+# Installation
 
+```
+devtools::install_github("fchuffar/dmethr")
+```
 
 # run pipeline on the cluster
 
@@ -23,10 +27,6 @@ git pull
 R
 # source("00_run_pipeline.R")
 # rmarkdown::render("meta_analysis.Rmd")
-
-
-
-
 ```
 
 # knit meta_analysis on laptop
