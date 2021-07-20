@@ -1,36 +1,22 @@
-Package: epimedtools
+Package: dmethr
 Type: Package
-Title: Useful Tools Allowing Multi-Omics Analysis
-Description: A set of useful tools encapsulating some 'GEOquery' functions. This package relies on RC, caching features and memoisation to simplify, homogenize and speed up multi-omic analysis.
-Version: 0.0.1.9004
-Date: 2016-01-26
+Title: dmethr: a 3-step pipeline to explore DNA methylation controlled gene expression from omics data
+Description: Hunting DNA methylation repression of transcriptional activity and its reactivation in a demethylating context.
+Version: 0.0.0.1
+Date: 2021-07-20
 Authors@R: c(
-    person("Florent", "Chuffart", ,"florent.chuffart@gmail.com", c("aut", "cre", "cph")),
-    person("Bernard", "Ycart", ,"bernard.ycart@imag.fr", "aut")
+    person("Florence", "Pittion", ,"florence.pittion@gmail.com", c("aut","cph")),
+    person("Florent", "Chuffart", ,"florent.chuffart@gmail.com", c("aut", "cre", "cph"))
     )
 Maintainer: Florent Chuffart <florent.chuffart@gmail.com>
-License: CeCILL
+License: GPL
+Encoding: UTF-8
 LazyData: TRUE
 Imports:
-    seqinr,
-    gplots, 
-    shiny,
-    Biobase,
-    beanplot,
-    memoise,
-    affy,
-    survival,
-    GEOquery,
-    nortest,
-    DBI,
-    jsonlite,
-    httr,  
-    gtools
+    memoise 
 Depends:
     methods
 RoxygenNote: 6.1.1
 Suggests: knitr,
-    rmarkdown,
-    epimeddata,
-    testthat
+    rmarkdown
 VignetteBuilder: knitr

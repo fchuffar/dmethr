@@ -1,6 +1,17 @@
 if (!exists("mread.xlsx")) {mread.xlsx = memoise::memoise(openxlsx::read.xlsx)}
 
 
+
+#' Adding a text in a corner of a plot
+#'
+#' This function add a text in a corner of a plot
+#' @param text string, the text to add to the plot
+#' @param region string, the region where put the text on th eplot
+#' @param pos interger, relative position of the letter
+#' @param cex interger, size of the text
+#' @param ... Parameters passed to graphics::text function
+#' @importFrom graphics text 
+#' @export
 fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
   region <- match.arg(region, c("figure", "plot", "device"))
   pos <- match.arg(pos, c("topleft", "top", "topright", 
@@ -52,7 +63,7 @@ fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
     bottomright =y[1] + sh)
   old.par <- par(xpd=NA)
   on.exit(par(old.par))
-  text(x1, y1, text, cex=cex, ...)
+  graphics::text(x1, y1, text, cex=cex, ...)
   return(invisible(c(x,y)))
 }
 
@@ -207,10 +218,19 @@ truncate_survival = function(s, censoring_time) {
   return(s)
 }
 
+#' Draw enrichment plot
+#'
+#' This function raw enrichment plot.
+#' @param expression_vector named numric vector
+#' @param gene_set character vector of gene of interest
+#' @param prefix string used to prefix outputs
+#' @param nperm interger number of permutation to use 
+#' @param PLOT_GSEA boolean defining if the GSEA plot needs to be computed
+#' @importFrom stats wilcox.test 
+#' @importFrom graphics boxplot 
+#' @export
 et_gsea_plot = function(expression_vector, gene_set, prefix, nperm=1000, PLOT_GSEA=FALSE) {
-  
-  
-  utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
+  utest = stats::wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
   boxplot(rank(expression_vector)~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), main=paste0("Mann-Whitney U test (pval=", signif(utest$p.value, 3), ")"), ylab=paste0("rank(log2FoldChange)"), xlab="", col=adjustcolor(c("red", "grey"), alpha.f=.5))  
   
 

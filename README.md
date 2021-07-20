@@ -57,4 +57,11 @@ ln -s ~/../chuffarf/projects/study_gpl570
 ln -s ~/../chuffarf/projects/all_human_tissues
 ln -s ~/../chuffarf/projects/hadaca
 ```
+  
+  
+# Development 
+  
+```
+devtools::document(); devtools::install(); devtools::check(build_args="--no-build-vignettes")
+```
 
