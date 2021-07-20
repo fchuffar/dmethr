@@ -17,30 +17,12 @@ output:
 ```{r, echo=FALSE, eval=TRUE}
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
 source("../R/common.R")
+source("params.R")
 ```
 
 # Step 1
 
 ```{r}
-tcga_projects = c("TCGA-LUSC")
-#, "TCGA-LUAD")
-
-nb_rnd_feat = 0
-ud_strs = c(2500, 1000, 500, 250)
-# feature_pretreatments = c("raw", "cen")
-#feature_pretreatments = c("cen")
-feature_pretreatments = c("raw")
-
-reducer_func2_names = c("mean", "max", "min")
-
-gses = c(
-  "GSE45332", 
-  "GSE5816", 
-  "GSE14315"#, 
-  # "GSE25427", 
-  # "GSE22250"
-  )
-
 feats_filename = "feats_raw_2500_0_max.xlsx"
 feats = mread.xlsx(feats_filename)
 rownames(feats) = feats$gene_symbol
@@ -91,13 +73,7 @@ stat1 = data.frame(
 stat1$grp = factor(stat1$grp, levels=c("250","500","1000","2500", "common"))
 layout(1, respect=TRUE)
 boxplot(nb_cpg_rich~grp, stat1, ylim=c(0,20000), xlab="ud_str", main="CpG rich genes")
-```
 
-
-# Step 2: Mean methylation in healthy tissues
-
-
-```{r}
 idx_cpg_rich_common_notna = intersect(
   intersect(
     intersect(
@@ -132,6 +108,9 @@ legend("bottomright", col=1:2, lty=1, legend=c("nb. CpG rich", "nb. CpG rich wit
 ```
 
 
+# Step 2: Mean methylation in healthy tissues
+
+
 
 
 
@@ -159,9 +138,6 @@ idx_genes = rownames(foo)[!apply(is.na(foo), 1, any)]
 foo = foo[idx_genes,]
 head(foo)
 
-<<<<<<< HEAD
-pairs(foo, pch=".", main="Mean methylation in healthy tissues")
-=======
 my_pairs = function (...) 
 {
     panel.cor = function(x, y, digits = 2, prefix = "", cex.cor, 
@@ -194,8 +170,6 @@ plot_feat_den(foo[,2], foo[,6], )
 plot_feat_den(foo[,3], foo[,7], )
 plot_feat_den(foo[,4], foo[,8], )
 
-
->>>>>>> 822dc15a15d4b52c901c0583663bd64f4e5ce056
 ```
 
 # Step 3 
