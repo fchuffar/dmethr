@@ -13,7 +13,7 @@ et_gsea_plot(
 )
 }
 \arguments{
-\item{expression_vector}{named numric vector}
+\item{expression_vector}{named numeric vector}
 
 \item{gene_set}{character vector of gene of interest}
 
