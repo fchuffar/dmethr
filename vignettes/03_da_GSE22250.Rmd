@@ -140,7 +140,7 @@ idx_ttt=rownames(gse_five$exp_grp)[gse_five$exp_grp$treatment_5aza%in%"5-AZA"]
 
 #if (!exists("mcompute_anadiff")) {mcompute_anadiff = memoise::memoise(compute_anadiff)}
 
-source("common.R")
+source("../R/common.R")
 
 stats5 = mcompute_anadiff(gse_five, idx_ctl, idx_ttt)
 

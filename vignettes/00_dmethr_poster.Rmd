@@ -215,7 +215,7 @@ models = c(model = "DNMT DKO vs. WT (ref.)", "5-aza 1000 nM vs. DMSO (ref.)")
 gs_name = "methplusplus"
 utests = list()
 
-source("common.R")
+source("../R/common.R")
 layout(matrix(1:(3*length(gses)), length(gses), byrow=TRUE), respect=TRUE)
 for (i in 1:length(gses)) {
   gse = gses[i]

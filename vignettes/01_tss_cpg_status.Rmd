@@ -19,7 +19,7 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 ```
 
 ```{r}
-source("common.R")
+source("../R/common.R")
 if (!exists("stp")) stp = 100
 if (!exists("nb_rnd_feat")) nb_rnd_feat = 2000
 if (!exists("ud_str")) ud_str = 2500

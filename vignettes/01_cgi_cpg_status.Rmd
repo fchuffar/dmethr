@@ -17,7 +17,7 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 ```
 
 ```{r}
-source("common.R")
+source("../R/common.R")
 step = 100
 nb_rnd_feat = 2000
 ud_str = 2500
