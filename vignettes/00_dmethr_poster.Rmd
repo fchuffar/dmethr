@@ -1,5 +1,5 @@
 ---
-title: "Demethr: a 3-step pipeline to explore DNA methylation controlled gene expression from omics data."
+title: "Dmethr: a 3-step pipeline to explore DNA methylation controlled gene expression from omics data."
 author: "F. Pittion     , E. Bourova-Flin, S. Khochbin    , S. Rousseaux   , F. Chuffart"
 date: "`r Sys.Date()`"
 output: 
