@@ -13,8 +13,8 @@ reducer_func2_names = c("mean", "max")
 
 models = c(
   GSE45332 = "DNMT DKO vs. WT (ref.)", 
-  GSE5816  = "5-aza 1000 nM vs. DMSO (ref.)",
-  GSE14315 = "5-aza vs. Ctrl (ref.)"#,
+  GSE14315 = "5-aza vs. Ctrl (ref.)",
+  GSE5816  = "5-aza 1000 nM vs. DMSO (ref.)"#,
   #GSE25427 = "5-aza vs. Mock (ref.)",
   #GSE22250 = "5-aza vs. WT (ref.)"
 )
