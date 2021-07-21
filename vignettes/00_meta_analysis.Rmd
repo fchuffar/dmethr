@@ -1,5 +1,5 @@
 ---
-title: "`demethr` Meta analysis"
+title: "`dmethr` Meta analysis"
 author: "Florence Pittion, Florent Chuffart"
 date: "`r Sys.Date()`"
 output: 
