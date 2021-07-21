@@ -1,4 +1,3 @@
-if (!exists("mread.xlsx")) {mread.xlsx = memoise::memoise(openxlsx::read.xlsx)}
 
 
 
@@ -210,10 +209,10 @@ expression_in_gtex = function(gene_symbols) {
 
 #' Adding survival information
 #'
-#' This function 
+#' This function provide
 #' @param censoring_time interger, lenght of survival time
-#' @param s list , transcriptom data
-#' @importFrom survival::Surv 
+#' @param s list , transcriptomic data
+#' @importFrom survival Surv 
 #' @export
 
 
@@ -234,7 +233,7 @@ truncate_survival = function(s, censoring_time) {
 #' Draw enrichment plot
 #'
 #' This function raw enrichment plot.
-#' @param expression_vector named numric vector
+#' @param expression_vector named numeric vector
 #' @param gene_set character vector of gene of interest
 #' @param prefix string used to prefix outputs
 #' @param nperm interger number of permutation to use 
@@ -326,7 +325,7 @@ et_gsea_plot = function(expression_vector, gene_set, prefix, nperm=1000, PLOT_GS
 #'
 #' This function normalize data
 #' @param data 
-#' @param normalization  string of normalization parameters
+#' @param normalization  character vector of normalization parameters
 #' @importFrom stats qqnorm
 #' @export
 
@@ -355,26 +354,24 @@ normalization = function(data, normalization) {
 
 #'  realise heatmap
 #' @param data 
-#' @param rsc    row side colors                      
-#' @param csc    column side colors   
-#' @param Colv   col hclust dendrogramm values                    
-#' @param Rowv   row hclust dendrogramm values
-#' @param dendrogram                  
-#' @param nb_grp_row  
-#' @param nb_grp_col 
-#' @param main 
-#' @param hcmeth_cols 
-#' @param hcmeth_rows
-#' @param normalization normalization function
-#' @param ordering_func 
-#' @param colors 
-#' @param PCA 
-#' @param PLOT_MAIN_HM
-#' @param RowSideColors
+#' @param rsc   vector of color of the size the row                     
+#' @param csc   vector of color of the size the column  
+#' @param Colv dendrogramm objet obtain by casting  col hclust                     
+#' @param Rowv   dendrogramm objet obtain by casting row hclust
+#' @param dendrogram  character ,  take value "both" "row"  "col" "none"            
+#' @param main character, title of heatmap
+#' @param hcmeth_cols character, distance use for meth column HC
+#' @param hcmeth_rows character, distance use for meth row HC
+#' @param normalization character specifying which kind of normalization to use
+#' @param ordering_func string, function for order
+#' @param colors character vector of colors
+#' @param PCA logical 
+#' @param PLOT_MAIN_HM logical, heatmap is provided
 #' @param ...  
 #' @importFrom stats hclust  
 #' @importFrom stats prcomp
-#' @importFrom gplots::heatmap.2
+#' @importFrom gplots heatmap.2
+#' @importFrom igraph compare
 #' @export
 
 
@@ -390,7 +387,7 @@ plot_expr_hm = function(data,
   main=""                          , 
   hcmeth_cols="eucl_dist"          , 
   hcmeth_rows="cor"                , 
-  normalization=FALSE              , 
+  normalization="none"              , 
   ordering_func=median             , 
   colors=c("cyan", "black", "red") , 
   PCA=FALSE                        , 
@@ -402,7 +399,7 @@ plot_expr_hm = function(data,
   # data = data[apply(data, 1, function(l) {length(unique(l))})>1, ]
   
   # normalization
-  data = normalization(data, normalization)
+  data = dmethr::normalization(data, normalization)
   # RowSideColors = rsc
   # hc_row=NULL
 
@@ -625,6 +622,15 @@ plot_expr_hm = function(data,
 
 
 
+#' Volcano plot
+#'
+#' provide Volcano plot
+#' @param feats genes data
+#' @param gse  string , name of gse
+#' @importFrom graphics points
+#' @export
+
+
 plot_volcano = function (feats, gse, gs_name, ...) {
   plot(feats[,paste0("l2fc_", gse)], -log10(feats[,paste0("pval_", gse)]), col="grey", xlab="log2FoldChange", ylab="adjusted pval", ...)
   idx = rownames(feats)[feats[[gs_name]]]
@@ -634,7 +640,13 @@ plot_volcano = function (feats, gse, gs_name, ...) {
 }
 
 
-if (!exists("mreadRDS")) mreadRDS = memoise::memoise(readRDS)
+#' TCGA data 
+#'
+#' colecte TCGA data
+#' @param tcga_project string, name of TCGA project
+#' @param gene_filename  character, path of rds file
+#' @export
+
 
 get_genes = function(tcga_project, gene_filename="~/projects/genes/bed_grch38_epimeddb.rds") {
   genes = mreadRDS(gene_filename)
@@ -656,7 +668,7 @@ get_genes = function(tcga_project, gene_filename="~/projects/genes/bed_grch38_ep
 
   return(list(genes=genes, chrs_indexed_genes=chrs_indexed_genes))
 }
-if (!exists("mget_genes")) { mget_genes = memoise::memoise(get_genes)}
+
 
 get_neighborhood_genes = function(bed, interaction_range=2500, nb_genes_max=1, START_TO_START=TRUE) {
   genes_singleton = mget_genes()
@@ -745,7 +757,6 @@ get_matbin_from_seq = function(seq, up_str, dwn_str, step) {
   colnames(mat) = paste0("binmax ", ifelse(offset<0, "-", "+"), abs(offset), "kb")
   return(mat)  
 }
-if (!exists("mget_matbin_from_seq")) {mget_matbin_from_seq = memoise::memoise(get_matbin_from_seq)}
 
 
 get_seq_from_bed = function(bed, up_str, dwn_str, chrom_sizes, genome=BSgenome.Hsapiens.UCSC.hg38::Hsapiens) {
@@ -885,7 +896,6 @@ get_feat_indexed_probes = function(feats_bed6, probes_bed2, up_str, dwn_str) {
   barplot(table(sapply(feat_indexed_probes, length)))
   return(feat_indexed_probes)
 }
-if (!exists("mget_feat_indexed_probes")) mget_feat_indexed_probes = memoise::memoise(get_feat_indexed_probes)
 
 
 
@@ -1033,7 +1043,6 @@ get_multiomic_data = function(gene_symbols, tcga_project, feat_indexed_probes, r
   ret = preproc_omics_data(region_id, gene_symbols, s_cnv, s_meth, s_trscr, feat_indexed_probes)
   return(ret)
 }
-if (!exists("mget_multiomic_data")) {mget_multiomic_data = memoise::memoise(get_multiomic_data)}
 
 
 momic_pattern = function(gene_symbols, tcga_project, interaction_range=2500, LAYOUT=TRUE, ...) {    
@@ -1094,7 +1103,7 @@ readstudyRDS = function(rds_file){
   return(s)
 }
 
-if (!exists("mreadstudyRDS")) {mreadstudyRDS = memoise::memoise(readstudyRDS)}
+
 
 
 
@@ -1112,5 +1121,14 @@ compute_anadiff = function(s, idx_ctl, idx_ttt) {
   })
   return(result)
 }
-if (!exists("mcompute_anadiff")) {mcompute_anadiff = memoise::memoise(compute_anadiff)}
 
+
+
+if (!exists("mcompute_anadiff")) {mcompute_anadiff = memoise::memoise(compute_anadiff)}
+if (!exists("mreadRDS")) mreadRDS = memoise::memoise(readRDS)
+if (!exists("mreadstudyRDS")) {mreadstudyRDS = memoise::memoise(readstudyRDS)}
+if (!exists("mget_multiomic_data")) {mget_multiomic_data = memoise::memoise(get_multiomic_data)}
+if (!exists("mget_feat_indexed_probes")) mget_feat_indexed_probes = memoise::memoise(get_feat_indexed_probes)
+if (!exists("mget_matbin_from_seq")) {mget_matbin_from_seq = memoise::memoise(get_matbin_from_seq)}
+if (!exists("mread.xlsx")) {mread.xlsx = memoise::memoise(openxlsx::read.xlsx)}
+if (!exists("mget_genes")) { mget_genes = memoise::memoise(get_genes)}
