@@ -9,7 +9,12 @@
 #' @param pos interger, relative position of the letter
 #' @param cex interger, size of the text
 #' @param ... Parameters passed to graphics::text function
-#' @importFrom graphics text 
+#' @importFrom graphics text
+#' @importFrom graphics grconvertX
+#' @importFrom graphics grconvertY 
+#' @importFrom graphics par
+#' @importFrom graphics strwidth
+#' @importFrom graphics strheight
 #' @export
 fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
   region <- match.arg(region, c("figure", "plot", "device"))
@@ -66,7 +71,12 @@ fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
   return(invisible(c(x,y)))
 }
 
-
+#' Analyse gene expression in gtex database
+#'
+#' This function provide heatmap?
+#' @param gene_symbol character vector for gene symbol
+#' @importFrom base rev 
+#' @export
 
 
 expression_in_gtex = function(gene_symbols) {
@@ -1077,6 +1087,15 @@ momic_pattern = function(gene_symbols, tcga_project, interaction_range=2500, LAY
   return(data)
 }
 
+
+#' Read RDS file from study 
+#'
+#' this fonction  
+#' @param rds_file rds object
+#' @importFrom base gsub
+#' @export
+
+
 readstudyRDS = function(rds_file){
   s = readRDS(rds_file)
   rownames(s$data) = gsub("/", "_", gsub("-", "_", rownames(s$data)))
@@ -1104,6 +1123,15 @@ readstudyRDS = function(rds_file){
 }
 
 
+#' Comput differential analysis 
+#'
+#' this fonction provide results of differentiel analysis 
+#' @param s 
+#' @param idx_ctl  
+#' @param idx_ttt
+#' @importFrom stats lm
+#' @importFrom stats anova
+#' @export
 
 
 
