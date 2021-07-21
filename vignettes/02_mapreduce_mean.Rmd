@@ -225,7 +225,7 @@ dispatched into `r length(unique(s_meth$exp_grp$tissue_group_level1))` tissues. 
 table(feats$cpg_status, feats[[gs_name]], useNA="ifany")
 ```
 
-```{r expression_in_gtex}
+```{r expression_in_gtex, fig.height=9}
 if (sum(feats[["methplusplus"]]) < 1000) {
   expression_in_gtex(rownames(feats)[feats[["methplusplus"]]])  
 }
