@@ -24,5 +24,5 @@ et_gsea_plot(
 \item{PLOT_GSEA}{boolean defining if the GSEA plot needs to be computed}
 }
 \description{
-This function raw enrichment plot.
+This function enrichment plot.
 }
