@@ -793,6 +793,9 @@ get_seq_from_bed = function(bed, up_str, dwn_str, chrom_sizes, genome=BSgenome.H
     beg = max(1,tss - bef)
     end = min(chrom_sizes[chr,2], tss + aft)
     str = as.character(BSgenome::getSeq(genome, chr, beg, end))
+    if (strand == "-") {
+      str = Biostrings::reverseComplement(Biostrings::DNAString("str"))
+    }  
     return(str)
   })
   return(seq)
