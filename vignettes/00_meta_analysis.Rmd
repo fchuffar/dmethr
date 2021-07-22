@@ -1,5 +1,6 @@
 ---
-title: "`dmethr` Meta analysis"
+title: "`dmethr`: meta analysis"
+subtitle: "Numerical exploration of the pipeline parameters"
 author: "Florence Pittion, Florent Chuffart"
 date: "`r Sys.Date()`"
 output: 
@@ -113,7 +114,6 @@ legend("bottomright", col=1:2, lty=1, legend=c("nb. CpG rich", "nb. CpG rich wit
 
 
 ```{r, fig.height=9}
-layout(1, respect=TRUE)
 foo = sapply(c(
   "feats_raw_250_0_mean.xlsx", 
   "feats_raw_500_0_mean.xlsx", 
@@ -159,14 +159,16 @@ my_pairs = function (...)
     }
     pairs(..., upper.panel = panel.cor)
 }
+
+layout(1, respect=TRUE)
 my_pairs(foo, pch=".", col=adjustcolor(1, alpha.f = 0.1))
 
 
 
-plot_feat_den(foo[,1], foo[,5], )
-plot_feat_den(foo[,2], foo[,6], )
-plot_feat_den(foo[,3], foo[,7], )
-plot_feat_den(foo[,4], foo[,8], )
+plot_feat_den(foo[,1], foo[,5], main="mean x max, 250")
+plot_feat_den(foo[,2], foo[,6], main="mean x max, 500")
+plot_feat_den(foo[,3], foo[,7], main="mean x max, 1000")
+plot_feat_den(foo[,4], foo[,8], main="mean x max, 2500")
 
 ```
 # Step 2
@@ -237,6 +239,90 @@ legend("topleft",
   lty=c(0,0), 
   pch=c(1,2)
 )
+
+
+
+
+foo = sapply(c(
+  "feats_raw_250_0_mean.xlsx", 
+  "feats_raw_500_0_mean.xlsx", 
+  "feats_raw_1000_0_mean.xlsx", 
+  "feats_raw_2500_0_mean.xlsx",
+  "feats_raw_250_0_max.xlsx", 
+  "feats_raw_500_0_max.xlsx", 
+  "feats_raw_1000_0_max.xlsx", 
+  "feats_raw_2500_0_max.xlsx"
+  ), function(feats_filename){
+  feats = mread.xlsx(feats_filename)
+  rownames(feats) = feats$gene_symbol
+  rownames(feats)[feats$methplusplus]
+}) 
+head(foo)
+
+data.frame(
+  mean  = sapply(foo[1:4], length),
+  max   = sapply(foo[5:8], length),
+  common= sapply(list(
+    intersect(foo[[1]], foo[[5]]),
+    intersect(foo[[2]], foo[[6]]),
+    intersect(foo[[3]], foo[[7]]),
+    intersect(foo[[4]], foo[[8]])),
+    length)
+)
+
+
+stats = NULL
+for (feature_pretreatment in feature_pretreatments) {
+  print(feature_pretreatment)
+  for (ud_str in ud_strs) {
+    print(ud_str)
+    for (reducer_func2_name in reducer_func2_names) {
+      print(reducer_func2_name)
+      
+      prefix3 = paste0(feature_pretreatment, "_", ud_str, "_", nb_rnd_feat, "_", reducer_func2_name)
+      feats_filename = paste0("feats_", prefix3, ".xlsx")
+      print(feats_filename)
+      feats = mread.xlsx (feats_filename)
+      
+      rownames(feats)[feats$methplusplus]
+        
+      tmp_list = list(
+        feature_pretreatment = feature_pretreatment, 
+        ud_str = ud_str, 
+        reducer_func2_name = reducer_func2_name,
+        nb_rnd_feat = nb_rnd_feat, 
+        nb_cpg_rich = sum(feats$cpg_status %in% "rich"),
+        nb_methpp =   sum(feats$methplusplus)
+      )
+
+      for (gse in gses) {
+        print(gse)
+        gene_set = rownames(feats)[feats[["methplusplus"]]]
+        expression_vector = feats[,paste0("l2fc_", gse)]
+        names(expression_vector) = rownames(feats)
+        expression_vector = expression_vector[!is.na(expression_vector)]
+        utest = wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
+        pv = utest$p.value
+        print(pv)
+        tmp_list[[paste0("utest_pval_", gse)]] = pv
+      }
+
+      
+      if (is.null(stats)) {
+        stats = tmp_list
+      } else{
+        stats = rbind(stats, tmp_list)
+      }
+    }
+  }
+}
+stats
+stats[,1]
+stats = data.frame(lapply(data.frame(stats, stringsAsFactors=FALSE), unlist), stringsAsFactors=FALSE)
+stats[,1]
+
+stats = stats[stats$feature_pretreatment=="raw",]
+
 
 
 

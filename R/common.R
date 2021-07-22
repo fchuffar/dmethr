@@ -719,7 +719,7 @@ get_neighborhood_genes = function(bed, interaction_range=2500, nb_genes_max=1, S
 }
 
 
-plot_feat_den = function (x, y, xlim, ylim, ...) {
+plot_feat_den = function (x, y, xlim, ylim, main="", ...) {
   if (missing(xlim)) {
     xlim = range(x)    
   }
@@ -728,12 +728,16 @@ plot_feat_den = function (x, y, xlim, ylim, ...) {
   }
   layout(matrix(c(2,1,1,2,1,1,4,3,3), 3), respect=TRUE)
   # plot(x, y, pch=".", xlim=xlim, ylim=ylim)
+  par(mar=c(5.1, 4.1, 0, 0))
   smoothScatter (x, y, xlim=xlim, ylim=ylim, ...)
-  den_x = density(x,)
-  plot(den_x$x, den_x$y, type="l", xlim=xlim, xlab="")
+  den_x = density(x)
+  par(mar=c(0, 4.1, 4.1, 0))
+  plot(den_x$x, den_x$y, type="l", xlim=xlim, xlab="", xaxt="n", main=main)
   den_y = density(y)
   # den_y = density(y, breaks=c(-1, seq(min(ylim), max(ylim)), max(y)+1))
-  plot(den_y$y, den_y$x, type="l", ylim=ylim, ylab="")  
+  par(mar=c(5.1, 0, 0, 2.1))
+  plot(den_y$y, den_y$x, type="l", ylim=ylim, ylab="", yaxt="n")  
+  par(mar=c(5.1, 4.1, 4.1, 2.1))
 }
 
 get_matbin_from_seq = function(seq, up_str, dwn_str, step) {
