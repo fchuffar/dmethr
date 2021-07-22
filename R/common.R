@@ -9,7 +9,12 @@
 #' @param pos interger, relative position of the letter
 #' @param cex interger, size of the text
 #' @param ... Parameters passed to graphics::text function
-#' @importFrom graphics text 
+#' @importFrom graphics text
+#' @importFrom graphics grconvertX
+#' @importFrom graphics grconvertY 
+#' @importFrom graphics par
+#' @importFrom graphics strwidth
+#' @importFrom graphics strheight
 #' @export
 fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
   region <- match.arg(region, c("figure", "plot", "device"))
@@ -66,7 +71,11 @@ fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
   return(invisible(c(x,y)))
 }
 
-
+#' Analyse gene expression in gtex database
+#'
+#' This function provide heatmap?
+#' @param gene_symbol character vector for gene symbol
+#' @export
 
 
 expression_in_gtex = function(gene_symbols) {
@@ -232,14 +241,19 @@ truncate_survival = function(s, censoring_time) {
 
 #' Draw enrichment plot
 #'
-#' This function raw enrichment plot.
+#' This function enrichment plot.
 #' @param expression_vector named numeric vector
 #' @param gene_set character vector of gene of interest
 #' @param prefix string used to prefix outputs
 #' @param nperm interger number of permutation to use 
 #' @param PLOT_GSEA boolean defining if the GSEA plot needs to be computed
+#' @importFrom grDevices adjustcolor
+#' @importFrom utils write.table
+#' @importFrom utils read.table
 #' @importFrom stats wilcox.test 
 #' @importFrom graphics boxplot 
+#' @importFrom graphics par
+#' @importFrom graphics plot.new
 #' @export
 et_gsea_plot = function(expression_vector, gene_set, prefix, nperm=1000, PLOT_GSEA=FALSE) {
   utest = stats::wilcox.test(expression_vector~ifelse(names(expression_vector)%in%gene_set, "methplusplus", "others"), las=2)
@@ -1081,6 +1095,14 @@ momic_pattern = function(gene_symbols, tcga_project, interaction_range=2500, LAY
   return(data)
 }
 
+
+#' Read RDS file from study 
+#'
+#' this fonction  
+#' @param rds_file rds object
+#' @export
+
+
 readstudyRDS = function(rds_file){
   s = readRDS(rds_file)
   rownames(s$data) = gsub("/", "_", gsub("-", "_", rownames(s$data)))
@@ -1108,6 +1130,15 @@ readstudyRDS = function(rds_file){
 }
 
 
+#' Comput differential analysis 
+#'
+#' this fonction provide results of differentiel analysis 
+#' @param s 
+#' @param idx_ctl  
+#' @param idx_ttt
+#' @importFrom stats lm
+#' @importFrom stats anova
+#' @export
 
 
 
