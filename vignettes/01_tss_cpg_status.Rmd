@@ -93,8 +93,39 @@ if (!file.exists(seq_filename)) {
   seq = get_seq_from_bed(feats, up_str, dwn_str, hg38_chrom_sizes)
   saveRDS(seq, seq_filename)
 }
-seq = readRDS(seq_filename)
 length(seq)
+
+for (seq_filename in c(
+  "seq_tss_1000_1000_100_0.rds",
+  "seq_tss_250_250_100_0.rds",
+  "seq_tss_2500_2500_100_0.rds",
+  "seq_tss_500_500_100_0.rds"
+  ))  {
+  seq = readRDS(seq_filename)
+  print(seq_filename)
+
+  idx = names(seq)
+  seq = epimedtools::monitored_apply(t(t(idx)), 1, function(n) {
+    strand = feats[n,][[6]]
+    str = seq[[n]]
+    if (strand == "-") {
+      str = as.character(Biostrings::reverseComplement(Biostrings::DNAString(str)))
+    }
+    str
+  })
+  names(seq) = idx
+  saveRDS(seq, seq_filename)
+}
+
+# cp seq_tss_1000_1000_100_0.rds  seq_tss_sim_1000_1000_100_0.rds
+# cp seq_tss_250_250_100_0.rds    seq_tss_sim_250_250_100_0.rds
+# cp seq_tss_2500_2500_100_0.rds  seq_tss_sim_2500_2500_100_0.rds
+# cp seq_tss_500_500_100_0.rds    seq_tss_sim_500_500_100_0.rds
+
+# cp seq_tss_sim_1000_1000_100_0.rds  seq_tss_1000_1000_100_0.rds
+# cp seq_tss_sim_250_250_100_0.rds    seq_tss_250_250_100_0.rds
+# cp seq_tss_sim_2500_2500_100_0.rds  seq_tss_2500_2500_100_0.rds
+# cp seq_tss_sim_500_500_100_0.rds    seq_tss_500_500_100_0.rds
 ```
 
 ```{r Slice DNA sequences and count CpG density}
