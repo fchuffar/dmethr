@@ -105,7 +105,7 @@ expression_in_gtex = function(gene_symbols) {
       d = data[,idx_sample]
       sum(is.na(d))
       d = d[apply(d, 1, any),]
-      foo = plot_expr_hm(
+      foo = dmethr::plot_expr_hm(
         data=d                           ,
         rsc=NULL                         , 
         csc=NULL                         , 
@@ -464,7 +464,7 @@ plot_expr_hm = function(data,
         # ... bases on correlation
         tmp_d = tmp_d[!apply(is.na(tmp_d), 1, any), ]
         d = dist(1 - cor(t(tmp_d), method="pe"))
-        hc_row = hclust(d, method="single")
+        hc_row = hclust(d, method="complete")
         Rowv = as.dendrogram(hc_row)      
       }
     } else {
@@ -794,7 +794,7 @@ get_seq_from_bed = function(bed, up_str, dwn_str, chrom_sizes, genome=BSgenome.H
     end = min(chrom_sizes[chr,2], tss + aft)
     str = as.character(BSgenome::getSeq(genome, chr, beg, end))
     if (strand == "-") {
-      str = Biostrings::reverseComplement(Biostrings::DNAString("str"))
+      str = as.character(Biostrings::reverseComplement(Biostrings::DNAString(str)))
     }  
     return(str)
   })
