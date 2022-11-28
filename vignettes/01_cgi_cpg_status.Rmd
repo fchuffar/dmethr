@@ -452,7 +452,7 @@ feats_binmax$end = feats_binmax$start + 1
 feat_filename_status = "~/projects/01_momik/results/feats_epic_grch38_cpg_status.rds"
 
 saveRDS(feats_binmax, feat_filename_status)
-WriteXLS::WriteXLS(feats_binmax, "feats_epic_grch38_cpg_status.xls")
+WriteXLS::WriteXLS(feats_binmax, "feats_epic_grch38_cpg_status.xlsx")
 ```
 
 # heatmap cpg rich

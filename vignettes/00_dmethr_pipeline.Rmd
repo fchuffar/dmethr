@@ -22,6 +22,7 @@ knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, 
 
 
 ```{r}
+if (!exists("motifs"))               { motifs = c("GC")                            ;}
 if (!exists("tcga_projects"))        { tcga_projects = c("TCGA-LUSC", "TCGA-LUAD") ;}
 if (!exists("nb_rnd_feat"))          { nb_rnd_feat = 0                             ;}
 if (!exists("ud_str"))               { ud_str = 2500                               ;}

@@ -2,6 +2,8 @@
 tcga_projects = c("TCGA-LUSC")
 #, "TCGA-LUAD")
 
+motifs = c("GC", "GCGC")
+
 nb_rnd_feat = 0
 ud_strs = c(250, 500, 1000, 2500)
 # feature_pretreatments = c("raw", "cen")

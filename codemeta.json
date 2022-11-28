@@ -1,0 +1,32 @@
+{
+    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+    "@type": "SoftwareSourceCode",
+    "license": "https://spdx.org/licenses/GPL-3.0",
+    "codeRepository": "https://github.com/fchuffar/dmethr",
+    "dateCreated": "2021-08-31",
+    "name": "dmethr",
+    "description": "dmethr: a 3-step pipeline to explore DNA methylation controlled gene expression from omics data",
+    "applicationCategory": "Cellular Biology",
+    "programmingLanguage": [
+        "R"
+    ],
+    "author": [
+        {
+            "@type": "Person",
+            "givenName": "Florent",
+            "familyName": "Chuffart",
+            "email": "florent.chuffart@gmail.com",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "INSERM"
+            }
+        }
+    ],
+    "author": [
+        {
+            "@type": "Person",
+            "givenName": "Florence",
+            "familyName": "Pittion"
+        }
+    ]
+}
