@@ -17,6 +17,7 @@ output:
 knitr::opts_chunk$set(collapse=TRUE, comment = "#>", fig.width=9, fig.height=6, eval=TRUE, echo=FALSE, results="hide", warning=FALSE)
 species="Homo_sapiens"
 version="hg38"
+source("../R/common.R")
 ```
 
 # Requirements
@@ -149,7 +150,7 @@ if (!exists("gene_indexed_probes")) {
     # print(gene)
     chr = gene[[1]]
     meth_platform = chrs_indexed_methpf[[chr]]
-    ret = dmprocr::get_probe_names(gene, meth_platform, pf_chr_colname, pf_pos_colname, up_str, dwn_str) 
+    ret = dmprocr_get_probe_names(gene, meth_platform, pf_chr_colname, pf_pos_colname, up_str, dwn_str) 
     return(ret)
   })
   barplot(table(sapply(gene_indexed_probes, length)))

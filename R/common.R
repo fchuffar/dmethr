@@ -1,3 +1,45 @@
+dmprocr_get_probe_names = function (gene, pf_meth, pf_chr_colname = "Chromosome", pf_pos_colname = "Start", 
+    up_str = 5000, dwn_str = 5000) 
+{
+    if (substr(gene[[1]], 1, 3) != "chr") {
+        gene[[1]] = paste0("chr", gene[[1]])
+    }
+    chr = gene[[1]]
+    strand = gene[[6]]
+    gene_name = gene[[4]]
+    beg = as.numeric(gene[[2]])
+    end = as.numeric(gene[[3]])
+    if (nrow(pf_meth) == 0) {
+        warning(paste0("No probes for gene ", gene[[4]], "(", 
+            gene[[5]], ")."))
+        return(NULL)
+    }
+    if (substr(pf_meth[1, pf_chr_colname], 1, 3) != "chr") {
+        pf_meth[, pf_chr_colname] = paste0("chr", pf_meth[, pf_chr_colname])
+    }
+    if (strand == "-") {
+        off_set_beg = dwn_str
+        off_set_end = up_str
+        tss = end
+    }
+    else {
+        off_set_beg = up_str
+        off_set_end = dwn_str
+        tss = beg
+    }
+    probe_idx = rownames(pf_meth)[!is.na(pf_meth[[pf_pos_colname]]) & 
+        !is.na(pf_meth[[pf_chr_colname]]) & pf_meth[[pf_chr_colname]] == 
+        chr & pf_meth[[pf_pos_colname]] >= tss - up_str & pf_meth[[pf_pos_colname]] < 
+        tss + dwn_str]
+    if (length(probe_idx) == 0) {
+        warning(paste0("No probes for gene ", gene[[4]], "(", 
+            gene[[5]], ")."))
+        return(NULL)
+    }
+    else {
+        return(probe_idx)
+    }
+}
 
 
 
@@ -850,7 +892,7 @@ build_feats_epic_grch38 = function() {
     chr = feat[[1]]
     len = as.numeric(feat[[5]])
     meth_platform = chrs_indexed_methpf[[chr]]
-    ret = dmprocr::get_probe_names(feat, meth_platform, pf_chr_colname, pf_pos_colname, 0, len) 
+    ret = dmprocr_get_probe_names(feat, meth_platform, pf_chr_colname, pf_pos_colname, 0, len) 
     # meth_platform[ret,1:3]
     # feat
     return(ret)
@@ -911,7 +953,7 @@ get_feat_indexed_probes = function(feats_bed6, probes_bed2, up_str, dwn_str) {
     # print(gene)
     chr = gene[[1]]
     meth_platform = chrs_indexed_methpf[[chr]]
-    ret = dmprocr::get_probe_names(gene, meth_platform, 1, 2, up_str, dwn_str) 
+    ret = dmprocr_get_probe_names(gene, meth_platform, 1, 2, up_str, dwn_str) 
     return(ret)
   })
   barplot(table(sapply(feat_indexed_probes, length)))
@@ -942,7 +984,7 @@ get_multiomic_data = function(gene_symbols, tcga_project, feat_indexed_probes, r
       }  
       meth_platform = pf_orig[pf_orig[[pf_chr_colname]]%in%feat[[1]], ]
       head(meth_platform)
-      probes = dmprocr::get_probe_names(feat, meth_platform, pf_chr_colname, pf_pos_colname, interaction_range, interaction_range) 
+      probes = dmprocr_get_probe_names(feat, meth_platform, pf_chr_colname, pf_pos_colname, interaction_range, interaction_range) 
 
       # print(feat_indexed_probes)
       tss = ifelse(feat[[6]]=="+", feat[[2]], feat[[3]])
@@ -967,7 +1009,7 @@ get_multiomic_data = function(gene_symbols, tcga_project, feat_indexed_probes, r
       }  
       meth_platform = pf_orig[pf_orig[[pf_chr_colname]]%in%feat[[1]], ]
       head(meth_platform)
-      probes = dmprocr::get_probe_names(feat, meth_platform, pf_chr_colname, pf_pos_colname, 0, feat[[3]]-feat[[2]])       
+      probes = dmprocr_get_probe_names(feat, meth_platform, pf_chr_colname, pf_pos_colname, 0, feat[[3]]-feat[[2]])       
       feat_indexed_probes = list()
       feat_indexed_probes[[region_id]] = probes
       feat_indexed_probes
