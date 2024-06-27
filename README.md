@@ -14,9 +14,27 @@ we are developing `dmethr`.
 devtools::install_github("fchuffar/dmethr")
 ```
 
+# Conda env
+
+```
+source ~/conda_config.sh
+# conda create -n dmethr_env
+conda activate dmethr_env
+# mamba install -c anaconda -c bioconda -c conda-forge -c r r-base libopenblas bioconductor-geoquery bioconductor-affy bioconductor-biobase r-seqinr r-rcpparmadillo r-devtools r-fastmap r-matrix r-kernsmooth r-catools r-gtools r-nortest r-survival r-beanplot r-gplots r-sass jquery r-nlme r-bslib r-sourcetools r-fontawesome r-xtable r-httpuv r-dbi r-igraph
+# devtools::install_github("fchuffar/epimedtools")
+# gse='GSE41037'; rmarkdown::render('01_build_study_generic.Rmd', output_file=paste0('01_build_study_',gse,'.html'));
+# gse='GSE119617'; rmarkdown::render('01_build_study_generic.Rmd', output_file=paste0('01_build_study_',gse,'.html'));
+# gse='GSE40279'; rmarkdown::render('01_build_study_generic.Rmd', output_file=paste0('01_build_study_',gse,'.html'));
+# gse='GSE42861'; rmarkdown::render('01_build_study_generic.Rmd', output_file=paste0('01_build_study_',gse,'.html'));
+# dim(s$data) # problem with GSE42861 : only 374449 probes. not the case with R3.6.1 
+snakemake -k --cores 1 -s 00_custom_studies_wf.py -pn
+
+```
+
 # Run pipeline
 
 ```
+rmarkdown::render("00_dmethr_pipeline.Rmd")
 rmarkdown::render("01_tss_cpg_status.Rmd")
 rmarkdown::render("02_mapreduce_mean.Rmd")
 rmarkdown::render("03_da_GSE45332.Rmd")
